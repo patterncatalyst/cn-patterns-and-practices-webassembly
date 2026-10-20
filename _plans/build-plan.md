@@ -15,7 +15,7 @@ locked outline, and the plans ledger. No chapter prose, no runnable examples,
 and no WIT contract body are written in r01.
 
 Repo: `patterncatalyst/cn-patterns-and-practices-webassembly` (public,
-remote-first). The `cn-` (cloud-native) prefix deliberately marks the
+remote-first). The `cn-` (cloud-native) prefix marks the
 deviation from the four `api-` siblings — this is a runtime/deployment site,
 not an API style — while the hub still places it under Cloud Native / API
 design alongside REST/gRPC/GraphQL/WebSockets (DRQ-001).

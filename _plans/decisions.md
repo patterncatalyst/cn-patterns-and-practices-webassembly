@@ -16,15 +16,15 @@ Public GitHub repo `patterncatalyst/cn-patterns-and-practices-webassembly`,
 MIT license, remote-first: create the GitHub repo first, then branch, then
 work — off-device durability from the first commit, matching the four `api-`
 sibling sites. User-confirmed 2026-10-20 over the `api-` alternative: the
-`cn-` (cloud-native) prefix deliberately signals that this is a
+`cn-` (cloud-native) prefix signals that this is a
 runtime/deployment site, not an API style, while the hub entry still lands
 under Cloud Native / API design alongside REST/gRPC/GraphQL/WebSockets.
 
 ## DRQ-002 — Stack deviation: Rust and Go, not Quarkus/Python
 
 Every hands-on chapter and example ships in **Rust** and **Go**, not the
-Quarkus/Python stack the four `api-` siblings use. This is a deliberate
-deviation: the subject is a runtime/deployment target (WebAssembly
+Quarkus/Python stack the four `api-` siblings use. The reason: the subject
+is a runtime/deployment target (WebAssembly
 components on Kubernetes), and Rust and Go are the two toolchains with
 mature Component Model support (`cargo-component`, standard Go's `wasip1` +
 `go:wasmexport`, TinyGo as a sidebar).
@@ -34,7 +34,7 @@ mature Component Model support (`cargo-component`, standard Go's `wasip1` +
 Two runtimes are taught: **wasmtime** (the reference single-process Wasm
 runtime) and **wasmCloud** (the distributed actor/capability runtime). Part 4
 introduces them separately, one chapter each, before a third chapter shows
-them together in the context the rest of the book deploys against.
+them together in the deployment context the later chapters build on.
 
 ## DRQ-004 — Contract spine: WIT / Component Model; drift-gate deferred
 

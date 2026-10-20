@@ -83,7 +83,7 @@ exclude:
   - vendor/
   - node_modules/
   - examples/   # ← important: trailing slash; runnable code lives here, not site content
-  - contracts/  # ← single source of truth (proto + buf); validated in CI, not rendered
+  - contracts/  # ← single source of truth (the WIT world); validated in CI, not rendered
   - scripts/
   - presentation/  # ← .pptx deck builders + sources; repo artifacts, not site content
   - README.md
