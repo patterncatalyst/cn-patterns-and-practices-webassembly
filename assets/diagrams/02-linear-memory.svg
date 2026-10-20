@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 340" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="40" y="70" width="160" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="120.0" y="113.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Page 0</text>
+<text x="120.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">offset 0-65535</text>
+<rect x="210" y="70" width="160" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="113.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Page 1</text>
+<text x="290.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">offset 65536-131071</text>
+<rect x="380" y="70" width="160" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="460.0" y="113.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Page 2</text>
+<text x="460.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">offset 131072-196607</text>
+<rect x="550" y="70" width="160" height="90" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="630.0" y="113.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">memory.grow</text>
+<text x="630.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">adds another 64 KiB page</text>
+<rect x="40" y="220" width="300" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="190.0" y="253.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">in-bounds load at offset 4096</text>
+<text x="190.0" y="270.0" font-size="11.5" fill="#555555" text-anchor="middle">succeeds: inside current memory size</text>
+<rect x="420" y="220" width="300" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="570.0" y="253.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">load past offset 196607</text>
+<text x="570.0" y="270.0" font-size="11.5" fill="#555555" text-anchor="middle">traps: outside current memory size</text>
+<path d="M190,150 L190,220" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="196.0" y="179.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">ok</text>
+<text x="196.0" y="179.0" font-size="11" fill="#b8650a" text-anchor="middle">ok</text>
+<path d="M460,160 L460,220" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="466.0" y="184.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">bounds check fails</text>
+<text x="466.0" y="184.0" font-size="11" fill="#555" text-anchor="middle">bounds check fails</text>
+<text x="430" y="30" font-size="13" fill="#1d1d1d" text-anchor="middle" font-weight="700">Linear memory: one contiguous byte array, indexed from 0, growing in 64 KiB pages</text>
+<text x="430" y="320" font-size="12" fill="#b8650a" text-anchor="middle" font-weight="700">Every load/store is bounds-checked against the instance&#x27;s current memory size, not just at the edges.</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 400" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="240" y="15" width="340" height="110" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="410.0" y="45.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">interface types</text>
+<text x="410.0" y="62.5" font-size="11.5" fill="#555555" text-anchor="middle">record location, money, cargo, route-spec,</text>
+<text x="410.0" y="77.5" font-size="11.5" fill="#555555" text-anchor="middle">booking, leg, itinerary, handling-event</text>
+<text x="410.0" y="92.5" font-size="11.5" fill="#555555" text-anchor="middle">enum handling-event-type, routing-status,</text>
+<text x="410.0" y="107.5" font-size="11.5" fill="#555555" text-anchor="middle">transport-status · variant cargo-error</text>
+<rect x="80" y="190" width="300" height="110" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="230.0" y="220.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">interface booking</text>
+<text x="230.0" y="237.5" font-size="11.5" fill="#555555" text-anchor="middle">use types.{cargo, booking, route-spec,</text>
+<text x="230.0" y="252.5" font-size="11.5" fill="#555555" text-anchor="middle">itinerary, cargo-error}</text>
+<text x="230.0" y="267.5" font-size="11.5" fill="#555555" text-anchor="middle">book-cargo · request-possible-routes</text>
+<text x="230.0" y="282.5" font-size="11.5" fill="#555555" text-anchor="middle">assign-route · get-cargo</text>
+<rect x="440" y="190" width="300" height="125" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="590.0" y="220.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">interface handling</text>
+<text x="590.0" y="237.5" font-size="11.5" fill="#555555" text-anchor="middle">use types.{handling-event, handling-event-type,</text>
+<text x="590.0" y="252.5" font-size="11.5" fill="#555555" text-anchor="middle">location, transport-status, cargo-error}</text>
+<text x="590.0" y="267.5" font-size="11.5" fill="#555555" text-anchor="middle">resource cargo-tracker</text>
+<text x="590.0" y="282.5" font-size="11.5" fill="#555555" text-anchor="middle">register-handling-event</text>
+<text x="590.0" y="297.5" font-size="11.5" fill="#555555" text-anchor="middle">list-handling-events</text>
+<path d="M340,125 L260,190" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="306.0" y="151.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">use types.{...}</text>
+<text x="306.0" y="151.5" font-size="11" fill="#555" text-anchor="middle">use types.{...}</text>
+<path d="M480,125 L570,190" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="531.0" y="151.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">use types.{...}</text>
+<text x="531.0" y="151.5" font-size="11" fill="#555" text-anchor="middle">use types.{...}</text>
+<text x="410" y="370" font-size="12" fill="#555555" text-anchor="middle">One package, patterncatalyst:cargo@0.1.0: types carries no functions, booking and handling add behavior over it.</text>
+</svg>
