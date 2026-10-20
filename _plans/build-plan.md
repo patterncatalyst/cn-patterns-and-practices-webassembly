@@ -110,18 +110,38 @@ The native Rust `wasmtime` host that drives both components to
 byte-identical output (DRQ-023) doubles as the seed for Ch8's
 polyglot/compose chapter.
 
-## r03b — remaining Part 2 split
+## r03b — Part 2 completion: composition, debugging, errors
 
 Ch8 (composing and polyglot components), Ch9 (debugging), and Ch10 (error
-handling), all written against the same two components built in r03a rather
-than new ones.
+handling), all written against an extended version of the r03a example tree
+rather than new ones: the Rust and Go **provider** components from r03a gain
+two new **consumer** components (Rust and Go, both `wasi:cli/run` COMMAND
+components, DRQ-028) plus a 4-way `wac plug` composition across every
+{Rust, Go} consumer × {Rust, Go} provider pairing (DRQ-027, DRQ-030), and the
+error/trap test paths that back Ch10's taxonomy (DRQ-034). The CI drift gate
+in `contracts.yml` (DRQ-024) is extended to install `wac` and regenerate the
+consumer-side bindings alongside the existing provider bindings check.
 
-## Deferred to later iterations (r03b+)
+The headline build finding is the command-adapter/Go-heap `cabi_realloc`
+early-init trap (DRQ-032): the COMMAND adapter calls `cabi_realloc` during
+`_start`, before TinyGo's heap is ready, so the Go consumer needs a static
+bump-arena allocator rather than the heap-backed one providers use. Related
+findings recorded for Ch8–Ch10: `wac` composes across WASI 0.2.x minor-version
+skew without a workaround (DRQ-033); composed-artifact bytes are
+non-deterministic upstream (wac#216), so equivalence is asserted on runtime
+output, never on bytes (DRQ-031); and TinyGo's one-shot `-target=wasip2`
+remains unusable for the consumer for the same adapter-pinning reason Ch7
+found for the provider (DRQ-035).
 
-- Ch8–Ch10 chapter prose and Part 3–Part 7 chapter prose (Ch11–Ch28), to the
-  house depth standard: paired SVG+Excalidraw diagrams, the house chapter
-  spine (Learning objectives + Why this matters at the top, For deeper
-  coverage at the end).
+**Part 2 (Building Components, Ch6–Ch10) is now COMPLETE.** Combined with
+Ch0 Setup, which shipped in r03a, every chapter in Parts 0–2 has prose, a
+runnable example, and a passing CI gate.
+
+## Deferred to later iterations (r04+)
+
+- Part 3–Part 7 chapter prose (Ch11–Ch28), to the house depth standard:
+  paired SVG+Excalidraw diagrams, the house chapter spine (Learning
+  objectives + Why this matters at the top, For deeper coverage at the end).
 - Runnable examples for Part 3 onward, each with its own verify step,
   following the Part 2 pattern of one shared WIT world built in both Rust
   and Go.
@@ -143,8 +163,10 @@ Roadmap sketch:
 - **r03a** — Ch0 Setup + Ch6–Ch7 (Rust, Go) + the first runnable examples +
   the full WIT-drift gate (regenerate both bindings, fail on drift).
 - **r03b** — Ch8–Ch10 (composing/polyglot, debugging, error handling), on
-  the same two components built in r03a.
-- **r04** — Part 3 Interfaces: HTTP & gRPC.
+  the r03a components extended with two consumer components and a 4-way wac
+  composition. **Part 2 (Ch6–Ch10) is now COMPLETE** (this iteration).
+- **r04** — Part 3 Interfaces: HTTP & gRPC — Ch11 HTTP from a component,
+  Ch12 gRPC with Wasm, Ch13 networking/reconnect/resilience. **Next up.**
 - **r05** — Part 4 Runtimes: wasmtime & wasmCloud.
 - **r06+** — Part 5 Kubernetes deployment tiers: minikube first, then CRC,
   both verified live headless; HPA, then KEDA scale-to-zero.

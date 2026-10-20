@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="300" y="20" width="280" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="440.0" y="53.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">provider: rust/</text>
+<text x="440.0" y="70.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-component — exports cargo/*</text>
+<rect x="620" y="20" width="280" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="760.0" y="53.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">provider: go/</text>
+<text x="760.0" y="70.0" font-size="11.5" fill="#555555" text-anchor="middle">TinyGo + wasm-tools — exports cargo/*</text>
+<rect x="20" y="140" width="240" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="140.0" y="173.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">consumer: consumer-rust/</text>
+<text x="140.0" y="190.0" font-size="11.5" fill="#555555" text-anchor="middle">imports cargo/*, exports wasi:cli/run</text>
+<rect x="20" y="280" width="240" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="140.0" y="313.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">consumer: consumer-go/</text>
+<text x="140.0" y="330.0" font-size="11.5" fill="#555555" text-anchor="middle">imports cargo/*, exports wasi:cli/run</text>
+<rect x="300" y="140" width="280" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="440.0" y="173.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">rustC x rustP</text>
+<text x="440.0" y="190.0" font-size="11.5" fill="#555555" text-anchor="middle">wac plug --plug rustP rustC</text>
+<rect x="620" y="140" width="280" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="760.0" y="173.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">rustC x goP</text>
+<text x="760.0" y="190.0" font-size="11.5" fill="#555555" text-anchor="middle">wac plug --plug goP rustC</text>
+<rect x="300" y="280" width="280" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="440.0" y="313.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">goC x rustP</text>
+<text x="440.0" y="330.0" font-size="11.5" fill="#555555" text-anchor="middle">wac plug --plug rustP goC</text>
+<rect x="620" y="280" width="280" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="760.0" y="313.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">goC x goP</text>
+<text x="760.0" y="330.0" font-size="11.5" fill="#555555" text-anchor="middle">wac plug --plug goP goC</text>
+<rect x="160" y="420" width="720" height="110" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="520.0" y="465.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmtime run composed-&lt;name&gt;.wasm</text>
+<text x="520.0" y="482.5" font-size="11.5" fill="#555555" text-anchor="middle">identical normalized summary, all four combos</text>
+<text x="520.0" y="497.5" font-size="11.5" fill="#555555" text-anchor="middle">booking=...|cargo=...|weight=1200.5|...|events=3|tracker=... in-transit 3|history=...</text>
+<path d="M440,90 L440,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M760,90 L760,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M440,90 L440,280" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M760,90 L760,280" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M260,175 L300,175" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M260,315 L300,315" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M440,210 L440,420" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M760,210 L700,420" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M440,350 L440,420" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M760,350 L700,420" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="520" y="548" font-size="12" fill="#555555" text-anchor="middle">Match-by-WIT-identifier, not by source language: the two cross-language cells compose and run exactly like the two same-language cells.</text>
+</svg>

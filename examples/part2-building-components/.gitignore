@@ -4,3 +4,10 @@ host/target/
 go/core.wasm
 go/embedded.wasm
 go/cargo-go.wasm
+consumer-rust/target/
+consumer-go/core.wasm
+consumer-go/embedded.wasm
+consumer-go/cargo-consumer-go.wasm
+# Composed components are non-deterministic (wac#216) and written to a temp dir
+# by verify.sh, never committed.
+composed*.wasm

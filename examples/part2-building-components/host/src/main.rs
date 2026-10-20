@@ -21,8 +21,13 @@ wasmtime::component::bindgen!({
 });
 
 use exports::patterncatalyst::cargo::types::{
-    HandlingEventType, Location, RouteSpec, RoutingStatus, TransportStatus,
+    CargoError, HandlingEventType, Location, RouteSpec, RoutingStatus, TransportStatus,
 };
+
+// Documented sentinel tracking id that makes the component's `get-cargo` panic,
+// so the host can demonstrate a wasm TRAP distinct from a recoverable domain
+// error. Kept in lockstep with rust/src/lib.rs and go/main.go.
+const TRAP_SENTINEL: &str = "__TRAP__";
 
 // wasmtime 50 returns its own `wasmtime::Error` (no longer `anyhow::Error`), so
 // anyhow's `.context()` does not apply to its results. This extension bridges a
@@ -356,5 +361,43 @@ fn main() -> Result<()> {
 
     eprintln!("[{label}] all assertions passed");
     println!("{}", serde_json::to_string_pretty(&summary)?);
+
+    // --- error taxonomy: recoverable domain error vs. unrecoverable trap -------
+    // These run AFTER the normalized summary is printed, and only write to stderr,
+    // so the stdout the cross-language diff compares is unchanged. The trap call
+    // is LAST because a trap poisons the component instance in this Store.
+
+    // Recoverable: get-cargo on an unknown id returns Ok(Err(not-found)) — the
+    // CALL succeeds, the domain result is an error. No trap.
+    let missing = booking_api
+        .call_get_cargo(&mut store, "NO-SUCH-CARGO")
+        .wc("call get-cargo (unknown id)")?;
+    match missing {
+        Ok(c) => bail!(
+            "ASSERT FAIL [recoverable]: expected cargo-error::not-found for an unknown id, got Ok({:?})",
+            c.tracking_id
+        ),
+        Err(CargoError::NotFound(msg)) => {
+            eprintln!("[{label}] recoverable: get-cargo(\"NO-SUCH-CARGO\") -> Ok(Err(cargo-error::not-found: {msg:?})) — domain error, instance still alive");
+        }
+        Err(other) => bail!(
+            "ASSERT FAIL [recoverable]: expected cargo-error::not-found, got {other:?}"
+        ),
+    }
+
+    // Unrecoverable: the sentinel id makes get-cargo panic inside the component,
+    // which surfaces as an Err from the wasmtime CALL itself (a trap) — NOT an
+    // Ok(Err(..)) domain result. Distinguishing these is the whole point.
+    let trapped = booking_api.call_get_cargo(&mut store, TRAP_SENTINEL);
+    match trapped {
+        Err(e) => {
+            eprintln!("[{label}] trap: get-cargo(\"{TRAP_SENTINEL}\") -> wasmtime call returned Err (a trap): {e}");
+        }
+        Ok(domain) => bail!(
+            "ASSERT FAIL [trap]: expected a wasm trap for the sentinel id, but the call returned a value: {domain:?}"
+        ),
+    }
+
+    eprintln!("[{label}] error-taxonomy assertions passed (recoverable not-found + trap distinguished)");
     Ok(())
 }
