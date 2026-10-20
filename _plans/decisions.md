@@ -235,3 +235,92 @@ wasip1-plus-reactor-adapter path is used instead.
 target triple, not `wasm32-wasip2` — the tool adapts a wasip1 core module
 into a component internally. Recorded here so Ch6 doesn't present the
 `wasm32-wasip2` rustup target as the whole build story.
+
+## DRQ-027 — Composition tool: wac 0.12.0
+
+**wac** (0.12.0, the prebuilt `wac-cli` release binary) is the composition
+tool for Ch8, driven as `wac plug --plug <provider> <consumer-socket> -o
+composed.wasm` to wire a provider component's export into a consumer
+component's matching import. `wac compose` against a `.wac` script is noted
+as the escape hatch for a composition graph with more than two components,
+but is not exercised in r03b.
+
+## DRQ-028 — Consumer components are COMMAND components
+
+Both consumer components (Rust and Go) are `wasi:cli/run` **command**
+components, not reactors, so the composed artifact runs directly under
+`wasmtime run` with no native host required to exercise a composition. The
+native Rust `wasmtime` host from Ch6/Ch7 (DRQ-023) is retained alongside the
+command consumers — Ch9/Ch10 need it to drive the error and trap taxonomy
+test cases directly.
+
+## DRQ-029 — Consumer WIT homes: Rust gets a local world, Go reuses the existing one
+
+The Rust consumer defines a **local** `world cargo-cli` (imports the three
+provider interfaces, exports `wasi:cli/run`) with the pristine `contracts/wit`
+pulled in as a `cargo-component` path dependency. The Go consumer reuses the
+contract's existing `world cargo-consumer` as-is. `contracts/wit` stays
+**pristine** — the fallback considered going into r03b, adding a
+`cargo-cli`-shaped world directly to the contract package, turned out not to
+be needed.
+
+## DRQ-030 — Polyglot scope: all four consumer×provider pairs, asserted on runtime output
+
+The composition scope for Ch8 is all **four** pairings of {Rust, Go}
+consumer × {Rust, Go} provider, each composed with `wac plug` and run to
+completion. Equivalence between pairings is asserted on **runtime output**,
+not on the composed artifact's bytes (see DRQ-031).
+
+## DRQ-031 — wac upstream issue #216: composed bytes are non-deterministic
+
+Two `wac plug` invocations over the same inputs do not produce byte-identical
+`composed.wasm` output (tracked upstream as wac#216). `verify.sh` and Ch8's
+teaching material assert the four compositions' **runtime output**, never
+the composed artifact's bytes — a lesson that generalizes to any Component
+Model tool chain that touches section ordering or custom-section metadata
+during composition.
+
+## DRQ-032 — Command-adapter + Go-heap `cabi_realloc` early-init trap
+
+The key r03b build finding: the wasip1→COMMAND adapter calls the module's
+`cabi_realloc` from inside `_start`, before the TinyGo runtime and its
+garbage collector have finished initializing. A heap-backed `cabi_realloc` —
+fine in a reactor, where `_initialize` completes first — aborts when called
+this early from a command component. The fix is a **static bump-arena**
+`cabi_realloc` in the Go consumer (`consumer-go/cabi_realloc.go`) that
+doesn't touch the TinyGo heap. Providers keep the heap-backed `cabi_realloc`
+from Ch7, since `_initialize` always completes before a provider's exports
+are called.
+
+## DRQ-033 — WASI minor-version skew composes fine
+
+The Rust provider pins WASI **0.2.3** and the Go provider pins WASI
+**0.2.12** (DRQ-013's matrix entries); `wac` leaves both as unresolved
+imports on the composed component, and wasmtime v50 satisfies either at
+instantiation time through semver-compatible component linking. No
+chapter-level workaround is needed for the skew — it's recorded here so Ch8
+can call it out as expected behavior rather than a bug to route around.
+
+## DRQ-034 — Error/trap taxonomy: recoverable result vs. a poisoning trap
+
+Ch10's error taxonomy distinguishes two failure shapes: a **recoverable**
+`result<_, cargo-error>` returned from a component call, which the native
+host sees as `Ok(Err(..))` and can continue past; and a **trap** raised by a
+Rust `panic!` or a Go `panic()` inside the component, which the host sees as
+a wasmtime `Err` and which **poisons the Store** — no further calls succeed
+against that instance. Because the trap poisons the Store, the sentinel trap
+test case runs **last** in the test sequence, after every recoverable-error
+case. A shared sentinel tracking ID, `__TRAP__`, is added in lockstep to both
+the Rust and Go components so the host-side test harness can recognize which
+call is expected to trap.
+
+## DRQ-035 — TinyGo one-shot `-target=wasip2` is unusable; explicit wasip1+adapt stays the path
+
+A single-step `tinygo build -target=wasip2` fails for the command consumer
+the same way DRQ-025 found for the provider: the wasip2 target's bundled
+adapter is pinned to WASI 0.2.0, older than the WIT world's imports. The
+working path stays the explicit two-step one from DRQ-025 — build for
+wasip1, embed the WIT world, then `wasm-tools component new
+--adapt=command.wasm` using the wasmtime v50 COMMAND adapter recorded in the
+version matrix — substituting the command adapter for the reactor adapter
+since the consumer exports `wasi:cli/run`, not a reactor interface.

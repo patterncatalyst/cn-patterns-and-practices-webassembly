@@ -7,21 +7,27 @@
 #      runs first so a broken contract fails before the heavier job starts.
 #
 #   2. examples — the full drift + examples gate deferred from r02, now that
-#      examples/part2-building-components/ (Rust + Go components, native
-#      host, verify.sh) exists to build and diff. Installs the full pinned
-#      toolchain, runs verify.sh (which already builds both components,
-#      regenerating their bindings from contracts/wit as a side effect of
-#      the build — cargo-component updates src/bindings.rs as part of
-#      `cargo component build`, and go/build.sh's own first step is
+#      examples/part2-building-components/ (Rust + Go provider components,
+#      Rust + Go consumer components, native host, wac compositions,
+#      verify.sh) exists to build and diff. Installs the full pinned
+#      toolchain (including wac, for composing provider + consumer), runs
+#      verify.sh (which already builds both provider components and both
+#      consumer components, regenerating all four sets of bindings from
+#      contracts/wit as a side effect of the build — cargo-component
+#      updates src/bindings.rs as part of `cargo component build` for both
+#      Rust crates, and each Go build's own first step is
 #      `wit-bindgen-go generate`), runs the native host against both
-#      components, asserts the two independently-built components agree
-#      byte-for-byte, and checks each component's exported WIT against
-#      contracts/wit. The drift check then piggybacks on that same
-#      regeneration: if it produced any diff against the committed
-#      Rust/Go bindings, the committed bindings were stale and the job
-#      fails. Folded into one job (not a separate bindings-drift job) so
-#      the slow from-source cargo-component build and the rest of the
-#      toolchain install only happen once per run.
+#      providers, asserts the two independently-built providers agree
+#      byte-for-byte, checks each component's exported WIT against
+#      contracts/wit, composes all four provider x consumer combinations
+#      with `wac plug`, and runs the recoverable-error + trap assertions
+#      against the composed components. The drift check then piggybacks on
+#      that same regeneration: if it produced any diff against the
+#      committed Rust/Go bindings (providers AND consumers), the committed
+#      bindings were stale and the job fails. Folded into one job (not a
+#      separate bindings-drift job) so the slow from-source cargo-component
+#      build and the rest of the toolchain install only happen once per
+#      run.
 #
 # Don't duplicate pages.yml's Jekyll build/deploy logic here, and don't
 # duplicate this validation step in pages.yml (see pages.yml's own note on
@@ -66,7 +72,7 @@ jobs:
     name: Build + run the examples, check generated bindings for drift
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       RUST_VERSION: "1.99.1"
       CARGO_COMPONENT_VERSION: "0.21.1"
@@ -78,6 +84,8 @@ jobs:
       WASM_TOOLS_SHA256: "655b8df67d54c3ef9b52fc237c4e94bbfbb5f5f43825245cb0940a7002a9ed65"
       WASMTIME_VERSION: "50.0.0"
       WASMTIME_SHA256: "77c19ee0437991f9ac7837b9c269d9c7076744f85dad263fea5214cc2723c7ff"
+      WAC_VERSION: "0.12.0"
+      WAC_SHA256: "7cd490edbd452221ef89e6750fc43eacc9b71b1242095eb577cb9a3bf0d3beda"
       EXAMPLE_DIR: "examples/part2-building-components"
     steps:
       - uses: actions/checkout@v5
@@ -164,6 +172,20 @@ jobs:
           sudo install -m 0755 "/tmp/wasmtime-v${WASMTIME_VERSION}-x86_64-linux/wasmtime" /usr/local/bin/wasmtime
           wasmtime --version
 
+      # wac composes the provider + consumer components (wac plug) for the
+      # recoverable-error + trap assertions. Prebuilt musl binary, not
+      # `cargo install` — avoids another from-source build in an already
+      # cargo-component-heavy job.
+      - name: Install wac ${{ env.WAC_VERSION }} (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          bin="wac-cli-x86_64-unknown-linux-musl"
+          curl -fsSL -o "/tmp/${bin}" \
+            "https://github.com/bytecodealliance/wac/releases/download/v${WAC_VERSION}/${bin}"
+          echo "${WAC_SHA256}  /tmp/${bin}" | sha256sum -c -
+          sudo install -m 0755 "/tmp/${bin}" /usr/local/bin/wac
+          wac --version
+
       # verify.sh exports PATH itself (~/.cargo/bin, ~/.local/bin, ~/go/bin,
       # ~/.local/tinygo/bin) — matches exactly where each install step above
       # placed its binary, so no further PATH wiring is needed here. It
@@ -177,21 +199,25 @@ jobs:
       - name: Build + run the examples (verify.sh)
         run: ${{ env.EXAMPLE_DIR }}/verify.sh
 
-      # Drift gate: verify.sh (above) already regenerated BOTH sets of
+      # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
-      # building. If that regeneration produced any diff — modified lines OR
-      # new/removed generated files — the committed bindings are stale
-      # relative to the contract and the build fails here.
+      # building — the two providers (Rust + Go) AND the two consumers
+      # (Rust + Go) it now also builds before composing. If that
+      # regeneration produced any diff — modified lines OR new/removed
+      # generated files — the committed bindings are stale relative to the
+      # contract and the build fails here.
       - name: Check committed generated bindings are not stale (drift gate)
         run: |
           set -euo pipefail
           GO_BINDINGS="${EXAMPLE_DIR}/go/internal/cargo"
           RUST_BINDINGS="${EXAMPLE_DIR}/rust/src/bindings.rs"
-          CHANGED="$(git status --porcelain -- "$GO_BINDINGS" "$RUST_BINDINGS")"
+          CONSUMER_GO_BINDINGS="${EXAMPLE_DIR}/consumer-go/internal"
+          CONSUMER_RUST_BINDINGS="${EXAMPLE_DIR}/consumer-rust/src/bindings.rs"
+          CHANGED="$(git status --porcelain -- "$GO_BINDINGS" "$RUST_BINDINGS" "$CONSUMER_GO_BINDINGS" "$CONSUMER_RUST_BINDINGS")"
           if [[ -n "$CHANGED" ]]; then
             echo "::error::Committed generated bindings are stale relative to contracts/wit:"
             echo "$CHANGED"
-            git --no-pager diff -- "$GO_BINDINGS" "$RUST_BINDINGS" || true
+            git --no-pager diff -- "$GO_BINDINGS" "$RUST_BINDINGS" "$CONSUMER_GO_BINDINGS" "$CONSUMER_RUST_BINDINGS" || true
             exit 1
           fi
-          echo "ok — committed bindings (${GO_BINDINGS}, ${RUST_BINDINGS}) match a fresh regeneration from contracts/wit"
+          echo "ok — committed bindings (${GO_BINDINGS}, ${RUST_BINDINGS}, ${CONSUMER_GO_BINDINGS}, ${CONSUMER_RUST_BINDINGS}) match a fresh regeneration from contracts/wit"

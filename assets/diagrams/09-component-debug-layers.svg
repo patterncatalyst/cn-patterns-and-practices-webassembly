@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="1140" height="110" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Component boundary — canon lift / canon lower glue, no debug info of its own</text>
+<rect x="20" y="142" width="1140" height="220" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="162" font-size="12" font-weight="700" fill="#1d1d1d">Inside: the core module(s) wasm-tools objdump actually reports</text>
+<rect x="20" y="378" width="1140" height="180" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="32" y="398" font-size="12" font-weight="700" fill="#1d1d1d">What a wasmtime trap backtrace can resolve today, same sentinel panic on both sides</text>
+<rect x="300" y="56" width="580" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="590.0" y="82.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">patterncatalyst:cargo (component)</text>
+<text x="590.0" y="99.0" font-size="11.5" fill="#555555" text-anchor="middle">canon lift / canon lower — type-erased core calls become typed WIT calls</text>
+<rect x="60" y="184" width="420" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="214.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Core module 0 — Rust, cargo-component --release</text>
+<text x="270.0" y="231.5" font-size="11.5" fill="#555555" text-anchor="middle">custom &quot;name&quot; section only</text>
+<text x="270.0" y="246.5" font-size="11.5" fill="#555555" text-anchor="middle">no .debug_info / .debug_line (no profile.release.debug=true)</text>
+<rect x="700" y="184" width="420" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="910.0" y="214.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Core module 0 — Go, TinyGo -target=wasip1</text>
+<text x="910.0" y="231.5" font-size="11.5" fill="#555555" text-anchor="middle">custom &quot;name&quot; + full DWARF</text>
+<text x="910.0" y="246.5" font-size="11.5" fill="#555555" text-anchor="middle">.debug_info/.debug_line/.debug_str embedded by default</text>
+<rect x="380" y="288" width="420" height="56" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="590.0" y="314.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasi_snapshot_preview1 adapter (vendored .wasm)</text>
+<text x="590.0" y="331.0" font-size="11.5" fill="#555555" text-anchor="middle">named functions only — no DWARF either side</text>
+<rect x="60" y="418" width="420" height="110" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="270.0" y="456.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Rust __TRAP__ backtrace</text>
+<text x="270.0" y="473.0" font-size="11.5" fill="#555555" text-anchor="middle">demangled crate/fn names, 12 frames</text>
+<text x="270.0" y="488.0" font-size="11.5" fill="#555555" text-anchor="middle">ends at ...booking@0.1.0#get-cargo</text>
+<text x="270.0" y="503.0" font-size="11.5" fill="#555555" text-anchor="middle">file:line — NOT shown (no DWARF to read)</text>
+<rect x="700" y="418" width="420" height="110" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="910.0" y="456.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Go __TRAP__ backtrace</text>
+<text x="910.0" y="473.0" font-size="11.5" fill="#555555" text-anchor="middle">demangled fn names AND file:line</text>
+<text x="910.0" y="488.0" font-size="11.5" fill="#555555" text-anchor="middle">e.g. go/main.go:166:9</text>
+<text x="910.0" y="503.0" font-size="11.5" fill="#555555" text-anchor="middle">plus adapter fd_write assert noise on the way out</text>
+<path d="M500,112 L270,184" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="391.0" y="142.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wraps</text>
+<text x="391.0" y="142.0" font-size="11" fill="#555" text-anchor="middle">wraps</text>
+<path d="M680,112 L910,184" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="801.0" y="142.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wraps</text>
+<text x="801.0" y="142.0" font-size="11" fill="#555" text-anchor="middle">wraps</text>
+<path d="M270,264 L270,418" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="276.0" y="335.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">symbolizer reads</text>
+<text x="276.0" y="335.0" font-size="11" fill="#555" text-anchor="middle">symbolizer reads</text>
+<path d="M910,264 L910,418" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="916.0" y="335.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">symbolizer reads</text>
+<text x="916.0" y="335.0" font-size="11" fill="#555" text-anchor="middle">symbolizer reads</text>
+<text x="590" y="580" font-size="12" fill="#555555" text-anchor="middle">Interactive breakpoint stepping across this same boundary (wasmtime run -g/--gdbstub &lt;PORT&gt;, an LLDB gdbstub) attaches at the native/core level — there is no WIT-aware, per-interface source view yet.</text>
+</svg>
