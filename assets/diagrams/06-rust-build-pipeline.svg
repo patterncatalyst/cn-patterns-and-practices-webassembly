@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="1040" height="150" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">cargo component build --release, driven by Cargo.toml&#x27;s [package.metadata.component.target]</text>
+<rect x="20" y="188" width="1040" height="150" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="208" font-size="12" font-weight="700" fill="#1d1d1d">the crate&#x27;s own source, written once the bindings exist</text>
+<rect x="20" y="360" width="1040" height="130" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="32" y="380" font-size="12" font-weight="700" fill="#1d1d1d">build output: one core module, adapted internally into one component</text>
+<rect x="50" y="56" width="260" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="180.0" y="91.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">contracts/wit/</text>
+<text x="180.0" y="108.5" font-size="11.5" fill="#555555" text-anchor="middle">package patterncatalyst:cargo@0.1.0</text>
+<text x="180.0" y="123.5" font-size="11.5" fill="#555555" text-anchor="middle">world cargo</text>
+<rect x="400" y="56" width="280" height="90" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="540.0" y="99.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-component 0.21.1</text>
+<text x="540.0" y="116.0" font-size="11.5" fill="#555555" text-anchor="middle">reads target.path + target.world</text>
+<rect x="780" y="56" width="260" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="910.0" y="91.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">bindings.rs (generated)</text>
+<text x="910.0" y="108.5" font-size="11.5" fill="#555555" text-anchor="middle">Guest trait per interface,</text>
+<text x="910.0" y="123.5" font-size="11.5" fill="#555555" text-anchor="middle">GuestCargoTracker for the resource</text>
+<rect x="50" y="228" width="440" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="263.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">src/lib.rs</text>
+<text x="270.0" y="280.5" font-size="11.5" fill="#555555" text-anchor="middle">impl BookingGuest, impl HandlingGuest,</text>
+<text x="270.0" y="295.5" font-size="11.5" fill="#555555" text-anchor="middle">impl GuestCargoTracker for Tracker</text>
+<rect x="560" y="228" width="480" height="90" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="800.0" y="263.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Result&lt;Booking, CargoError&gt;</text>
+<text x="800.0" y="280.5" font-size="11.5" fill="#555555" text-anchor="middle">lowered to WIT result&lt;booking, cargo-error&gt;</text>
+<text x="800.0" y="295.5" font-size="11.5" fill="#555555" text-anchor="middle">by generated code, not hand-written</text>
+<rect x="50" y="398" width="320" height="68" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="210.0" y="430.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasm32-wasip1 core module</text>
+<text x="210.0" y="447.0" font-size="11.5" fill="#555555" text-anchor="middle">(cargo-component&#x27;s internal build target)</text>
+<rect x="430" y="398" width="60" height="68" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="460.0" y="437.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">adapt</text>
+<rect x="540" y="398" width="500" height="68" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="790.0" y="430.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">target/wasm32-wasip1/release/cargo_rust.wasm</text>
+<text x="790.0" y="447.0" font-size="11.5" fill="#555555" text-anchor="middle">exports world cargo</text>
+<path d="M310,101 L400,101" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="361.0" y="95.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">path, world</text>
+<text x="361.0" y="95.0" font-size="11" fill="#555" text-anchor="middle">path, world</text>
+<path d="M680,101 L780,101" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="736.0" y="95.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">generates</text>
+<text x="736.0" y="95.0" font-size="11" fill="#555" text-anchor="middle">generates</text>
+<path d="M910,146 L500,228" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="711.0" y="181.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">bindings module, use bindings::exports::...</text>
+<text x="711.0" y="181.0" font-size="11" fill="#555" text-anchor="middle">bindings module, use bindings::exports::...</text>
+<path d="M490,273 L560,273" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="531.0" y="267.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">return type</text>
+<text x="531.0" y="267.0" font-size="11" fill="#555" text-anchor="middle">return type</text>
+<path d="M270,318 L270,398" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="276.0" y="352.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">cargo component build --release</text>
+<text x="276.0" y="352.0" font-size="11" fill="#555" text-anchor="middle">cargo component build --release</text>
+<path d="M370,432 L430,432" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M490,432 L540,432" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="521.0" y="426.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">internal, one step</text>
+<text x="521.0" y="426.0" font-size="11" fill="#555" text-anchor="middle">internal, one step</text>
+<text x="540" y="505" font-size="12" fill="#555555" text-anchor="middle">The artifact lands under wasm32-wasip1/, not wasm32-wasip2/ — cargo-component adapts a wasip1 core module into the component internally.</text>
+</svg>

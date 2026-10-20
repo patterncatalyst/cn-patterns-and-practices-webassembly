@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="1140" height="180" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Generation — standard Go, nothing TinyGo-specific yet</text>
+<rect x="20" y="216" width="1140" height="120" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="32" y="236" font-size="12" font-weight="700" fill="#1d1d1d">Compilation — the one step that must be TinyGo</text>
+<rect x="20" y="356" width="1140" height="148" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="376" font-size="12" font-weight="700" fill="#1d1d1d">Componentization — wasm-tools, same for any language</text>
+<rect x="50" y="62" width="210" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="155.0" y="105.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">contracts/wit/</text>
+<text x="155.0" y="122.0" font-size="11.5" fill="#555555" text-anchor="middle">patterncatalyst:cargo@0.1.0</text>
+<rect x="320" y="62" width="260" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="450.0" y="105.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wit-bindgen-go generate</text>
+<text x="450.0" y="122.0" font-size="11.5" fill="#555555" text-anchor="middle">-o internal/cargo --world cargo</text>
+<rect x="640" y="56" width="240" height="100" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="760.0" y="96.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">internal/cargo/**</text>
+<text x="760.0" y="113.5" font-size="11.5" fill="#555555" text-anchor="middle">Exports struct vars, cm types</text>
+<text x="760.0" y="128.5" font-size="11.5" fill="#555555" text-anchor="middle">(generated, DO NOT EDIT)</text>
+<rect x="930" y="56" width="200" height="100" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="1030.0" y="104.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">main.go + cabi_realloc.go</text>
+<text x="1030.0" y="121.0" font-size="11.5" fill="#555555" text-anchor="middle">hand-written, ordinary Go</text>
+<rect x="350" y="252" width="280" height="62" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="490.0" y="281.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">tinygo build -target=wasip1</text>
+<text x="490.0" y="298.0" font-size="11.5" fill="#555555" text-anchor="middle">-buildmode=c-shared -o core.wasm .</text>
+<rect x="720" y="252" width="220" height="62" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="830.0" y="281.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">core.wasm</text>
+<text x="830.0" y="298.0" font-size="11.5" fill="#555555" text-anchor="middle">wasip1 reactor core module</text>
+<rect x="50" y="400" width="320" height="76" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="210.0" y="436.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasm-tools component embed</text>
+<text x="210.0" y="453.0" font-size="11.5" fill="#555555" text-anchor="middle">contracts/wit --world cargo core.wasm</text>
+<rect x="430" y="400" width="340" height="76" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="600.0" y="428.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasm-tools component new</text>
+<text x="600.0" y="445.5" font-size="11.5" fill="#555555" text-anchor="middle">--adapt wasi_snapshot_preview1=</text>
+<text x="600.0" y="460.5" font-size="11.5" fill="#555555" text-anchor="middle">adapters/...reactor.wasm</text>
+<rect x="850" y="400" width="270" height="76" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="985.0" y="436.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-go.wasm</text>
+<text x="985.0" y="453.0" font-size="11.5" fill="#555555" text-anchor="middle">exports world cargo</text>
+<path d="M260,107 L320,107" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M580,107 L640,107" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="616.0" y="101.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">generates</text>
+<text x="616.0" y="101.0" font-size="11" fill="#555" text-anchor="middle">generates</text>
+<path d="M880,107 L930,107" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="911.0" y="101.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">imports</text>
+<text x="911.0" y="101.0" font-size="11" fill="#555" text-anchor="middle">imports</text>
+<path d="M1030,156 L490,252" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="766.0" y="198.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">compiled by</text>
+<text x="766.0" y="198.0" font-size="11" fill="#555" text-anchor="middle">compiled by</text>
+<path d="M630,283 L720,283" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M830,314 L210,400" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="526.0" y="351.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">input to embed</text>
+<text x="526.0" y="351.0" font-size="11" fill="#555" text-anchor="middle">input to embed</text>
+<path d="M370,438 L430,438" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="406.0" y="432.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">embedded.wasm</text>
+<text x="406.0" y="432.0" font-size="11" fill="#555" text-anchor="middle">embedded.wasm</text>
+<path d="M770,438 L850,438" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="816.0" y="432.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">adapt + wrap</text>
+<text x="816.0" y="432.0" font-size="11" fill="#555" text-anchor="middle">adapt + wrap</text>
+<text x="590" y="500" font-size="12" fill="#555555" text-anchor="middle">The source and the generated bindings are standard, idiomatic Go throughout; only the compiler in the middle band differs from `go build`.</text>
+</svg>

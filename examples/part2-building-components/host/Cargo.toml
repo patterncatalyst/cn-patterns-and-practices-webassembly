@@ -1,0 +1,21 @@
+[package]
+name = "cargo-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# A native host that loads a `cargo`-world component (Rust's or Go's), calls
+# its exported booking + handling interfaces across the component boundary, and
+# asserts the domain results against a shared fixture. The SAME binary runs
+# against both components, which is what makes the polyglot-equivalence check
+# possible.
+[dependencies]
+wasmtime = "50"
+wasmtime-wasi = "50"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[[bin]]
+name = "cargo-host"
+path = "src/main.rs"
