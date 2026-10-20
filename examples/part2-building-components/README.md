@@ -221,7 +221,7 @@ host (`host/src/main.rs`) demonstrates both against BOTH providers:
   `get-cargo` panic. The wasmtime CALL itself returns `Err` (a trap) and the
   instance is poisoned. The host asserts this is a trap, NOT an `Ok(Err(..))`.
   The sentinel is kept in LOCKSTEP across `rust/src/lib.rs` and `go/main.go` and
-  is deliberately absent from the main scenario, so the byte-identical
+  is kept out of the main scenario, so the byte-identical
   cross-language summary is unaffected. Because a trap poisons the instance, the
   host runs the trap call LAST.
 
