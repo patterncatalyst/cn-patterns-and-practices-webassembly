@@ -12,7 +12,8 @@ render_with_liquid: false
 > memory. The Kubernetes deployment tier and wasi-nn rows carry a
 > current-stable snapshot taken on the same date for reference, but stay
 > marked TBD-at-kickoff: each gets its own live, dated re-survey and gets
-> pinned for real when the chapter or example that depends on it is written.
+> pinned as a firm version when the chapter or example that depends on it is
+> written.
 
 The Wasm toolchain and WASI/Component Model rows are the r02 pins. The
 Kubernetes deployment tier and wasi-nn rows are not pins yet — they are a
@@ -23,19 +24,25 @@ snapshot to plan against, re-verified live when their chapter lands.
 | **Authoring box (confirmed, installed)** | |
 | Rust | 1.99.1 — installed and confirmed on the authoring box |
 | cargo | 1.99.1 — ships with the Rust toolchain above |
-| Go | 1.26.9 — installed and confirmed on the authoring box; primary Go path (DRQ-013) |
-| TinyGo | 0.43.0 — installed and confirmed working against Go 1.26.9 / LLVM 22.1.4; optional sidebar path (DRQ-013) |
+| Go | 1.26.9 — installed and confirmed on the authoring box; source language and `wit-bindgen-go` bindings stay standard Go (DRQ-013, reversed on the compiler choice by DRQ-021) |
+| TinyGo | 0.43.0 — installed and confirmed working against Go 1.26.9 / LLVM 22.1.4; **the compiler** that produces Component Model exports, not a sidebar (DRQ-021 reverses DRQ-013) |
 | Rust nightly | Not used for r02. Stable Rust 1.99.1 covers `wasm32-wasip2` and `cargo-component` without a nightly toolchain. Any future chapter that needs a nightly-only Wasm feature gets its own pinned, dated nightly (e.g. `nightly-2026-MM-DD`) at the point it's introduced — never a floating `nightly` channel. |
 | **Wasm toolchain (r02 pins, verified 2026-10-20)** | |
 | wasm-tools | **1.262.0**, released 2026-10-13. Linux x86_64 release tarball `wasm-tools-1.262.0-x86_64-linux.tar.gz`, SHA-256 `655b8df67d54c3ef9b52fc237c4e94bbfbb5f5f43825245cb0940a7002a9ed65`. This is the version the r02 contracts CI gate pins. Source: https://github.com/bytecodealliance/wasm-tools/releases/tag/v1.262.0 |
-| cargo-component | **0.21.1**, released 2025-04-07; still the latest stable tag as of 2026-10-20 (confirmed against crates.io `max_stable_version`, no newer release since). Source: https://github.com/bytecodealliance/cargo-component/releases/tag/v0.21.1 |
-| wasmtime | **v50.0.0**, released 2026-10-20. Wasmtime ships a new major monthly; v50 is the current latest. Source: https://github.com/bytecodealliance/wasmtime/releases/tag/v50.0.0 |
+| cargo-component | **0.21.1**, released 2025-04-07; still the latest stable tag as of 2026-10-20 (confirmed against crates.io `max_stable_version`, no newer release since). Installed via `cargo install --locked cargo-component`; unlike wasm-tools and wasmtime, there is no prebuilt release binary. Source: https://github.com/bytecodealliance/cargo-component/releases/tag/v0.21.1 |
+| wasmtime | **v50.0.0**, released 2026-10-20. Wasmtime ships a new major monthly; v50 is the current latest. r03 also pins the `wasmtime` and `wasmtime-wasi` **50** Rust crates for the native host that drives the examples. Source: https://github.com/bytecodealliance/wasmtime/releases/tag/v50.0.0 |
 | wash (wasmCloud CLI) | **0.43.0**, released 2026-02-04 — the latest release published as stable (confirmed on crates.io, package `wash`). A `wash` 2.0 rewrite exists as release candidates (`wash-v2.0.0-rc.8`, 2026-03-10) but had not reached stable as of this survey; treat 0.43.0 as current. Source: https://github.com/wasmCloud/wasmCloud/releases/tag/wash-v0.43.0 |
 | wasmCloud host | **v2.10.3**, released 2026-10-02 (recorded for reference; the host and the `wash` CLI version independently of each other). Source: https://github.com/wasmCloud/wasmCloud/releases/tag/v2.10.3 |
 | **WASI / Component Model status (verified 2026-10-20)** | |
 | WASI Preview 2 (0.2.x line) | Current patch is **v0.2.12**, released 2026-06-02 — stable and released. The `wasm32-wasip2` Rust target and `cargo-component` both target this line as of this survey. Source: https://github.com/WebAssembly/WASI/releases/tag/v0.2.12 |
 | WASI Preview 3 (0.3.x line) | Now also released: v0.3.0 (2026-06-11, first stable), v0.3.1 (2026-08-11), **v0.3.2** (2026-10-13, latest overall). Adds native async. Most toolchains, including the Rust/Go paths used in this site, still target 0.2 as of this survey; 0.3 is noted here as a known option for a future chapter to evaluate on its own merits. Source: https://github.com/WebAssembly/WASI/releases and https://wasi.dev/releases |
 | Component Model | Pre-1.0. Still a Phase 2/3 W3C proposal, not yet supported in browsers. A Component Model 1.0 roadmap was discussed publicly in 2026 (Wasm I/O 2026, Barcelona) but is not finalized as of this survey. Tooling (wasm-tools, wasmtime, wit-bindgen) tracks the proposal directly rather than a finished spec. Source: https://component-model.bytecodealliance.org/ and https://bytecodealliance.org/articles/the-road-to-component-model-1-0 |
+| **r03 build toolchain (confirmed/installed, 2026-10-20)** | |
+| Rust target `wasm32-wasip2` | Added via `rustup target add wasm32-wasip2` on Rust **1.99.1** stable — no nightly needed for this target. `cargo-component` 0.21.1 still compiles to `wasm32-wasip1` internally and adapts the result forward; see DRQ-026. Source: `rustup target list` |
+| TinyGo (Go component compiler) | **0.43.0** — see the Authoring box row above. DRQ-021 reverses DRQ-013: TinyGo, not standard `go build`, is the compiler for every Go component example on this site. Source: https://github.com/tinygo-org/tinygo/releases |
+| wit-bindgen-go | **v0.7.0** (`go.bytecodealliance.org/cmd/wit-bindgen-go`) — generates the Go-side WIT bindings TinyGo builds against. Source: https://github.com/bytecodealliance/go-modules/releases |
+| go.bytecodealliance.org/cm | Pinned at **v0.3.0**. The `v0.4.0+` tags were cut on the root module path and are unusable for the `/cm` import — do not take a newer tag until upstream fixes the module layout. Source: https://pkg.go.dev/go.bytecodealliance.org/cm |
+| wasip1→p2 reactor adapter | `wasi_snapshot_preview1.reactor.wasm`, shipped inside the wasmtime **v50.0.0** release artifacts, SHA-256 `73b01f85e42e99c890efbbf619cd765e04e5809da36d976b87fc64abd87f5812` — adapts TinyGo's wasip1 reactor output forward into the wasip2 Component Model world. Source: https://github.com/bytecodealliance/wasmtime/releases/tag/v50.0.0 |
 | **Kubernetes deployment tier (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
 | containerd Wasm shim (runwasi) | Snapshot: `containerd-shim-wasmtime` v0.6.1 (sibling shims wasmer/wasmedge/wamr at the same v0.6.1; `containerd-shim-wasm` v1.0.1), released 2026-06-12. Source: https://github.com/containerd/runwasi/releases — re-verify live when Part 5 minikube chapters land |
 | minikube / Kubernetes | Snapshot: minikube **v1.39.0**, released 2026-09-02. Source: https://github.com/kubernetes/minikube/releases/tag/v1.39.0 — re-verify the live combination when Part 5 minikube chapters land; docker driver + containerd runtime only, per house convention |

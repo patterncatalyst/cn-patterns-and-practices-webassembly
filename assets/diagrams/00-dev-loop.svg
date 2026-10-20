@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="1060" height="340" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">examples/part2-building-components/ — repeat this loop per language, then run verify.sh for both</text>
+<rect x="50" y="70" width="230" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="165.0" y="100.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">1. build</text>
+<text x="165.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">cargo component build --release</text>
+<text x="165.0" y="132.5" font-size="11.5" fill="#555555" text-anchor="middle">./go/build.sh (TinyGo)</text>
+<rect x="320" y="70" width="230" height="80" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="435.0" y="108.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">2. inspect</text>
+<text x="435.0" y="125.0" font-size="11.5" fill="#555555" text-anchor="middle">wasm-tools component wit &lt;file&gt;.wasm</text>
+<rect x="590" y="70" width="230" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="705.0" y="108.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">3. run</text>
+<text x="705.0" y="125.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-host &lt;wasm&gt; scenario.json &lt;lang&gt;</text>
+<rect x="860" y="70" width="190" height="80" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="955.0" y="108.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">4. verify</text>
+<text x="955.0" y="125.0" font-size="11.5" fill="#555555" text-anchor="middle">./verify.sh</text>
+<rect x="320" y="200" width="460" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="550.0" y="233.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">verify.sh diffs Rust output vs Go output</text>
+<text x="550.0" y="250.0" font-size="11.5" fill="#555555" text-anchor="middle">and checks exported interfaces against contracts/wit</text>
+<rect x="200" y="310" width="700" height="40" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="550.0" y="335.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">5. teardown — cargo clean; rm core.wasm embedded.wasm cargo-go.wasm (see .gitignore)</text>
+<path d="M280,110 L320,110" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M550,110 L590,110" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="576.0" y="104.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">exports match?</text>
+<text x="576.0" y="104.0" font-size="11" fill="#555" text-anchor="middle">exports match?</text>
+<path d="M820,110 L860,110" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M955,150 L700,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="833.5" y="169.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">runs both languages</text>
+<text x="833.5" y="169.0" font-size="11" fill="#555" text-anchor="middle">runs both languages</text>
+<path d="M550,270 L550,310" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="556.0" y="284.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">between runs</text>
+<text x="556.0" y="284.0" font-size="11" fill="#555" text-anchor="middle">between runs</text>
+<text x="550" y="420" font-size="12" fill="#555555" text-anchor="middle">check-prereqs.sh runs once, before step 1, to confirm the toolchain this loop depends on.</text>
+</svg>

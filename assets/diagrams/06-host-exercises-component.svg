@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="500" height="500" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">host/src/main.rs — native Rust, wasmtime::component</text>
+<rect x="560" y="16" width="500" height="500" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="572" y="36" font-size="12" font-weight="700" fill="#1d1d1d">cargo_rust.wasm — exports world cargo</text>
+<rect x="50" y="56" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="89.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">bindgen!({ path: contracts/wit, world: &quot;cargo&quot; })</text>
+<rect x="50" y="128" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="161.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Component::from_file + Cargo::instantiate(linker)</text>
+<rect x="50" y="200" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="233.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">booking_api.call_book_cargo(spec, weight_kg)</text>
+<rect x="50" y="272" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">call_get_cargo / call_request_possible_routes /</text>
+<text x="270.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">call_assign_route</text>
+<rect x="50" y="344" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="370.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">handling_api.call_register_handling_event x3,</text>
+<text x="270.0" y="387.0" font-size="11.5" fill="#555555" text-anchor="middle">call_list_handling_events</text>
+<rect x="50" y="416" width="440" height="80" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="270.0" y="446.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">tracker_api.call_constructor(cargo_id)</text>
+<text x="270.0" y="463.5" font-size="11.5" fill="#555555" text-anchor="middle">call_tracking_id / call_current_status / call_history</text>
+<text x="270.0" y="478.5" font-size="11.5" fill="#555555" text-anchor="middle">tracker.resource_drop(&amp;mut store)</text>
+<rect x="600" y="56" width="420" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="810.0" y="89.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">impl BookingGuest for Component</text>
+<rect x="600" y="200" width="420" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="810.0" y="226.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">book_cargo / get_cargo / request_possible_routes /</text>
+<text x="810.0" y="243.0" font-size="11.5" fill="#555555" text-anchor="middle">assign_route over thread_local STATE</text>
+<rect x="600" y="344" width="420" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="810.0" y="377.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">impl HandlingGuest for Component</text>
+<rect x="600" y="416" width="420" height="80" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="810.0" y="454.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">struct Tracker { tracking_id }</text>
+<text x="810.0" y="471.0" font-size="11.5" fill="#555555" text-anchor="middle">impl GuestCargoTracker for Tracker</text>
+<path d="M490,228 L600,84" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="551.0" y="150.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">call across component boundary</text>
+<text x="551.0" y="150.0" font-size="11" fill="#555" text-anchor="middle">call across component boundary</text>
+<path d="M490,300 L600,228" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M490,372 L600,372" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M490,456 L600,456" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="551.0" y="450.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">constructor + 3 methods</text>
+<text x="551.0" y="450.0" font-size="11" fill="#555" text-anchor="middle">constructor + 3 methods</text>
+<text x="540" y="540" font-size="12" fill="#555555" text-anchor="middle">Same host binary, same scenario, same assertions run again in Chapter 7 against cargo-go.wasm — the point is that both sides satisfy identical calls.</text>
+</svg>
