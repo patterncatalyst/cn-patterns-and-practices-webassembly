@@ -1,0 +1,35 @@
+package patterncatalyst:cargo@0.1.0;
+
+/// Handling event recording, event history, and the `cargo-tracker`
+/// resource that follows a single cargo's status and history over time.
+interface handling {
+    use types.{handling-event, handling-event-type, location, transport-status, cargo-error};
+
+    /// Record a new handling event against a cargo.
+    register-handling-event: func(
+        cargo-id: string,
+        event-type: handling-event-type,
+        location: location,
+        voyage-id: string,
+        recorded-at: string,
+    ) -> result<_, cargo-error>;
+
+    /// List the recorded handling events for a cargo, in chronological
+    /// order.
+    list-handling-events: func(cargo-id: string) -> result<list<handling-event>, cargo-error>;
+
+    /// Tracks one cargo's current status and handling history. Construct
+    /// one per tracking ID, then query it as handling events arrive.
+    resource cargo-tracker {
+        constructor(tracking-id: string);
+
+        /// The tracking ID this tracker was constructed with.
+        tracking-id: func() -> string;
+
+        /// The cargo's most recent transport status.
+        current-status: func() -> transport-status;
+
+        /// The full handling history recorded for this cargo so far.
+        history: func() -> list<handling-event>;
+    }
+}

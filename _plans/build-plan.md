@@ -10,9 +10,10 @@ Fifth site in the series (REST → gRPC → GraphQL → WebSockets → this one)
 deliberate deviation from the first four: this site teaches a **runtime and
 deployment target**, not an API style. Kubernetes deployment is the point of
 the book, not an appendix bolted on at the end.
-This document covers **r01 — bootstrap scaffold** only: site chrome, the
-locked outline, and the plans ledger. No chapter prose, no runnable examples,
-and no WIT contract body are written in r01.
+This document tracks the build iteration by iteration, starting from **r01 —
+bootstrap scaffold** (site chrome, the locked outline, and the plans ledger;
+no chapter prose, no runnable examples, no WIT contract body) through **r02 —
+Foundations + WIT contract** (below).
 
 Repo: `patterncatalyst/cn-patterns-and-practices-webassembly` (public,
 remote-first). The `cn-` (cloud-native) prefix marks the
@@ -63,20 +64,46 @@ numbered chapter because deploying to Kubernetes is this book's whole point,
 a deliberate divergence from the four `api-` siblings, where CRC is a
 non-numbered appendix (DRQ-007).
 
-## Deferred to later iterations (r02+)
+## r02 — Foundations + WIT contract
 
-- Chapter prose for all 29 chapters, to the house depth standard: paired
+Part 1 Foundations written to the house depth standard, the cargo-domain WIT
+contract authored and validated, and a validate-only contract CI gate wired
+up.
+
+- Part 1 Foundations, Ch1–Ch5, written to the house depth standard: Ch1 Why
+  server-side Wasm, Ch2 The execution model, Ch3 The Component Model and WIT,
+  Ch4 WASI Preview 2, Ch5 The shared cargo domain as components. Each chapter
+  carries the house spine (Learning objectives + Why this matters at the top,
+  For deeper coverage at the end), paired SVG+Excalidraw diagrams, a concrete
+  box, and a Decision callout.
+- The cargo-domain WIT world authored at `contracts/wit/` — package
+  `patterncatalyst:cargo@0.1.0` split across `types.wit`, `bookings.wit`,
+  `handling.wit`, and `world.wit` — validating under wasm-tools 1.262.0
+  (DRQ-015).
+- A validate-only contract CI gate (`.github/workflows/contracts.yml`)
+  running `wasm-tools component wit contracts/wit`, with wasm-tools installed
+  from a pinned, checksummed GitHub release binary rather than built from
+  source on every run (DRQ-016, DRQ-017).
+- The version matrix surveyed and pinned (2026-10-20).
+- The hub entry on `patterncatalyst/workshops-tutorials-list`, added at the
+  end of r02 now that there is real content to point to: five chapters and a
+  validated contract (DRQ-019).
+
+## Deferred to later iterations (r03+)
+
+- Ch0 Setup and the lab, deferred to r03 so it lands alongside the first real
+  toolchain install and the first Rust and Go builds it documents (DRQ-018).
+- Chapter prose for Ch6–Ch28, to the house depth standard: paired
   SVG+Excalidraw diagrams, the house chapter spine (Learning objectives +
   Why this matters at the top, For deeper coverage at the end).
 - Runnable examples under `examples/`, every example built in **both Rust and
   Go** against one shared WIT world, each with its own verify step.
-- The WIT contract body under `contracts/` (the Component Model interfaces
-  this site teaches), plus the CI WIT-drift gate that regenerates both
-  language bindings and fails the build on drift.
+- The full WIT-drift CI gate: regenerate both language bindings from
+  `contracts/wit/` and fail the build on drift. Deferred to r03 — there are
+  no bindings yet to diff against (DRQ-016).
 - minikube manifests (containerd Wasm shim + wasmCloud operator + Istio) and
   the CRC deployment tier — both verified live headless.
 - A dev compose for supporting services plus the LGTM observability stack.
-- The hub entry on `patterncatalyst/workshops-tutorials-list`.
 - The companion deck(s) — built LAST, after every chapter and example.
 
 ## Release cadence
@@ -86,10 +113,12 @@ never diverge. Each iteration ends on a clean `bundle exec jekyll build`.
 
 Roadmap sketch:
 
-- **r01** — scaffold (this iteration).
-- **r02** — Part 1 Foundations prose (Ch0–Ch5).
-- **r03** — Part 2 Building Components + the first Rust and Go examples +
-  the WIT contract spine.
+- **r01** — scaffold.
+- **r02** — Part 1 Foundations prose (Ch1–Ch5) + the cargo-domain WIT
+  contract + validate-only contract CI (this iteration).
+- **r03** — Part 2 Building Components (Ch6–Ch10) + Ch0 Setup + the first
+  Rust and Go examples + the full WIT-drift gate (regenerate both bindings,
+  fail on drift).
 - **r04** — Part 3 Interfaces: HTTP & gRPC.
 - **r05** — Part 4 Runtimes: wasmtime & wasmCloud.
 - **r06+** — Part 5 Kubernetes deployment tiers: minikube first, then CRC,

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="580" height="500" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">The booking → itinerary → handling flow</text>
+<rect x="620" y="16" width="360" height="500" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="632" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Shared value types</text>
+<rect x="50" y="56" width="240" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="170.0" y="89.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">route-spec</text>
+<text x="170.0" y="106.0" font-size="11.5" fill="#555555" text-anchor="middle">origin, destination, arrival-deadline</text>
+<rect x="330" y="56" width="240" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="450.0" y="89.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo</text>
+<text x="450.0" y="106.0" font-size="11.5" fill="#555555" text-anchor="middle">tracking-id, weight-kg</text>
+<rect x="170" y="166" width="280" height="78" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="310.0" y="195.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">booking</text>
+<text x="310.0" y="212.5" font-size="11.5" fill="#555555" text-anchor="middle">booking-id, cargo-id, route-spec,</text>
+<text x="310.0" y="227.5" font-size="11.5" fill="#555555" text-anchor="middle">price, status</text>
+<rect x="50" y="284" width="240" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="170.0" y="317.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">itinerary</text>
+<text x="170.0" y="334.0" font-size="11.5" fill="#555555" text-anchor="middle">booking-id, legs</text>
+<rect x="330" y="284" width="240" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="450.0" y="317.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">leg</text>
+<text x="450.0" y="334.0" font-size="11.5" fill="#555555" text-anchor="middle">voyage-id, load/unload, status</text>
+<rect x="50" y="404" width="280" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="190.0" y="434.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">handling-event</text>
+<text x="190.0" y="451.5" font-size="11.5" fill="#555555" text-anchor="middle">cargo-id, event-type, location,</text>
+<text x="190.0" y="466.5" font-size="11.5" fill="#555555" text-anchor="middle">voyage-id, recorded-at</text>
+<rect x="360" y="404" width="220" height="80" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="470.0" y="442.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-tracker (resource)</text>
+<text x="470.0" y="459.0" font-size="11.5" fill="#555555" text-anchor="middle">tracking-id, current-status, history</text>
+<rect x="660" y="56" width="280" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="800.0" y="89.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">location</text>
+<text x="800.0" y="106.0" font-size="11.5" fill="#555555" text-anchor="middle">unlocode, name, country</text>
+<rect x="660" y="176" width="280" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="800.0" y="209.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">money</text>
+<text x="800.0" y="226.0" font-size="11.5" fill="#555555" text-anchor="middle">amount (decimal string), currency</text>
+<path d="M200,126 L300,166" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="256.0" y="140.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">booking.route-spec</text>
+<text x="256.0" y="140.0" font-size="11" fill="#555" text-anchor="middle">booking.route-spec</text>
+<path d="M420,126 L380,166" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="406.0" y="140.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">booking.cargo-id</text>
+<text x="406.0" y="140.0" font-size="11" fill="#555" text-anchor="middle">booking.cargo-id</text>
+<path d="M260,244 L170,284" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="221.0" y="258.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">itinerary.booking-id</text>
+<text x="221.0" y="258.0" font-size="11" fill="#555" text-anchor="middle">itinerary.booking-id</text>
+<path d="M290,319 L330,319" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="316.0" y="313.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">composed of</text>
+<text x="316.0" y="313.0" font-size="11" fill="#555" text-anchor="middle">composed of</text>
+<path d="M190,354 L190,404" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="196.0" y="373.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">cargo-id</text>
+<text x="196.0" y="373.0" font-size="11" fill="#555" text-anchor="middle">cargo-id</text>
+<path d="M330,444 L360,444" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="351.0" y="438.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">history()</text>
+<text x="351.0" y="438.0" font-size="11" fill="#555" text-anchor="middle">history()</text>
+<path d="M290,75 L660,90" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="481.0" y="76.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">origin/destination</text>
+<text x="481.0" y="76.5" font-size="11" fill="#555" text-anchor="middle">origin/destination</text>
+<path d="M570,319 L660,200" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="621.0" y="253.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">load/unload</text>
+<text x="621.0" y="253.5" font-size="11" fill="#555" text-anchor="middle">load/unload</text>
+<path d="M330,430 L660,230" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="501.0" y="324.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">location</text>
+<text x="501.0" y="324.0" font-size="11" fill="#555" text-anchor="middle">location</text>
+<path d="M450,195 L660,211" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="561.0" y="197.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">price</text>
+<text x="561.0" y="197.0" font-size="11" fill="#555" text-anchor="middle">price</text>
+<text x="500" y="540" font-size="12" fill="#555555" text-anchor="middle">Solid arrows: a record field referencing another record by id or by composition. Dashed arrows: a field typed as a shared value, not a nested object.</text>
+</svg>

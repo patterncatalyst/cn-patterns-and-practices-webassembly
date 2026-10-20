@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 440" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="30" y="40" width="340" height="300" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="188.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Module (.wasm)</text>
+<text x="200.0" y="205.0" font-size="11.5" fill="#555555" text-anchor="middle">static binary artifact</text>
+<rect x="55" y="95" width="290" height="36" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="200.0" y="118.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Types</text>
+<rect x="55" y="136" width="290" height="36" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="200.0" y="159.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Imports</text>
+<rect x="55" y="177" width="290" height="36" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="200.0" y="200.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Functions + Code</text>
+<rect x="55" y="218" width="290" height="36" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="200.0" y="241.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Memory + Table</text>
+<rect x="55" y="259" width="290" height="36" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="200.0" y="282.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Globals + Exports</text>
+<rect x="55" y="300" width="290" height="28" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="200.0" y="319.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Data + Element segments</text>
+<rect x="490" y="40" width="340" height="300" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="660.0" y="188.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Instance</text>
+<text x="660.0" y="205.0" font-size="11.5" fill="#555555" text-anchor="middle">runtime object, one per instantiate()</text>
+<rect x="515" y="100" width="290" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="660.0" y="128.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">own linear memory</text>
+<text x="660.0" y="145.0" font-size="11.5" fill="#555555" text-anchor="middle">allocated per memory section</text>
+<rect x="515" y="170" width="290" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="660.0" y="198.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">own table + globals</text>
+<text x="660.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">initialized from data/element segments</text>
+<rect x="515" y="240" width="290" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="660.0" y="268.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">resolved imports</text>
+<text x="660.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">bound to host-supplied functions</text>
+<path d="M370,190 L490,190" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="436.0" y="184.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">instantiate()</text>
+<text x="436.0" y="184.0" font-size="11" fill="#b8650a" text-anchor="middle">instantiate()</text>
+<text x="430" y="405" font-size="12" fill="#555555" text-anchor="middle">A module is compiled and validated once; instantiation is cheap and can happen many times from the same module.</text>
+</svg>

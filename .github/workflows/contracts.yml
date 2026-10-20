@@ -1,0 +1,48 @@
+# The WIT contract CI gate.
+#
+# VALIDATE-ONLY for r02: this job confirms contracts/wit parses as a valid WIT
+# package (wasm-tools component wit). It does NOT regenerate language
+# bindings and does NOT diff them for drift.
+#
+# The full drift gate — regenerate BOTH bindings (Rust via cargo-component,
+# Go via wasm-tools/wit-bindgen-go) from contracts/wit and fail the build if
+# the checked-in bindings/examples disagree — is deferred to r03, once the
+# first bindings/examples exist to regenerate and diff against. Don't
+# duplicate pages.yml's Jekyll build/deploy logic here, and don't duplicate
+# this validation step in pages.yml (see pages.yml's own note on this job
+# landing in "a later iteration").
+name: contracts
+
+on:
+  push:
+    branches: [main]      # push to main only; PRs validate via pull_request below
+  pull_request:
+    branches: [main]      # build on PRs targeting main
+  workflow_dispatch:      # allow manual runs from the Actions UI
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate the WIT contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install wasm-tools (pinned, checksum-verified)
+        env:
+          WASM_TOOLS_VERSION: "1.262.0"   # no floating tag — pin exact
+          WASM_TOOLS_SHA256: "655b8df67d54c3ef9b52fc237c4e94bbfbb5f5f43825245cb0940a7002a9ed65"
+        run: |
+          set -euo pipefail
+          archive="wasm-tools-${WASM_TOOLS_VERSION}-x86_64-linux.tar.gz"
+          curl -fsSL -o "/tmp/${archive}" \
+            "https://github.com/bytecodealliance/wasm-tools/releases/download/v${WASM_TOOLS_VERSION}/${archive}"
+          echo "${WASM_TOOLS_SHA256}  /tmp/${archive}" | sha256sum -c -
+          tar -xzf "/tmp/${archive}" -C /tmp
+          sudo install -m 0755 "/tmp/wasm-tools-${WASM_TOOLS_VERSION}-x86_64-linux/wasm-tools" /usr/local/bin/wasm-tools
+          wasm-tools --version
+
+      - name: wasm-tools component wit (validates the WIT package)
+        run: wasm-tools component wit contracts/wit

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="420" height="384" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Host — holds resource handles</text>
+<rect x="500" y="16" width="420" height="384" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="512" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Wasm guest instance — holds only what it&#x27;s handed</text>
+<rect x="50" y="66" width="340" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="220.0" y="92.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Clock handle</text>
+<text x="220.0" y="109.0" font-size="11.5" fill="#555555" text-anchor="middle">wasi:clocks/monotonic-clock</text>
+<rect x="50" y="142" width="340" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="220.0" y="168.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Filesystem handle</text>
+<text x="220.0" y="185.0" font-size="11.5" fill="#555555" text-anchor="middle">preopened dir: /data/cargo</text>
+<rect x="50" y="218" width="340" height="56" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="220.0" y="244.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Socket handle</text>
+<text x="220.0" y="261.0" font-size="11.5" fill="#555555" text-anchor="middle">outbound TCP, port 443</text>
+<rect x="50" y="312" width="340" height="64" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="220.0" y="342.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Host kernel</text>
+<text x="220.0" y="359.0" font-size="11.5" fill="#555555" text-anchor="middle">syscalls live here only</text>
+<rect x="530" y="80" width="360" height="56" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="710.0" y="106.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Granted: clock capability</text>
+<text x="710.0" y="123.0" font-size="11.5" fill="#555555" text-anchor="middle">usable inside the instance</text>
+<rect x="530" y="156" width="360" height="56" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="710.0" y="182.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Granted: filesystem capability</text>
+<text x="710.0" y="199.0" font-size="11.5" fill="#555555" text-anchor="middle">scoped to /data/cargo only</text>
+<rect x="530" y="280" width="360" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="710.0" y="313.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">No socket capability granted</text>
+<text x="710.0" y="330.0" font-size="11.5" fill="#555555" text-anchor="middle">guest cannot open a connection</text>
+<path d="M390,94 L530,108" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="466.0" y="95.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">grant</text>
+<text x="466.0" y="95.0" font-size="11" fill="#b8650a" text-anchor="middle">grant</text>
+<path d="M390,170 L530,184" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="466.0" y="171.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">grant (scoped)</text>
+<text x="466.0" y="171.0" font-size="11" fill="#b8650a" text-anchor="middle">grant (scoped)</text>
+<path d="M390,246 L530,300" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="466.0" y="267.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">not granted</text>
+<text x="466.0" y="267.0" font-size="11" fill="#555" text-anchor="middle">not granted</text>
+<path d="M680,350 L280,344" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="486.0" y="341.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">no ambient syscalls, no direct path</text>
+<text x="486.0" y="341.0" font-size="11" fill="#555" text-anchor="middle">no ambient syscalls, no direct path</text>
+<text x="470" y="410" font-size="12" fill="#555555" text-anchor="middle">The guest cannot ask for what the host did not already hand it.</text>
+</svg>

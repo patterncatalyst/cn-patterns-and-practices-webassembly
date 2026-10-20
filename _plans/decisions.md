@@ -134,3 +134,48 @@ Two example anchors are settled ahead of their chapters:
 - **Ch26 backend-architecture survey**: **Spin** (Fermyon) is the example
   anchor for the "other backend architectures" survey chapter, contrasted
   against the wasmtime/wasmCloud pair taught in Part 4.
+
+## DRQ-015 — WIT package layout: a directory, not a flat file
+
+The cargo-domain contract lives at `contracts/wit/` as a **package
+directory** — `types.wit`, `bookings.wit`, `handling.wit`, `world.wit` — under
+package `patterncatalyst:cargo@0.1.0`, not a single flat `.wit` file. This
+lets `wasm-tools component wit contracts/wit` validate the whole package in
+one pass and gives Ch3 a real multi-interface world to teach from instead of
+a single-file toy. The package is dependency-free — no `wasi:*` imports — so
+the validate gate needs no dependency fetch step.
+
+## DRQ-016 — Contract CI posture: validate-only for r02
+
+The r02 contract CI gate (`.github/workflows/contracts.yml`) runs
+`wasm-tools component wit contracts/wit` and nothing else. The full drift
+gate — regenerate Rust and Go bindings from the WIT world and fail the build
+if either has drifted — is deferred to r03, when the first bindings exist to
+diff against.
+
+## DRQ-017 — wasm-tools install method in CI: pinned release binary
+
+CI installs wasm-tools from a **pinned GitHub release binary verified by a
+SHA-256 checksum**, not `cargo install wasm-tools`, which compiles from
+source on every run. Pinned at **1.262.0**.
+
+## DRQ-018 — Ch0 Setup deferred to r03
+
+Ch0 Setup and the lab is deferred from r02 to r03. User-confirmed 2026-10-20:
+a setup chapter is most accurate written alongside the first real toolchain
+install and the first Rust and Go builds it walks through, not ahead of them.
+
+## DRQ-019 — Hub card timing: add at the end of r02
+
+The hub entry on `patterncatalyst/workshops-tutorials-list` is added at the
+end of r02, not at r01 bootstrap. User-confirmed 2026-10-20: wait until there
+is real content to point to — five Foundations chapters and a validated
+contract — rather than linking an empty scaffold.
+
+## DRQ-020 — Diagram density: two figures is a floor, not a cap
+
+Two diagram pairs per chapter is the minimum, not a ceiling. Chapters where
+the material is inherently diagram-heavy — the execution model, the
+Component Model and WIT — carry more figures when the material warrants it.
+This matches the chapter-word-target posture: value-driven work over a
+target is fine, padding is not.
