@@ -1,0 +1,90 @@
+---
+layout: default
+title: Home
+---
+
+<section class="hero">
+  <div class="container">
+    <span class="hero__eyebrow">WebAssembly · WIT · Rust · Go · wasmtime · wasmCloud · Kubernetes</span>
+    <h1 class="hero__title">{{ site.title }}</h1>
+    <p class="hero__lead">{{ site.description }}</p>
+    <div class="hero__cta">
+      <a class="btn btn--primary"
+         href="{{ '/docs/00-outline/' | relative_url }}">Start reading →</a>
+      <a class="btn btn--secondary"
+         href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}"
+         rel="noopener">View on GitHub ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="container">
+    <div class="stats">
+      <div class="stat"><span class="stat__value">📐</span><span class="stat__label">One WIT world as the single source of truth for every component interface</span></div>
+      <div class="stat"><span class="stat__value">🦀</span><span class="stat__label">Every example in both Rust and Go</span></div>
+      <div class="stat"><span class="stat__value">⚙️</span><span class="stat__label">The same component on wasmtime and on wasmCloud</span></div>
+      <div class="stat"><span class="stat__value">☸️</span><span class="stat__label">Deployed on minikube and OpenShift Local, traced through the Grafana LGTM stack</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-heading">What this site is</h2>
+    <p class="section-sub">
+      A chapter-based, hands-on path to designing and deploying server-side
+      WebAssembly components well, built around a single
+      <a href="https://component-model.bytecodealliance.org/">WIT</a> world for a
+      shipping and cargo domain. Every hands-on chapter ships the same example
+      in <strong>both</strong> Rust (<code>cargo-component</code>, targeting
+      <code>wasm32-wasip2</code>) and Go (standard Go: <code>wasip1</code> plus
+      <code>go:wasmexport</code> and the <code>wasm-tools</code> adapter, with
+      TinyGo noted as the size-optimized alternative). The component serves
+      HTTP via <code>wasi-http</code> and talks gRPC, runs on
+      <a href="https://wasmtime.dev/">wasmtime</a> and on
+      <a href="https://wasmcloud.com/">wasmCloud</a> unchanged, and deploys to
+      Kubernetes on minikube (the containerd Wasm shim) and OpenShift Local.
+      Later parts cover Kubernetes patterns — sidecar, ambassador/adapter, HPA
+      scaling, scale-to-zero with KEDA — on-cluster observability with OTel and
+      the Grafana LGTM stack, and then the deviations: Istio and WebAssembly
+      (the WasmPlugin CRD), a survey of other Wasm backend architectures
+      (serverless/FaaS with Spin), and portable inference with
+      <code>wasi-nn</code>. Cross-reference the sibling
+      <a href="https://github.com/patterncatalyst/api-patterns-and-practices-rest">REST</a>
+      and
+      <a href="https://github.com/patterncatalyst/api-patterns-and-practices-grpc">gRPC</a>
+      sites for the HTTP and gRPC protocol detail. It assumes you can read Rust
+      and Go; it is not a tutorial in either language. All container images are
+      UBI-based.
+    </p>
+
+    {%- comment -%}
+      Two-level navigation: the homepage shows one card per Part. Each Part
+      card links to its own page (the _parts collection) which lists that
+      part's chapters. New chapters appear under their part automatically;
+      new parts appear here just by adding a file to _parts/.
+    {%- endcomment -%}
+    <div class="cards">
+      {% assign parts_sorted = site.parts | sort: "order" %}
+      {% for part in parts_sorted %}
+      {% assign part_docs = site.docs | where: "part", part.part_name %}
+      <a class="card" href="{{ part.url | relative_url }}">
+        <div class="card__eyebrow">Part {{ part.order }}</div>
+        <h3 class="card__title">{{ part.title }}</h3>
+        {% if part.blurb %}
+        <p class="card__desc">{{ part.blurb }}</p>
+        {% endif %}
+        <div class="card__meta">
+          {% if part_docs.size > 0 %}
+            <span>{{ part_docs.size }} chapter{% if part_docs.size != 1 %}s{% endif %}</span>
+          {% else %}
+            <span>Coming soon</span>
+          {% endif %}
+          <span>Explore →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
