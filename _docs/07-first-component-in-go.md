@@ -163,7 +163,7 @@ type trackerState struct {
 }
 
 var (
-	trackers    = map[cm.Rep]*trackerState{}
+	trackers           = map[cm.Rep]*trackerState{}
 	nextTracker cm.Rep = 1
 )
 ```

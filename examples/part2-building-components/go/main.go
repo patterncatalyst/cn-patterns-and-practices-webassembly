@@ -22,9 +22,9 @@ import (
 
 // Deterministic domain constants — MUST match the Rust implementation exactly.
 const (
-	voyageID     = "VOY-001"
-	legLoadTime  = "2026-11-01T00:00:00Z"
-	priceAmount  = "1500.00"
+	voyageID      = "VOY-001"
+	legLoadTime   = "2026-11-01T00:00:00Z"
+	priceAmount   = "1500.00"
 	priceCurrency = "USD"
 )
 
@@ -75,7 +75,7 @@ type trackerState struct {
 }
 
 var (
-	trackers    = map[cm.Rep]*trackerState{}
+	trackers           = map[cm.Rep]*trackerState{}
 	nextTracker cm.Rep = 1
 )
 
