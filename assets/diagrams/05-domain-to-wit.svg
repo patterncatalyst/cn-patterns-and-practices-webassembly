@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="1000" height="104" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">interface types — records + enums + cargo-error, no functions</text>
+<rect x="20" y="132" width="1000" height="92" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="152" font-size="12" font-weight="700" fill="#1d1d1d">interface booking — book-cargo, request-possible-routes, assign-route, get-cargo</text>
+<rect x="20" y="236" width="1000" height="92" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="256" font-size="12" font-weight="700" fill="#1d1d1d">interface handling — register-handling-event, list-handling-events, resource cargo-tracker</text>
+<rect x="20" y="344" width="1000" height="110" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="32" y="364" font-size="12" font-weight="700" fill="#1d1d1d">world cargo (export types, booking, handling) / world cargo-consumer (import types, booking, handling)</text>
+<rect x="50" y="52" width="200" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="150.0" y="85.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">location, money</text>
+<rect x="270" y="52" width="220" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="380.0" y="85.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo, route-spec, booking</text>
+<rect x="510" y="52" width="220" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="620.0" y="85.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">leg, itinerary, handling-event</text>
+<rect x="750" y="52" width="250" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="875.0" y="78.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">handling-event-type, routing-status,</text>
+<text x="875.0" y="95.0" font-size="11.5" fill="#555555" text-anchor="middle">transport-status, cargo-error</text>
+<rect x="50" y="164" width="460" height="48" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="280.0" y="193.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">book-cargo(route-spec, f64) -&gt; result&lt;booking, cargo-error&gt;</text>
+<rect x="530" y="164" width="460" height="48" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="760.0" y="193.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">request-possible-routes / assign-route / get-cargo</text>
+<rect x="50" y="268" width="440" height="48" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="297.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">register-handling-event / list-handling-events</text>
+<rect x="510" y="268" width="480" height="48" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="750.0" y="297.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">resource cargo-tracker: constructor + tracking-id/current-status/history</text>
+<rect x="50" y="376" width="440" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="270.0" y="404.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">world cargo</text>
+<text x="270.0" y="421.0" font-size="11.5" fill="#555555" text-anchor="middle">exports types, booking, handling</text>
+<rect x="550" y="376" width="440" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="770.0" y="404.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">world cargo-consumer</text>
+<text x="770.0" y="421.0" font-size="11.5" fill="#555555" text-anchor="middle">imports types, booking, handling</text>
+<rect x="50" y="480" width="200" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="150.0" y="508.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Rust component</text>
+<text x="150.0" y="525.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-component</text>
+<rect x="270" y="480" width="200" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="370.0" y="508.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Go component</text>
+<text x="370.0" y="525.0" font-size="11.5" fill="#555555" text-anchor="middle">wasm-tools</text>
+<rect x="720" y="480" width="260" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="850.0" y="508.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Consumer component</text>
+<text x="850.0" y="525.0" font-size="11.5" fill="#555555" text-anchor="middle">HTTP/gRPC adapter, Ch11/12</text>
+<path d="M150,480 L220,436" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="191.0" y="452.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">implements, exports</text>
+<text x="191.0" y="452.0" font-size="11" fill="#555" text-anchor="middle">implements, exports</text>
+<path d="M370,480 L280,436" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="331.0" y="452.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">implements, exports</text>
+<text x="331.0" y="452.0" font-size="11" fill="#555" text-anchor="middle">implements, exports</text>
+<path d="M850,480 L770,436" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="816.0" y="452.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">imports, calls</text>
+<text x="816.0" y="452.0" font-size="11" fill="#555" text-anchor="middle">imports, calls</text>
+<path d="M490,406 L550,406" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="526.0" y="400.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">composed together, Ch8</text>
+<text x="526.0" y="400.0" font-size="11" fill="#555" text-anchor="middle">composed together, Ch8</text>
+<text x="520" y="620" font-size="12" fill="#555555" text-anchor="middle">types carries no behavior; booking and handling add functions over it. Both worlds import or export all three interfaces together.</text>
+</svg>

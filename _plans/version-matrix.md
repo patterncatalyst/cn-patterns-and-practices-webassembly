@@ -6,14 +6,17 @@ render_with_liquid: false
 
 # Version Matrix
 
-> Surveyed: 2026-10-20 (r01 bootstrap). Only the authoring-box toolchain below
-> is confirmed by actual installation and a local build; every other row is a
-> placeholder marked TBD-at-kickoff and gets a real, dated survey pass —
-> checked against the vendor's own release notes, not memory — when the
-> chapter or example that depends on it is written.
+> Surveyed: 2026-10-20 (r02 foundations). The authoring-box toolchain and the
+> Part 2/4 Wasm toolchain rows below are now confirmed against upstream
+> release pages — checked against the vendor's own release notes, not
+> memory. The Kubernetes deployment tier and wasi-nn rows carry a
+> current-stable snapshot taken on the same date for reference, but stay
+> marked TBD-at-kickoff: each gets its own live, dated re-survey and gets
+> pinned for real when the chapter or example that depends on it is written.
 
-This is a placeholder laid down at r01 bootstrap. Nothing in this table is
-authoritative yet except the authoring-box rows explicitly marked confirmed.
+The Wasm toolchain and WASI/Component Model rows are the r02 pins. The
+Kubernetes deployment tier and wasi-nn rows are not pins yet — they are a
+snapshot to plan against, re-verified live when their chapter lands.
 
 | Component | Version |
 |---|---|
@@ -22,19 +25,25 @@ authoritative yet except the authoring-box rows explicitly marked confirmed.
 | cargo | 1.99.1 — ships with the Rust toolchain above |
 | Go | 1.26.9 — installed and confirmed on the authoring box; primary Go path (DRQ-013) |
 | TinyGo | 0.43.0 — installed and confirmed working against Go 1.26.9 / LLVM 22.1.4; optional sidebar path (DRQ-013) |
-| **Wasm toolchain (TBD-at-kickoff)** | |
-| wasmtime | TBD — survey live upstream release when Part 4 (Ch14) lands |
-| wash (wasmCloud CLI) | TBD — survey live upstream release when Part 4 (Ch15/16) lands |
-| wasm-tools | TBD — survey live upstream release when the Go component-adapter chapter lands |
-| cargo-component | TBD — survey live upstream release when the Rust component chapters (Part 2) land |
-| **Kubernetes deployment tier (TBD-at-kickoff)** | |
-| containerd Wasm shim (runwasi) | TBD — survey live upstream release when Part 5 minikube chapters land |
-| minikube / Kubernetes | TBD — survey the verified-live combination when Part 5 minikube chapters land; docker driver + containerd runtime only, per house convention |
-| Istio | TBD — survey live upstream release when Ch25 (Istio + Wasm) lands |
-| KEDA | TBD — survey live upstream release when Ch23 (scale-to-zero) lands |
-| CRC / OpenShift Local | TBD — survey live upstream release when Ch19 lands |
-| **wasi-nn (TBD-at-kickoff)** | |
-| wasi-nn backend (OpenVINO) | TBD — survey live upstream release when Ch27 lands |
+| Rust nightly | Not used for r02. Stable Rust 1.99.1 covers `wasm32-wasip2` and `cargo-component` without a nightly toolchain. Any future chapter that needs a nightly-only Wasm feature gets its own pinned, dated nightly (e.g. `nightly-2026-MM-DD`) at the point it's introduced — never a floating `nightly` channel. |
+| **Wasm toolchain (r02 pins, verified 2026-10-20)** | |
+| wasm-tools | **1.262.0**, released 2026-10-13. Linux x86_64 release tarball `wasm-tools-1.262.0-x86_64-linux.tar.gz`, SHA-256 `655b8df67d54c3ef9b52fc237c4e94bbfbb5f5f43825245cb0940a7002a9ed65`. This is the version the r02 contracts CI gate pins. Source: https://github.com/bytecodealliance/wasm-tools/releases/tag/v1.262.0 |
+| cargo-component | **0.21.1**, released 2025-04-07; still the latest stable tag as of 2026-10-20 (confirmed against crates.io `max_stable_version`, no newer release since). Source: https://github.com/bytecodealliance/cargo-component/releases/tag/v0.21.1 |
+| wasmtime | **v50.0.0**, released 2026-10-20. Wasmtime ships a new major monthly; v50 is the current latest. Source: https://github.com/bytecodealliance/wasmtime/releases/tag/v50.0.0 |
+| wash (wasmCloud CLI) | **0.43.0**, released 2026-02-04 — the latest release published as stable (confirmed on crates.io, package `wash`). A `wash` 2.0 rewrite exists as release candidates (`wash-v2.0.0-rc.8`, 2026-03-10) but had not reached stable as of this survey; treat 0.43.0 as current. Source: https://github.com/wasmCloud/wasmCloud/releases/tag/wash-v0.43.0 |
+| wasmCloud host | **v2.10.3**, released 2026-10-02 (recorded for reference; the host and the `wash` CLI version independently of each other). Source: https://github.com/wasmCloud/wasmCloud/releases/tag/v2.10.3 |
+| **WASI / Component Model status (verified 2026-10-20)** | |
+| WASI Preview 2 (0.2.x line) | Current patch is **v0.2.12**, released 2026-06-02 — stable and released. The `wasm32-wasip2` Rust target and `cargo-component` both target this line as of this survey. Source: https://github.com/WebAssembly/WASI/releases/tag/v0.2.12 |
+| WASI Preview 3 (0.3.x line) | Now also released: v0.3.0 (2026-06-11, first stable), v0.3.1 (2026-08-11), **v0.3.2** (2026-10-13, latest overall). Adds native async. Most toolchains, including the Rust/Go paths used in this site, still target 0.2 as of this survey; 0.3 is noted here as a known option for a future chapter to evaluate on its own merits. Source: https://github.com/WebAssembly/WASI/releases and https://wasi.dev/releases |
+| Component Model | Pre-1.0. Still a Phase 2/3 W3C proposal, not yet supported in browsers. A Component Model 1.0 roadmap was discussed publicly in 2026 (Wasm I/O 2026, Barcelona) but is not finalized as of this survey. Tooling (wasm-tools, wasmtime, wit-bindgen) tracks the proposal directly rather than a finished spec. Source: https://component-model.bytecodealliance.org/ and https://bytecodealliance.org/articles/the-road-to-component-model-1-0 |
+| **Kubernetes deployment tier (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
+| containerd Wasm shim (runwasi) | Snapshot: `containerd-shim-wasmtime` v0.6.1 (sibling shims wasmer/wasmedge/wamr at the same v0.6.1; `containerd-shim-wasm` v1.0.1), released 2026-06-12. Source: https://github.com/containerd/runwasi/releases — re-verify live when Part 5 minikube chapters land |
+| minikube / Kubernetes | Snapshot: minikube **v1.39.0**, released 2026-09-02. Source: https://github.com/kubernetes/minikube/releases/tag/v1.39.0 — re-verify the live combination when Part 5 minikube chapters land; docker driver + containerd runtime only, per house convention |
+| Istio | Snapshot: **1.31.2**, released 2026-10-16. Source: https://github.com/istio/istio/releases/tag/1.31.2 — re-verify live when Ch25 (Istio + Wasm) lands |
+| KEDA | Snapshot: **v2.21.0**, released 2026-09-23. Source: https://github.com/kedacore/keda/releases/tag/v2.21.0 — re-verify live when Ch23 (scale-to-zero) lands |
+| CRC / OpenShift Local | Snapshot: **2.64.0-4.22.14** (crc v2.64.0), released 2026-09-24. Source: https://github.com/crc-org/crc/releases/tag/2.64.0-4.22.14 — re-verify live when Ch19 lands |
+| **wasi-nn (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
+| wasi-nn backend (OpenVINO) | Snapshot: the `wasmtime-wasi-nn` crate tracks wasmtime's version directly (v50.0.0 as of this survey; source https://crates.io/crates/wasmtime-wasi-nn). The OpenVINO backend toolkit itself is at **2026.4.1**, released 2026-10-01. Source: https://github.com/openvinotoolkit/openvino/releases/tag/2026.4.1 — re-verify live when Ch27 lands |
 
 ## Dependency policy
 
