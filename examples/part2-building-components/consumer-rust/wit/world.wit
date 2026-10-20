@@ -1,0 +1,19 @@
+package patterncatalyst:cargo-consumer-rust@0.1.0;
+
+/// The consumer side of the cargo domain, as a runnable CLI command.
+///
+/// This world IMPORTS the three cargo interfaces from the repository contract
+/// (`patterncatalyst:cargo`, pulled in as a path dependency — see Cargo.toml's
+/// [package.metadata.component.target.dependencies], the contract itself stays
+/// untouched). It does not export the cargo interfaces; it CALLS them.
+///
+/// Because this crate is a cargo-component *command* (a `[[bin]]` with
+/// `fn main`), cargo-component additionally synthesizes the `wasi:cli/run`
+/// export that wraps `main`, so the COMPOSED component (this consumer plugged
+/// to a provider that exports `cargo`) is directly `wasmtime run`-able with no
+/// native host.
+world cargo-cli {
+    import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
+    import patterncatalyst:cargo/handling@0.1.0;
+}

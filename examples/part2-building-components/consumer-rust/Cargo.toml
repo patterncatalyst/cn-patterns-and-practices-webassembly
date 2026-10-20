@@ -1,0 +1,23 @@
+[package]
+name = "cargo-consumer-rust"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.component]
+package = "patterncatalyst:cargo-consumer-rust"
+
+# This command component targets a LOCAL world (wit/world.wit) that imports the
+# three cargo interfaces. The `patterncatalyst:cargo` package those interfaces
+# live in is supplied as a path dependency pointing at the repository contract,
+# so the contract stays pristine (no copy, no edit).
+[package.metadata.component.target]
+path = "wit"
+world = "cargo-cli"
+
+[package.metadata.component.target.dependencies]
+"patterncatalyst:cargo" = { path = "../../../contracts/wit" }
+
+[package.metadata.component.dependencies]
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
