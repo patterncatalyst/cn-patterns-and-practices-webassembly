@@ -1,16 +1,31 @@
 # The WIT contract CI gate.
 #
-# VALIDATE-ONLY for r02: this job confirms contracts/wit parses as a valid WIT
-# package (wasm-tools component wit). It does NOT regenerate language
-# bindings and does NOT diff them for drift.
+# Two jobs:
 #
-# The full drift gate — regenerate BOTH bindings (Rust via cargo-component,
-# Go via wasm-tools/wit-bindgen-go) from contracts/wit and fail the build if
-# the checked-in bindings/examples disagree — is deferred to r03, once the
-# first bindings/examples exist to regenerate and diff against. Don't
-# duplicate pages.yml's Jekyll build/deploy logic here, and don't duplicate
-# this validation step in pages.yml (see pages.yml's own note on this job
-# landing in "a later iteration").
+#   1. validate — confirms contracts/wit parses as a valid WIT package
+#      (wasm-tools component wit). No toolchain beyond wasm-tools; fast,
+#      runs first so a broken contract fails before the heavier job starts.
+#
+#   2. examples — the full drift + examples gate deferred from r02, now that
+#      examples/part2-building-components/ (Rust + Go components, native
+#      host, verify.sh) exists to build and diff. Installs the full pinned
+#      toolchain, runs verify.sh (which already builds both components,
+#      regenerating their bindings from contracts/wit as a side effect of
+#      the build — cargo-component updates src/bindings.rs as part of
+#      `cargo component build`, and go/build.sh's own first step is
+#      `wit-bindgen-go generate`), runs the native host against both
+#      components, asserts the two independently-built components agree
+#      byte-for-byte, and checks each component's exported WIT against
+#      contracts/wit. The drift check then piggybacks on that same
+#      regeneration: if it produced any diff against the committed
+#      Rust/Go bindings, the committed bindings were stale and the job
+#      fails. Folded into one job (not a separate bindings-drift job) so
+#      the slow from-source cargo-component build and the rest of the
+#      toolchain install only happen once per run.
+#
+# Don't duplicate pages.yml's Jekyll build/deploy logic here, and don't
+# duplicate this validation step in pages.yml (see pages.yml's own note on
+# this job landing in "a later iteration").
 name: contracts
 
 on:
@@ -46,3 +61,137 @@ jobs:
 
       - name: wasm-tools component wit (validates the WIT package)
         run: wasm-tools component wit contracts/wit
+
+  examples:
+    name: Build + run the examples, check generated bindings for drift
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RUST_VERSION: "1.99.1"
+      CARGO_COMPONENT_VERSION: "0.21.1"
+      GO_VERSION: "1.26.9"
+      WIT_BINDGEN_GO_VERSION: "v0.7.0"
+      TINYGO_VERSION: "0.43.0"
+      TINYGO_SHA256: "ca9fc6d055e3889462dea4450a2e42a92242d88b5c362a7ec39bdb563413d78a"
+      WASM_TOOLS_VERSION: "1.262.0"
+      WASM_TOOLS_SHA256: "655b8df67d54c3ef9b52fc237c4e94bbfbb5f5f43825245cb0940a7002a9ed65"
+      WASMTIME_VERSION: "50.0.0"
+      WASMTIME_SHA256: "77c19ee0437991f9ac7837b9c269d9c7076744f85dad263fea5214cc2723c7ff"
+      EXAMPLE_DIR: "examples/part2-building-components"
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Rust ${{ env.RUST_VERSION }} (pinned) + wasm32-wasip2 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.99.1"
+          targets: wasm32-wasip2
+
+      # cargo-component has no prebuilt binary for this version — it must be
+      # built from source (`cargo install --locked`), which is the slow part
+      # of this job. Cache ~/.cargo (bin + registry + git) plus both example
+      # crates' target/ dirs, keyed on the toolchain + example Cargo.lock
+      # files, with an OS/toolchain-only prefix as a restore-key fallback so
+      # a Cargo.lock bump still reuses the already-built cargo-component
+      # binary and most of the crates.io registry cache.
+      - name: Cache cargo (registry + cargo-component binary + build artifacts)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ env.EXAMPLE_DIR }}/rust/target
+            ${{ env.EXAMPLE_DIR }}/host/target
+          key: cargo-examples-${{ runner.os }}-rust${{ env.RUST_VERSION }}-cc${{ env.CARGO_COMPONENT_VERSION }}-${{ hashFiles(format('{0}/rust/Cargo.lock', env.EXAMPLE_DIR), format('{0}/host/Cargo.lock', env.EXAMPLE_DIR)) }}
+          restore-keys: |
+            cargo-examples-${{ runner.os }}-rust${{ env.RUST_VERSION }}-cc${{ env.CARGO_COMPONENT_VERSION }}-
+
+      - name: Install cargo-component ${{ env.CARGO_COMPONENT_VERSION }} (from source, --locked)
+        run: |
+          set -euo pipefail
+          if [[ -x "$HOME/.cargo/bin/cargo-component" ]] && \
+             "$HOME/.cargo/bin/cargo-component" --version 2>/dev/null | grep -q " ${CARGO_COMPONENT_VERSION}\$"; then
+            echo "cargo-component ${CARGO_COMPONENT_VERSION} already present (cache hit)"
+          else
+            cargo install cargo-component --locked --version "${CARGO_COMPONENT_VERSION}"
+          fi
+          cargo component --version
+
+      - name: Install Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: ${{ env.EXAMPLE_DIR }}/go/go.sum
+
+      - name: Install wit-bindgen-go ${{ env.WIT_BINDGEN_GO_VERSION }}
+        run: |
+          set -euo pipefail
+          go install "go.bytecodealliance.org/cmd/wit-bindgen-go@${WIT_BINDGEN_GO_VERSION}"
+          "$(go env GOPATH)/bin/wit-bindgen-go" --version || true
+
+      - name: Install TinyGo ${{ env.TINYGO_VERSION }} (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          archive="tinygo${TINYGO_VERSION}.linux-amd64.tar.gz"
+          curl -fsSL -o "/tmp/${archive}" \
+            "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/${archive}"
+          echo "${TINYGO_SHA256}  /tmp/${archive}" | sha256sum -c -
+          mkdir -p "$HOME/.local"
+          tar -xzf "/tmp/${archive}" -C "$HOME/.local"
+          "$HOME/.local/tinygo/bin/tinygo" version
+
+      - name: Install wasm-tools (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          archive="wasm-tools-${WASM_TOOLS_VERSION}-x86_64-linux.tar.gz"
+          curl -fsSL -o "/tmp/${archive}" \
+            "https://github.com/bytecodealliance/wasm-tools/releases/download/v${WASM_TOOLS_VERSION}/${archive}"
+          echo "${WASM_TOOLS_SHA256}  /tmp/${archive}" | sha256sum -c -
+          tar -xzf "/tmp/${archive}" -C /tmp
+          sudo install -m 0755 "/tmp/wasm-tools-${WASM_TOOLS_VERSION}-x86_64-linux/wasm-tools" /usr/local/bin/wasm-tools
+          wasm-tools --version
+
+      - name: Install wasmtime (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          archive="wasmtime-v${WASMTIME_VERSION}-x86_64-linux.tar.xz"
+          curl -fsSL -o "/tmp/${archive}" \
+            "https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/${archive}"
+          echo "${WASMTIME_SHA256}  /tmp/${archive}" | sha256sum -c -
+          tar -xJf "/tmp/${archive}" -C /tmp
+          sudo install -m 0755 "/tmp/wasmtime-v${WASMTIME_VERSION}-x86_64-linux/wasmtime" /usr/local/bin/wasmtime
+          wasmtime --version
+
+      # verify.sh exports PATH itself (~/.cargo/bin, ~/.local/bin, ~/go/bin,
+      # ~/.local/tinygo/bin) — matches exactly where each install step above
+      # placed its binary, so no further PATH wiring is needed here. It
+      # builds the Rust component (cargo component build --release, which
+      # also regenerates rust/src/bindings.rs), builds the Go component
+      # (go/build.sh, whose first step regenerates go/internal/cargo via
+      # wit-bindgen-go generate), builds the native host, runs the host
+      # against both components, diffs their output for byte-identical
+      # agreement, and checks each component's exported WIT against
+      # contracts/wit.
+      - name: Build + run the examples (verify.sh)
+        run: ${{ env.EXAMPLE_DIR }}/verify.sh
+
+      # Drift gate: verify.sh (above) already regenerated BOTH sets of
+      # committed generated bindings from contracts/wit as a side effect of
+      # building. If that regeneration produced any diff — modified lines OR
+      # new/removed generated files — the committed bindings are stale
+      # relative to the contract and the build fails here.
+      - name: Check committed generated bindings are not stale (drift gate)
+        run: |
+          set -euo pipefail
+          GO_BINDINGS="${EXAMPLE_DIR}/go/internal/cargo"
+          RUST_BINDINGS="${EXAMPLE_DIR}/rust/src/bindings.rs"
+          CHANGED="$(git status --porcelain -- "$GO_BINDINGS" "$RUST_BINDINGS")"
+          if [[ -n "$CHANGED" ]]; then
+            echo "::error::Committed generated bindings are stale relative to contracts/wit:"
+            echo "$CHANGED"
+            git --no-pager diff -- "$GO_BINDINGS" "$RUST_BINDINGS" || true
+            exit 1
+          fi
+          echo "ok — committed bindings (${GO_BINDINGS}, ${RUST_BINDINGS}) match a fresh regeneration from contracts/wit"

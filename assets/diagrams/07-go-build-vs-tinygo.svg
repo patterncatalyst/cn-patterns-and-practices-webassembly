@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="76" width="500" height="360" rx="12" fill="#fff0ef" stroke="#ddd"/>
+<text x="32" y="96" font-size="12" font-weight="700" fill="#1d1d1d">GOOS=wasip1 GOARCH=wasm go build</text>
+<rect x="580" y="76" width="500" height="360" rx="12" fill="#f1f8f2" stroke="#ddd"/>
+<text x="592" y="96" font-size="12" font-weight="700" fill="#1d1d1d">tinygo build -target=wasip1</text>
+<rect x="310" y="16" width="480" height="48" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="550.0" y="45.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Same main.go + internal/cargo/** bindings, unmodified</text>
+<rect x="50" y="120" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="153.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">go1.26.9, GOARCH=wasm = 64-bit pointers</text>
+<rect x="50" y="188" width="440" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="221.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">//go:wasmexport checks every exported</text>
+<text x="270.0" y="238.0" font-size="11.5" fill="#555555" text-anchor="middle">result and parameter type</text>
+<rect x="50" y="270" width="440" height="110" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="270.0" y="315.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">rejects: *cm.Result[...], *cm.List[...],</text>
+<text x="270.0" y="332.5" font-size="11.5" fill="#555555" text-anchor="middle">*string, *types.Leg</text>
+<text x="270.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">— pointerful types forbidden</text>
+<rect x="50" y="392" width="440" height="36" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="415.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">✗ compile fails, no core.wasm</text>
+<rect x="610" y="120" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="830.0" y="153.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">TinyGo 0.43, wasm32 target natively</text>
+<rect x="610" y="188" width="440" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="830.0" y="221.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">no //go:wasmexport pointer-width</text>
+<text x="830.0" y="238.0" font-size="11.5" fill="#555555" text-anchor="middle">restriction on this target</text>
+<rect x="610" y="270" width="440" height="110" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="830.0" y="323.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">accepts the same exported signatures</text>
+<text x="830.0" y="340.0" font-size="11.5" fill="#555555" text-anchor="middle">as ordinary 32-bit wasm functions</text>
+<rect x="610" y="392" width="440" height="36" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="830.0" y="415.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">✓ core.wasm written, reactor exports</text>
+<path d="M270,176 L270,188" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M270,258 L270,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M270,380 L270,392" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M830,176 L830,188" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M830,258 L830,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M830,380 L830,392" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="550" y="440" font-size="12" fill="#555555" text-anchor="middle">Not a Go-dialect rewrite: the compiler changes, the source and bindings do not.</text>
+</svg>

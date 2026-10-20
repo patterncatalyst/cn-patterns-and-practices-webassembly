@@ -89,18 +89,42 @@ up.
   end of r02 now that there is real content to point to: five chapters and a
   validated contract (DRQ-019).
 
-## Deferred to later iterations (r03+)
+## r03a — Building Components: the build spine
 
-- Ch0 Setup and the lab, deferred to r03 so it lands alongside the first real
-  toolchain install and the first Rust and Go builds it documents (DRQ-018).
-- Chapter prose for Ch6–Ch28, to the house depth standard: paired
-  SVG+Excalidraw diagrams, the house chapter spine (Learning objectives +
-  Why this matters at the top, For deeper coverage at the end).
-- Runnable examples under `examples/`, every example built in **both Rust and
-  Go** against one shared WIT world, each with its own verify step.
-- The full WIT-drift CI gate: regenerate both language bindings from
-  `contracts/wit/` and fail the build on drift. Deferred to r03 — there are
-  no bindings yet to diff against (DRQ-016).
+Part 2's first half: Ch0 Setup, Ch6 (Rust), and Ch7 (Go), backed by the
+site's first runnable examples — one shared WIT world implemented in both
+languages under `examples/part2-building-components/` (`rust/` + `go/` +
+`host/` + `fixtures/` + `verify.sh`) — plus the full WIT-drift CI gate
+promised at DRQ-016, now landed as an extension of `contracts.yml`: an
+examples build+run job, a bindings-regeneration diff check, and a
+world-conformance diff against `contracts/wit` (DRQ-022, DRQ-024).
+
+The headline finding is a reversal. DRQ-013 assumed standard `go build`
+would be the primary Go path, with TinyGo as an optional sidebar; r03a
+proved that wrong. Standard Go cannot emit Component Model exports at all,
+and **TinyGo 0.43.0 is the Go compiler** this site builds on from here out
+(DRQ-021). Go source and the generated `wit-bindgen-go` bindings stay
+ordinary, idiomatic Go — only the compiler differs.
+
+The native Rust `wasmtime` host that drives both components to
+byte-identical output (DRQ-023) doubles as the seed for Ch8's
+polyglot/compose chapter.
+
+## r03b — remaining Part 2 split
+
+Ch8 (composing and polyglot components), Ch9 (debugging), and Ch10 (error
+handling), all written against the same two components built in r03a rather
+than new ones.
+
+## Deferred to later iterations (r03b+)
+
+- Ch8–Ch10 chapter prose and Part 3–Part 7 chapter prose (Ch11–Ch28), to the
+  house depth standard: paired SVG+Excalidraw diagrams, the house chapter
+  spine (Learning objectives + Why this matters at the top, For deeper
+  coverage at the end).
+- Runnable examples for Part 3 onward, each with its own verify step,
+  following the Part 2 pattern of one shared WIT world built in both Rust
+  and Go.
 - minikube manifests (containerd Wasm shim + wasmCloud operator + Istio) and
   the CRC deployment tier — both verified live headless.
 - A dev compose for supporting services plus the LGTM observability stack.
@@ -116,9 +140,10 @@ Roadmap sketch:
 - **r01** — scaffold.
 - **r02** — Part 1 Foundations prose (Ch1–Ch5) + the cargo-domain WIT
   contract + validate-only contract CI (this iteration).
-- **r03** — Part 2 Building Components (Ch6–Ch10) + Ch0 Setup + the first
-  Rust and Go examples + the full WIT-drift gate (regenerate both bindings,
-  fail on drift).
+- **r03a** — Ch0 Setup + Ch6–Ch7 (Rust, Go) + the first runnable examples +
+  the full WIT-drift gate (regenerate both bindings, fail on drift).
+- **r03b** — Ch8–Ch10 (composing/polyglot, debugging, error handling), on
+  the same two components built in r03a.
 - **r04** — Part 3 Interfaces: HTTP & gRPC.
 - **r05** — Part 4 Runtimes: wasmtime & wasmCloud.
 - **r06+** — Part 5 Kubernetes deployment tiers: minikube first, then CRC,

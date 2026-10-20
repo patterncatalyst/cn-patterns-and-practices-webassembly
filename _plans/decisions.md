@@ -179,3 +179,59 @@ the material is inherently diagram-heavy — the execution model, the
 Component Model and WIT — carry more figures when the material warrants it.
 This matches the chapter-word-target posture: value-driven work over a
 target is fine, padding is not.
+
+## DRQ-021 — Go path reversed: TinyGo is the compiler, not a sidebar (supersedes DRQ-013)
+
+DRQ-013 is reversed. Standard `go build` (Go 1.26.9) cannot emit Component
+Model exports: `go:wasmexport` rejects the pointerful result and parameter
+types (`*cm.Result`, `*cm.List`, `*string`, record pointers) that the
+`wit-bindgen-go`/`cm` ABI produces, confirmed building the r03a examples.
+**TinyGo 0.43.0 is the working Go compiler** for every Go component example
+on this site from here forward. Go source and the generated
+`wit-bindgen-go` bindings stay standard, idiomatic Go — only the compiler
+that turns them into a component differs. User-confirmed 2026-10-20.
+
+## DRQ-022 — Examples layout: one shared Part 2 tree, two languages, one world
+
+Part 2 (Ch6–Ch10) examples live under a single shared tree,
+`examples/part2-building-components/` (`rust/` + `go/` + `host/` +
+`fixtures/` + `verify.sh`), implementing one WIT world in both languages and
+reused across all five chapters rather than forking a new tree per chapter.
+
+## DRQ-023 — Host/driver: a native Rust wasmtime host runs both components
+
+A native Rust host built on the `wasmtime` crate (`component::bindgen!` on
+`world cargo`) runs the Rust component and the Go component to
+byte-identical results. A provider component has no `_start`, so something
+has to host it; building that host in Rust now also seeds Ch8's
+polyglot/compose chapter rather than being throwaway test scaffolding.
+
+## DRQ-024 — Drift gate extends `contracts.yml`, not a new workflow
+
+The full WIT-drift gate deferred at DRQ-016 lands as an extension of the
+existing `contracts.yml` workflow rather than a new one: an examples
+build+run job, a bindings-regeneration `git diff --exit-code` check, and a
+world-conformance diff (`wasm-tools component wit <wasm>` against
+`contracts/wit`). Rust bindings regenerate on every build and the generated
+`src/bindings.rs` is committed; Go bindings are committed under
+`go/internal`.
+
+## DRQ-025 — Go build gotchas recorded for Ch7
+
+Several TinyGo/Go build quirks are recorded here so Ch7 can teach them
+directly rather than send readers rediscovering them: `//export
+cabi_realloc` is required; `-buildmode=c-shared` (the reactor target, which
+exports `_initialize`) is not a TinyGo build command, so the equivalent
+explicit flags are used instead; `go.bytecodealliance.org/cm` is pinned at
+v0.3.0 (DRQ-021's matrix entry); and the WIT path passed to
+`go:generate`/embed must be relative, because wasmtime's filesystem sandbox
+rejects an absolute path. A single direct `-target=wasip2` TinyGo build
+fails on an adapter wasi-version mismatch, which is why the explicit
+wasip1-plus-reactor-adapter path is used instead.
+
+## DRQ-026 — cargo-component output lands on wasm32-wasip1, not wasip2
+
+`cargo-component` 0.21.1's compiled artifact lands under the `wasm32-wasip1`
+target triple, not `wasm32-wasip2` — the tool adapts a wasip1 core module
+into a component internally. Recorded here so Ch6 doesn't present the
+`wasm32-wasip2` rustup target as the whole build story.
