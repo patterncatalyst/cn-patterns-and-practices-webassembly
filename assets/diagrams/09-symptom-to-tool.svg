@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 612" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="10" y="10" width="1180" height="556" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="22" y="30" font-size="12" font-weight="700" fill="#1d1d1d">Symptom  -&gt;  cheapest tool  -&gt;  caveat before you trust it</text>
+<rect x="20" y="58" width="360" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="91.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Need the shape before</text>
+<text x="200.0" y="108.0" font-size="11.5" fill="#555555" text-anchor="middle">running it at all</text>
+<rect x="410" y="58" width="390" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="605.0" y="91.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasm-tools component wit</text>
+<text x="605.0" y="108.0" font-size="11.5" fill="#555555" text-anchor="middle">&lt;file&gt;.wasm</text>
+<rect x="830" y="58" width="350" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1005.0" y="91.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">prints the world + interfaces</text>
+<text x="1005.0" y="108.0" font-size="11.5" fill="#555555" text-anchor="middle">embedded in the binary</text>
+<rect x="20" y="142" width="360" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="175.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Need to see the ABI glue</text>
+<text x="200.0" y="192.0" font-size="11.5" fill="#555555" text-anchor="middle">(canon lift / canon lower)</text>
+<rect x="410" y="142" width="390" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="605.0" y="175.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasm-tools print</text>
+<text x="605.0" y="192.0" font-size="11.5" fill="#555555" text-anchor="middle">&lt;file&gt;.wasm   (WAT)</text>
+<rect x="830" y="142" width="350" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1005.0" y="175.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">tens of thousands of lines —</text>
+<text x="1005.0" y="192.0" font-size="11.5" fill="#555555" text-anchor="middle">grep for the export name</text>
+<rect x="20" y="226" width="360" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="259.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Is DWARF even present</text>
+<text x="200.0" y="276.0" font-size="11.5" fill="#555555" text-anchor="middle">in this artifact?</text>
+<rect x="410" y="226" width="390" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="605.0" y="259.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasm-tools objdump</text>
+<text x="605.0" y="276.0" font-size="11.5" fill="#555555" text-anchor="middle">&lt;file&gt;.wasm</text>
+<rect x="830" y="226" width="350" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1005.0" y="259.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">per-section sizes; look for</text>
+<text x="1005.0" y="276.0" font-size="11.5" fill="#555555" text-anchor="middle">.debug_info under each module</text>
+<rect x="20" y="310" width="360" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="343.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Component trapped</text>
+<text x="200.0" y="360.0" font-size="11.5" fill="#555555" text-anchor="middle">at runtime</text>
+<rect x="410" y="310" width="390" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="605.0" y="343.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmtime run / host +</text>
+<text x="605.0" y="360.0" font-size="11.5" fill="#555555" text-anchor="middle">WASMTIME_BACKTRACE_DETAILS=1</text>
+<rect x="830" y="310" width="350" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1005.0" y="343.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">one frame per call; file:line</text>
+<text x="1005.0" y="360.0" font-size="11.5" fill="#555555" text-anchor="middle">only if that module has DWARF</text>
+<rect x="20" y="394" width="360" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="427.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Need what the component</text>
+<text x="200.0" y="444.0" font-size="11.5" fill="#555555" text-anchor="middle">wrote on its way down</text>
+<rect x="410" y="394" width="390" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="605.0" y="427.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">WasiCtxBuilder</text>
+<text x="605.0" y="444.0" font-size="11.5" fill="#555555" text-anchor="middle">::inherit_stderr()</text>
+<rect x="830" y="394" width="350" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1005.0" y="427.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">panic/log lines land on</text>
+<text x="1005.0" y="444.0" font-size="11.5" fill="#555555" text-anchor="middle">the host process&#x27;s own stderr</text>
+<rect x="20" y="478" width="360" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="511.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Need to pause and</text>
+<text x="200.0" y="528.0" font-size="11.5" fill="#555555" text-anchor="middle">step through source</text>
+<rect x="410" y="478" width="390" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="605.0" y="511.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmtime run</text>
+<text x="605.0" y="528.0" font-size="11.5" fill="#555555" text-anchor="middle">-g/--gdbstub &lt;PORT&gt;   (LLDB)</text>
+<rect x="830" y="478" width="350" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1005.0" y="511.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">native/core level only — no</text>
+<text x="1005.0" y="528.0" font-size="11.5" fill="#555555" text-anchor="middle">WIT-aware source view yet</text>
+<path d="M380,93.0 L410,93.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800,93.0 L830,93.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M380,177.0 L410,177.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800,177.0 L830,177.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M380,261.0 L410,261.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800,261.0 L830,261.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M380,345.0 L410,345.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800,345.0 L830,345.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M380,429.0 L410,429.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800,429.0 L830,429.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M380,513.0 L410,513.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800,513.0 L830,513.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="600" y="594" font-size="12" fill="#555555" text-anchor="middle">All six run against the SAME Part 2 artifacts (rust/target/.../cargo_rust.wasm, go/cargo-go.wasm) — none of them require rebuilding or instrumenting the component first.</text>
+</svg>
