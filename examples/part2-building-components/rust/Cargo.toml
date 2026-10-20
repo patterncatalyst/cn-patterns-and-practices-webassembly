@@ -1,0 +1,24 @@
+[package]
+name = "cargo-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+# The component targets the repository's shared WIT contract directly — the
+# crate does NOT copy the WIT. `target.path` points at contracts/wit (relative
+# to this Cargo.toml) and `target.world` selects the provider-side `cargo`
+# world, whose three exported interfaces (types, booking, handling) this crate
+# implements.
+[package.metadata.component]
+package = "patterncatalyst:cargo"
+
+[package.metadata.component.target]
+path = "../../../contracts/wit"
+world = "cargo"
+
+[package.metadata.component.dependencies]

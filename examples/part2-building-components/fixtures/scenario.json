@@ -1,0 +1,41 @@
+{
+  "_comment": "Shared, deterministic cargo-domain scenario consumed by host/ for BOTH the Rust and the Go component. `input` is what the host sends across the component boundary; `expected` is what both components must return, field for field. The ID formats, constant price, voyage id, leg load time and status mapping are fixed in both implementations (rust/src/lib.rs and go/main.go), so the two components produce identical observable results.",
+  "input": {
+    "route_spec": {
+      "origin": { "unlocode": "USNYC", "name": "New York", "country": "US" },
+      "destination": { "unlocode": "DEHAM", "name": "Hamburg", "country": "DE" },
+      "arrival_deadline": "2026-12-01T00:00:00Z"
+    },
+    "weight_kg": 1200.5,
+    "handling_events": [
+      { "event_type": "received", "location": { "unlocode": "USNYC", "name": "New York", "country": "US" }, "voyage_id": "VOY-001", "recorded_at": "2026-11-02T09:00:00Z" },
+      { "event_type": "loaded", "location": { "unlocode": "USNYC", "name": "New York", "country": "US" }, "voyage_id": "VOY-001", "recorded_at": "2026-11-03T14:30:00Z" },
+      { "event_type": "unloaded", "location": { "unlocode": "DEHAM", "name": "Hamburg", "country": "DE" }, "voyage_id": "VOY-001", "recorded_at": "2026-11-20T08:15:00Z" }
+    ]
+  },
+  "expected": {
+    "booking": {
+      "booking_id": "BOOKING-USNYC-DEHAM",
+      "cargo_id": "CARGO-USNYC-DEHAM",
+      "price_amount": "1500.00",
+      "price_currency": "USD",
+      "status": "not-routed"
+    },
+    "cargo": {
+      "tracking_id": "CARGO-USNYC-DEHAM",
+      "weight_kg": 1200.5
+    },
+    "itinerary": {
+      "booking_id": "BOOKING-USNYC-DEHAM",
+      "leg_voyage_id": "VOY-001",
+      "leg_status": "planned"
+    },
+    "assigned_status": "routed",
+    "events_count": 3,
+    "tracker": {
+      "tracking_id": "CARGO-USNYC-DEHAM",
+      "current_status": "in-transit",
+      "history_count": 3
+    }
+  }
+}
