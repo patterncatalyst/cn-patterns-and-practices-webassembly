@@ -1,0 +1,24 @@
+# minikube overlay — tunes the base otel-lgtm resource ceiling down to fit a
+# default `minikube start` VM (2 CPU / 4Gi for the docker driver's default
+# profile size, matching the convention in ../../../overlays/minikube — this is
+# a resource-budget overlay, not an image/pull-policy one: otel-lgtm is pulled
+# straight from Docker Hub like any other public image, never loaded via
+# `minikube image load` (unlike cargo-http-wasm, which has no registry to pull
+# from at all).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: otel-lgtm
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "2Gi"

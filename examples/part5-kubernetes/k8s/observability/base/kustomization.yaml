@@ -1,0 +1,10 @@
+# ch24 minikube observability backend — same namespace as the cargo-http app
+# (../../base/kustomization.yaml) so the shim's OTLP traffic and the Service it
+# targets are both in part5-kubernetes; no cross-namespace DNS to reason about.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: part5-kubernetes
+
+resources:
+  - otel-lgtm.yaml
