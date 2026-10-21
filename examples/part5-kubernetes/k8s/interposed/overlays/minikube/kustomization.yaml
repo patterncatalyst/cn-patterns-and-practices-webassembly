@@ -1,0 +1,36 @@
+# minikube overlay for the interposed compositions — retags both Wasm images to
+# the tags the component build.sh scripts build and `minikube image load`, and
+# forces imagePullPolicy: Never so the kubelet never tries a registry pull for
+# images that only exist in minikube's local containerd store (DRQ convention:
+# docker driver + containerd, no registry).
+#
+# The Ingress hosts stay the base placeholders here; the verify/capture scripts
+# patch them live to cargo-filtered.<ip>.nip.io / cargo-adapted.<ip>.nip.io (the
+# IP is only known at run time).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: cargo-http-filtered
+    newTag: minikube
+  - name: cargo-http-adapted
+    newTag: minikube
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-http-filtered
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Deployment
+      name: cargo-http-adapted
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

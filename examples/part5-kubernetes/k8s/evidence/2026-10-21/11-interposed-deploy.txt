@@ -1,0 +1,18 @@
+$ kubectl get deploy,svc,ingress -n part5-kubernetes -o wide
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS            IMAGES                         SELECTOR
+deployment.apps/cargo-http-adapted    1/1     1            1           9s    cargo-http-adapted    cargo-http-adapted:minikube    app.kubernetes.io/name=cargo-http-adapted
+deployment.apps/cargo-http-filtered   1/1     1            1           9s    cargo-http-filtered   cargo-http-filtered:minikube   app.kubernetes.io/name=cargo-http-filtered
+
+NAME                          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/cargo-http-adapted    ClusterIP   10.98.182.11     <none>        8080/TCP   9s    app.kubernetes.io/name=cargo-http-adapted
+service/cargo-http-filtered   ClusterIP   10.100.249.215   <none>        8080/TCP   9s    app.kubernetes.io/name=cargo-http-filtered
+
+NAME                                            CLASS   HOSTS                                ADDRESS   PORTS   AGE
+ingress.networking.k8s.io/cargo-http-adapted    nginx   cargo-adapted.192.168.49.2.nip.io              80      9s
+ingress.networking.k8s.io/cargo-http-filtered   nginx   cargo-filtered.192.168.49.2.nip.io             80      9s
+
+# runtimeClassName routing each Pod to the Wasm shim:
+$ kubectl get deploy cargo-http-filtered -o jsonpath={...runtimeClassName}
+wasmtime
+$ kubectl get deploy cargo-http-adapted -o jsonpath={...runtimeClassName}
+wasmtime

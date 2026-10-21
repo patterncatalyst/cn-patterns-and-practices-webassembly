@@ -310,6 +310,72 @@ chart, the `WasmCloudHostConfig` and OAM `Application` manifests, a
 
 **Ch19 is COMPLETE. Part 5 is now Ch17–Ch19 done, Ch20–Ch24 remaining.**
 
+## r06c — Part 5: Interposition patterns (sidecar, ambassador, adapter)
+
+Ch20 (sidecar) and Ch21 (ambassador, adapter), verified live and dual-cluster:
+minikube's compile-time `wac plug` composition and CRC's runtime wadm-link
+composition, backed by the new
+`examples/part5-kubernetes/{sidecar-filter,adapter,ambassador}` tree plus
+`k8s/interposed/` and the OpenShift `*interposed*`/`wadm-*` manifests.
+
+- Interposition happens at the `patterncatalyst:cargo/*` domain interfaces,
+  not at `wasi:http/incoming-handler`: WASI 0.2's handler resources are
+  non-constructible from inside a component, and `wac` rejects the attempt
+  as a resource mismatch (wac#149, DRQ-060). Each interposer gets a local
+  WIT world importing and exporting the cargo interfaces as a path
+  dependency, leaving `contracts/wit` untouched.
+- The same pattern is expressed two different ways across the two clusters
+  (DRQ-061). minikube composes provider → interposer → HTTP front door into
+  one `app-*.wasm` at build time with `wac plug`, since the raw containerd
+  shim can only host a single pod-scoped `RuntimeClass` workload and can't
+  host a pod sidecar (runwasi#1004). CRC links three separate components —
+  provider, interposer, front door — at runtime on
+  `patterncatalyst:cargo/booking` (and `handling`) over wRPC via wadm links,
+  which custom-interface links support on wasmCloud host 1.8+ (verified on
+  1.9.1 here).
+- **The state-across-links finding (DRQ-062)**, verified live on both
+  clusters: wasmCloud components are stateless per invocation — a fresh
+  instance with reset linear memory on every call. The front door's
+  two-call book-then-get round trip loses the in-memory booking once that
+  round trip crosses a runtime link, so a valid ID returns 404 on CRC; under
+  minikube's `wac plug` composite the same two calls share one in-process
+  instance, so the same ID returns 200. Compile-time composition shares
+  state; runtime links give independent lifecycle and per-hop policy
+  injection but not in-memory state, which has to move to a capability
+  provider or an external service. This is reported as a fully evidenced
+  finding on both clusters, not a gap to patch around.
+- Ch20's sidecar-filter enforces a destination-embargo policy plus logging,
+  with the embargo firing across the CRC link proven by a host-log
+  `POLICY DENY` line. Ch21's adapter translates a legacy request shape into
+  the canonical cargo shape, lossless on every JSON-surfaced field, and its
+  ambassador adds outbound calls with backoff and jitter. The ambassador is
+  substrate-asymmetric by the user's own confirmation (DRQ-063): CRC runs it
+  live over a runtime-granted lattice link (no grant → 500, egress is
+  itself a grant), while minikube's raw shim has no outbound-network knob,
+  so the minikube side is a local `wasmtime run -S inherit-network` smoke
+  test, documented as a substitute rather than presented as a live cluster
+  run.
+- Build gotchas recorded for the chapters (DRQ-064): a component that both
+  imports and exports the same WIT interface forks into two distinct
+  generated Rust type trees, bridged by a mandatory field-by-field `conv`
+  module; links are scoped to only the interfaces a component actually
+  imports (the front door imports `booking` only); CRC readiness for the
+  interposed chain is a 404 from the provider on an unknown ID, not a 200;
+  and wasmtime collapses any non-zero guest exit code to host process exit
+  code 1.
+- CI: the interposition examples join the existing build and bindings-drift
+  gate, and the interposed minikube overlay and OpenShift `wadm-*.yaml`
+  manifests join the static kubeconform gate — no cluster inside CI
+  (DRQ-065).
+- No new version pins: Ch20/Ch21 reuse the firm Part 5 tiers as-is (shim
+  v0.6.1, minikube v1.39.0/Kubernetes v1.37.1, wasmcloud-platform chart
+  0.1.2/host 1.9.1, httpserver provider 0.27.0, kubeconform v0.8.0); the new
+  per-component private ghcr image references are deploy artifacts, not
+  version pins.
+
+**Ch20 and Ch21 are COMPLETE. Part 5 is now Ch17–Ch21 done, Ch22–Ch24
+remaining (r06d).**
+
 ## Deferred to later iterations (r07+)
 
 - Part 6–Part 7 chapter prose (Ch25–Ch28), to the house depth standard:
@@ -357,9 +423,14 @@ Roadmap sketch:
 - **r06b** — Ch19 OpenShift Local/CRC (wasmCloud operator, `restricted-v2`,
   edge-TLS Routes, verified live headless). **Ch19 COMPLETE, Part 5 at
   Ch17–Ch19 done (this iteration).**
-- **r06c** — Ch20 sidecar + Ch21 ambassador/adapter. **Next up.**
-- **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero + Ch24 observability
-  (OTel+LGTM). **Part 5 (Ch17–Ch24) COMPLETE** at the end of r06d.
+- **r06c** — Ch20 sidecar + Ch21 ambassador/adapter (dual-cluster verified:
+  minikube compile-time `wac plug`, CRC runtime wadm links; the
+  state-across-links finding; ambassador substrate asymmetry). **Ch20/Ch21
+  COMPLETE, Part 5 at Ch17–Ch21 done (this iteration).**
+- **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero (HTTP add-on + Kafka scaler)
+  + Ch24 observability (OTel from Wasm + the LGTM stack), both verified live
+  on minikube and CRC per the headless-verification rule. **Next up. Part 5
+  (Ch17–Ch24) COMPLETE** at the end of r06d.
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey
   (Spin), wasi-nn.
 - **r0N** — Part 7 Final project.

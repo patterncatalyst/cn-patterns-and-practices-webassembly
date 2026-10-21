@@ -1,0 +1,6 @@
+# The front door reaches the cargo provider across a runtime-granted wadm link
+# (not a wac-plug composition). A 404 (the provider's OWN NotFound) proves the
+# outbound wRPC call reached the provider and it answered.
+$ curl -w ' [%{http_code}]' https://cargo-ambassador-wasmcloud.apps-crc.testing/cargo/NOPE
+{"error":"no cargo NOPE"} [404]
+    ✓ AMBASSADOR no-grant GET /cargo/NOPE -> 500 (ungranted outbound call denied; the unlinked front door is not served)

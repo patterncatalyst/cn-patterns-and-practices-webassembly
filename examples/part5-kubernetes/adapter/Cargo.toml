@@ -1,0 +1,30 @@
+[package]
+name = "cargo-adapter-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+# This component targets a LOCAL world (wit/world.wit) that IMPORTS and EXPORTS
+# the canonical cargo interfaces (the interposer shape) AND exports its own
+# `legacy` interface — a deliberately-different booking shape defined only in
+# this crate's WIT. It references `patterncatalyst:cargo` as a path dependency to
+# the repository contract (which stays pristine). No wasi:* target dependencies:
+# the cargo contract is plain value records; the wasi:cli/stderr import used for
+# logging is injected by cargo-component's preview1 adapter and satisfied by the
+# host when the final composition runs.
+[package.metadata.component]
+package = "patterncatalyst:cargo-adapter"
+
+[package.metadata.component.target]
+path = "wit"
+world = "cargo-adapter"
+
+[package.metadata.component.target.dependencies]
+"patterncatalyst:cargo" = { path = "../../../contracts/wit" }
+
+[package.metadata.component.dependencies]

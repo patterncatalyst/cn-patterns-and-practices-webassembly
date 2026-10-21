@@ -1,0 +1,33 @@
+# ingress-nginx Ingress for the FILTERED composition — the only externally
+# reachable path to cargo-http-filtered. The live curl goes
+# host -> ingress-nginx -> Service cargo-http-filtered:8080 -> Pod -> shim ->
+# component; no port-forward, no NodePort, no `minikube service` (house rule).
+#
+# The host is a generic placeholder so base/ stays deployable anywhere; the
+# verify/capture scripts patch it live to cargo-filtered.<minikube-ip>.nip.io
+# (nip.io resolves <anything>.<ip>.nip.io -> <ip>, so the URL authority is a real
+# DNS-resolvable Ingress host — no /etc/hosts edit, no tunnel).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cargo-http-filtered
+  namespace: part5-kubernetes
+  annotations:
+    # Deterministic "my rule matched" signal: ingress-nginx stamps this cookie
+    # only on responses routed through THIS Ingress rule, never on its generic
+    # default-backend 404 — the scripts wait for it before trusting the Ingress.
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "part5-filtered-affinity"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cargo-filtered.part5-kubernetes.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cargo-http-filtered
+                port:
+                  number: 8080

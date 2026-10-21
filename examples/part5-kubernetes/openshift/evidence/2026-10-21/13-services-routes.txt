@@ -1,0 +1,15 @@
+--- cargo-filtered ---
+SVC              TYPE        PORT
+cargo-filtered   ClusterIP   8000
+ROUTE            HOST                                        TERMINATION
+cargo-filtered   cargo-filtered-wasmcloud.apps-crc.testing   edge
+--- cargo-adapted ---
+SVC             TYPE        PORT
+cargo-adapted   ClusterIP   8001
+ROUTE           HOST                                       TERMINATION
+cargo-adapted   cargo-adapted-wasmcloud.apps-crc.testing   edge
+--- cargo-ambassador ---
+SVC                TYPE        PORT
+cargo-ambassador   ClusterIP   8002
+ROUTE              HOST                                          TERMINATION
+cargo-ambassador   cargo-ambassador-wasmcloud.apps-crc.testing   edge

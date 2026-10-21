@@ -1,0 +1,14 @@
+# wasmCloud host pod log lines emitted by the ch20 sidecar-filter interposer
+# (eprintln! 'cargo-filter: ...'), proving it is live in the runtime-link chain:
+cargo-filter: get-cargo tracking_id=NOPE
+cargo-filter: book-cargo origin=USNYC destination=DEHAM weight_kg=1200.5
+cargo-filter: get-cargo tracking_id=CARGO-USNYC-DEHAM
+cargo-filter: book-cargo origin=USNYC destination=CUHAV weight_kg=1200.5
+cargo-filter: POLICY DENY book-cargo: destination CUHAV is under embargo
+cargo-filter: get-cargo tracking_id=NOPE
+cargo-filter: book-cargo origin=USNYC destination=DEHAM weight_kg=1200.5
+cargo-filter: get-cargo tracking_id=CARGO-USNYC-DEHAM
+cargo-filter: book-cargo origin=USNYC destination=CUHAV weight_kg=1200.5
+cargo-filter: POLICY DENY book-cargo: destination CUHAV is under embargo
+cargo-filter: book-cargo origin=USNYC destination=DEHAM weight_kg=1200.5
+cargo-filter: get-cargo tracking_id=CARGO-USNYC-DEHAM

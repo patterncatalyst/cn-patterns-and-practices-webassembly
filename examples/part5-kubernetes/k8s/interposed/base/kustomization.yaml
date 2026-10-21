@@ -1,0 +1,20 @@
+# Base for the ch20/ch21 interposed compositions: two sibling Wasm front doors
+# (filtered + adapted) that run alongside each other on the shim.
+#
+# This set lists only the app objects. The shared pre-requisites are reused, not
+# duplicated (single source of truth): the `wasmtime` RuntimeClass is applied by
+# install-shim.sh, and the part5-kubernetes Namespace by the plain base
+# (k8s/base/namespace.yaml) — the verify/capture scripts apply it with
+# `kubectl apply -f` before this overlay. kustomize forbids referencing files
+# above a kustomization root, so those two shared YAMLs are not listed here; the
+# `namespace:` field still stamps every object below into part5-kubernetes.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: part5-kubernetes
+
+resources:
+  - deployment-filtered.yaml
+  - deployment-adapted.yaml
+  - ingress-filtered.yaml
+  - ingress-adapted.yaml

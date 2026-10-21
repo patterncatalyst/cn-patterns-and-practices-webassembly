@@ -1,0 +1,14 @@
+CRC version: 2.64.0+458092
+OpenShift version: 4.22.14
+MicroShift version: 4.22.13
+Server Version: 4.22.14
+Kubernetes Version: v1.35.6
+--- wasmCloud host version (WasmCloudHostConfig) ---
+version=1.9.1
+--- httpserver provider tag (wadm) ---
+  image: ghcr.io/wasmcloud/http-server:0.27.0
+--- separate component refs (runtime-link form) ---
+  provider : ghcr.io/patterncatalyst/cargo-provider:crc
+  frontdoor: ghcr.io/patterncatalyst/cargo-frontdoor:crc
+  filter   : ghcr.io/patterncatalyst/cargo-filter:crc
+  adapter  : ghcr.io/patterncatalyst/cargo-adapter:crc

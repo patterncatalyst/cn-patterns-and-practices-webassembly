@@ -76,6 +76,8 @@ plan against, re-verified live when their chapter lands.
 | httpserver capability provider | **`ghcr.io/wasmcloud/http-server:0.27.0`** — the same pin as the Part 4/minikube tier, reused unchanged for the CRC deployment. |
 | CRC / OpenShift Local | **2.64.0** / OCP **4.22.14** — `restricted-v2` SCC throughout; no privileged MachineConfig. Firms the r02 snapshot row below for this component. |
 | Note | The wasmCloud **v2** rewrite (runtime-operator chart 2.10.x) uses a different, non-OAM/non-`WasmCloudHostConfig` model that diverges from this book's Part 4 contract spine; the book pins the **v1 chart 0.1.2** instead of tracking v2. |
+| **Part 5 interposition patterns (r06c, no new pins)** | |
+| Note | Ch20 (sidecar) and Ch21 (ambassador, adapter) reuse the firm Part 5 pins as-is: containerd Wasm shim v0.6.1 and minikube v1.39.0/Kubernetes v1.37.1 on the compile-time `wac plug` path; wasmcloud-platform chart 0.1.2 and host 1.9.1 on the runtime wadm-link path; httpserver provider 0.27.0; kubeconform v0.8.0 for the static manifest gate. No new tool version is introduced. The new per-component private `ghcr.io/patterncatalyst/{cargo-provider,frontdoor,filter,adapter}:crc` image references are deploy artifacts for this chapter pair, not entries in the version pin table. |
 | **Kubernetes deployment tier (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
 | Istio | Snapshot: **1.31.2**, released 2026-10-16. Source: https://github.com/istio/istio/releases/tag/1.31.2 — re-verify live when Ch25 (Istio + Wasm) lands |
 | KEDA | Snapshot: **v2.21.0**, released 2026-09-23. Source: https://github.com/kedacore/keda/releases/tag/v2.21.0 — re-verify live when Ch23 (scale-to-zero) lands |

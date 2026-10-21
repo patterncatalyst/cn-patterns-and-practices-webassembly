@@ -1,0 +1,76 @@
+# wadm application (OAM core.oam.dev/v1beta1) — the ch21 AMBASSADOR as the
+# CRC-live, lattice-linked form.
+#
+# The ambassador's defining property is a RESILIENT OUTBOUND call reaching its
+# target through a RUNTIME-GRANTED link rather than an ambient default. On the
+# wasmCloud lattice that grant IS the wadm `link`: a component's outbound call to
+# another component only works if the link exists. Here the front door reaches the
+# cargo provider across a runtime link (no `wac plug` composition) — the first
+# time in this project the front door calls the provider over wRPC instead of a
+# compile-time splice:
+#
+#   httpserver     --wasi:http/incoming-handler-->  cargo-ambassador (front door)
+#   cargo-ambassador  --patterncatalyst:cargo/booking-->  cargo-provider-am
+#                        ^^^^^ the runtime-granted outbound link (the "grant")
+#
+# WITH this link (this manifest) the outbound hop is reached: GET /cargo/... -> 200
+# with the exact cargo JSON. WITHOUT it (wadm-ambassador-nogrant.yaml) the same
+# call is denied at the lattice boundary and fails fast (5xx) — egress is a grant,
+# not a default. The retry/backoff-with-jitter half of the ambassador is the Part 1
+# local `wasmtime run -S inherit-network` smoke (the shim path exposes no outbound
+# knob); this is the cluster-live grant proof. deploy-interposed.sh rewrites the
+# __*_REF__ placeholders. contracts/wit stays pristine.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-ambassador
+  annotations:
+    version: v0.0.1
+    description: "ch21 ambassador — HTTP front door reaching the cargo provider across a runtime-granted lattice link, on OpenShift Local"
+spec:
+  components:
+    - name: cargo-provider-am
+      type: component
+      properties:
+        image: __PROVIDER_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+
+    - name: cargo-ambassador
+      type: component
+      properties:
+        image: __FRONTDOOR_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+        # THE runtime-granted outbound link: front door's cargo IMPORT -> provider.
+        - type: link
+          properties:
+            target: cargo-provider-am
+            namespace: patterncatalyst
+            package: cargo
+            interfaces:
+              - booking
+
+    - name: httpserver-ambassador
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        - type: link
+          properties:
+            target: cargo-ambassador
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-ambassador-listen
+                properties:
+                  address: 0.0.0.0:8002
+        - type: daemonscaler
+          properties:
+            replicas: 1

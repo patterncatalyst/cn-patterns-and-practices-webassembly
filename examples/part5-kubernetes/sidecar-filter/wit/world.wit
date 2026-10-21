@@ -1,0 +1,29 @@
+package patterncatalyst:cargo-filter@0.1.0;
+
+/// A cross-cutting INTERPOSER for the cargo domain, as a WebAssembly component
+/// (ch20). It sits transparently between a `cargo` provider and the HTTP front
+/// door: it IMPORTS the three canonical cargo interfaces (the real provider's
+/// exports, supplied by `wac plug`) and EXPORTS the SAME three interfaces back
+/// out, so to the front door it is indistinguishable from the provider itself.
+///
+/// Because it speaks the identical contract on both sides, it can be dropped
+/// into the composition chain without any caller or provider change — the
+/// defining property of a sidecar/filter interposer:
+///
+///   provider (exports cargo)  ->  filter (imports+exports cargo)  ->  http door
+///
+/// The filter adds two cross-cutting concerns on the way through: a
+/// destination-embargo POLICY (an embargoed destination is rejected with
+/// `cargo-error::invalid-location`, which the front door's `send_error` maps to
+/// a 4xx) and per-call LOGGING to stderr. The `patterncatalyst:cargo` package is
+/// a path dependency to the repository contract (Cargo.toml) — the contract
+/// stays byte-for-byte pristine; this component defines only its own world.
+world cargo-filter {
+    import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
+    import patterncatalyst:cargo/handling@0.1.0;
+
+    export patterncatalyst:cargo/types@0.1.0;
+    export patterncatalyst:cargo/booking@0.1.0;
+    export patterncatalyst:cargo/handling@0.1.0;
+}

@@ -1,0 +1,28 @@
+# ingress-nginx Ingress for the ADAPTED composition — the only externally
+# reachable path to cargo-http-adapted. The live curl goes
+# host -> ingress-nginx -> Service cargo-http-adapted:8080 -> Pod -> shim ->
+# component; no port-forward, no NodePort, no `minikube service` (house rule).
+#
+# The host is a generic placeholder; the verify/capture scripts patch it live to
+# cargo-adapted.<minikube-ip>.nip.io.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cargo-http-adapted
+  namespace: part5-kubernetes
+  annotations:
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "part5-adapted-affinity"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cargo-adapted.part5-kubernetes.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cargo-http-adapted
+                port:
+                  number: 8080

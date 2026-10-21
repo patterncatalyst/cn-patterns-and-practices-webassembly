@@ -1,0 +1,6 @@
+POD                                   READY       RESTARTS   SCC
+nats-0                                true,true   0,0        restricted-v2
+wadm-57f596d4ff-rfk7t                 true        2          restricted-v2
+wasmcloud-host-6c5f6c5f88-ljhb2       true,true   0,0        restricted-v2
+wasmcloud-operator-7f6d8c99bf-zgkfh   true        0          restricted-v2
+namespace uid-range: 1000660000/10000
