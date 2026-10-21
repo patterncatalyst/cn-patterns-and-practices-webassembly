@@ -1,0 +1,34 @@
+[package]
+name = "sockets-client-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+# A cargo-component *command* component (a [[bin]] with fn main): cargo-component
+# synthesizes the wasi:cli/run export, so the build output runs directly under
+# `wasmtime run`. The local world imports the wasi:sockets / clocks / random
+# interfaces; cargo-component does not auto-scan wit/deps, so every referenced
+# wasi package is declared below as a path dependency (vendored 0.2.8 set).
+[package.metadata.component]
+package = "patterncatalyst:sockets-client"
+
+[package.metadata.component.target]
+path = "wit"
+world = "sockets-client"
+
+[package.metadata.component.target.dependencies]
+"wasi:io" = { path = "wit/deps/io" }
+"wasi:clocks" = { path = "wit/deps/clocks" }
+"wasi:random" = { path = "wit/deps/random" }
+"wasi:cli" = { path = "wit/deps/cli" }
+"wasi:filesystem" = { path = "wit/deps/filesystem" }
+"wasi:sockets" = { path = "wit/deps/sockets" }
+"wasi:http" = { path = "wit/deps/http" }
+
+[package.metadata.component.dependencies]
+
+[[bin]]
+name = "sockets-client-rust"
+path = "src/main.rs"

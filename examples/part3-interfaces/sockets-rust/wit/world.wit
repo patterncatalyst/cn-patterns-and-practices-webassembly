@@ -1,0 +1,18 @@
+package patterncatalyst:sockets-client@0.1.0;
+
+/// A capability-scoped outbound TCP client, as a WebAssembly *command*
+/// component (ch13). It imports the wasi:sockets, clocks, and random interfaces
+/// it needs; because it is a cargo-component bin (fn main), cargo-component
+/// synthesizes the wasi:cli/run export, so it runs directly under `wasmtime run`.
+///
+/// The component can only open a connection when the host GRANTS network access
+/// (`wasmtime run -S inherit-network`). Without the grant the connect is denied
+/// by the capability boundary — that denial is the point of the demo.
+world sockets-client {
+    import wasi:sockets/instance-network@0.2.8;
+    import wasi:sockets/network@0.2.8;
+    import wasi:sockets/tcp@0.2.8;
+    import wasi:sockets/tcp-create-socket@0.2.8;
+    import wasi:clocks/monotonic-clock@0.2.8;
+    import wasi:random/random@0.2.8;
+}

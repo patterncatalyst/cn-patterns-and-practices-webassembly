@@ -1,0 +1,19 @@
+package patterncatalyst:cargo@0.1.0;
+
+/// The provider side of the cargo domain. A Rust or Go component that
+/// implements booking and handling logic targets this world and exports
+/// these interfaces for a host or another component to call.
+world cargo {
+    export types;
+    export booking;
+    export handling;
+}
+
+/// The consumer side of the cargo domain. A component that calls into a
+/// `cargo`-implementing component, rather than implementing the domain
+/// itself, targets this world and imports the same interfaces.
+world cargo-consumer {
+    import types;
+    import booking;
+    import handling;
+}

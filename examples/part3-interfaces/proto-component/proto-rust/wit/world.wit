@@ -1,0 +1,25 @@
+package patterncatalyst:cargo-proto@0.1.0;
+
+/// Protobuf codec for the cargo domain, as a WebAssembly component (ch12).
+///
+/// The `codec` interface takes protobuf REQUEST bytes and returns protobuf
+/// RESPONSE bytes. The encode/decode happens with prost entirely inside the
+/// Wasm sandbox — this is Protobuf-the-serialization running server-side, as
+/// distinct from gRPC-the-transport (which the grpc-bridge terminates natively).
+interface codec {
+    /// Decode a protobuf `GetCargoRequest`, dispatch to the imported cargo
+    /// domain, and return a protobuf-encoded `GetCargoResponse`. Returns `err`
+    /// only when the request bytes fail to decode; a domain miss is reported in
+    /// the response's `error` field (still a valid protobuf message).
+    get-cargo: func(request: list<u8>) -> result<list<u8>, string>;
+}
+
+/// The component: decodes/encodes protobuf with prost (export `codec`) and
+/// calls the cargo domain across the component boundary (imports). Composed
+/// with a `cargo` provider via `wac plug`, the imports are satisfied.
+world cargo-proto {
+    import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
+
+    export codec;
+}

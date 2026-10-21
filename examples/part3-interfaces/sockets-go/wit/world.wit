@@ -1,0 +1,27 @@
+package patterncatalyst:sockets-client-go@0.1.0;
+
+/// TinyGo outbound TCP client with reconnect + backoff (ch13, GATE D Go).
+///
+/// Shipped as a REACTOR exporting `client.run-client`, driven by the native
+/// sockets-host. Why not a command (`wasmtime run`): TinyGo 0.43's runtime seeds
+/// randomness with arc4random during `_start`, and the wasip1->wasip2 COMMAND
+/// adapter's random_get traps when called that early ("assertion failed at
+/// adapter line 2404"). A reactor uses `_initialize` + the reactor adapter (the
+/// same path the part2 Go provider uses successfully), which avoids the trap.
+/// The host grants or withholds network access, mirroring `-S inherit-network`.
+interface client {
+    /// Connect to 127.0.0.1:port, retrying with exponential backoff + jitter up
+    /// to max-attempts. Returns the (1-based) attempt number that succeeded, or
+    /// an error string ("access-denied" when the host withheld the network).
+    run-client: func(port: u16, max-attempts: u32, base-ms: u64) -> result<u32, string>;
+}
+
+world sockets-client-go {
+    import wasi:sockets/instance-network@0.2.12;
+    import wasi:sockets/network@0.2.12;
+    import wasi:sockets/tcp@0.2.12;
+    import wasi:sockets/tcp-create-socket@0.2.12;
+    import wasi:clocks/monotonic-clock@0.2.12;
+
+    export client;
+}
