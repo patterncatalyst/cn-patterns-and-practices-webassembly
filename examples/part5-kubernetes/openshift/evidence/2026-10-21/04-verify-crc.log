@@ -1,0 +1,20 @@
+
+[1m==> 0/4 Preflight: Route exists[0m
+    ✓ edge-TLS Route https://cargo-http-wasmcloud.apps-crc.testing/
+
+[1m==> 1/4 Readiness: a real 200 through the edge-TLS Route[0m
+    ✓ Route serving (HTTP 200) on /cargo/CARGO-USNYC-DEHAM after 0s
+
+[1m==> 2/4 Exact cargo JSON (CA-verified, through the Route)[0m
+    ✓ GET /cargo/CARGO-USNYC-DEHAM returned the exact cargo JSON
+
+[1m==> 3/4 404 for an unknown tracking id[0m
+    ✓ GET /cargo/NOPE -> 404
+
+[1m==> 4/4 Resilience: delete the host pod; the Deployment restores it, traffic recovers[0m
+    deleting host pod wasmcloud-host-6c5f6c5f88-mbw4k ...
+    ✓ Route serving (HTTP 200) on /cargo/CARGO-USNYC-DEHAM after 0s
+    ✓ host pod recreated by the operator Deployment; traffic recovered to the exact cargo JSON
+
+PASS — Part 5 cargo component on OpenShift Local (CRC, crc-admin context): deployed by the wasmCloud operator to an in-cluster host; served the exact cargo JSON and a 404 through an edge-TLS Route (CA-verified against the cluster's own ingress CA, never -k/port-forward/NodePort); and recovered after the host pod was deleted.
+exit 0

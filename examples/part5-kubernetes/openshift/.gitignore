@@ -1,0 +1,4 @@
+# Nothing in openshift/ is a build artifact: the component is ../app.wasm
+# (gitignored by the parent) and is pushed to ghcr by deploy.sh. Temp wadm /
+# CA-bundle files are written to $TMPDIR, not here. Evidence .txt IS committed.
+*.tmp
