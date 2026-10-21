@@ -16,14 +16,16 @@ render_with_liquid: false
 > written. **Updated 2026-10-21 (r06a):** the Part 5 minikube tier (runwasi
 > shim, minikube, Kubernetes, containerd, ingress-nginx, kubeconform) is now
 > FIRM, re-surveyed and verified live on minikube rather than a snapshot.
-> Istio, KEDA, and CRC/OpenShift Local stay TBD-at-kickoff until their own
-> chapters land.
+> **Updated 2026-10-21 (r06b):** the Part 5 CRC/OpenShift tier (wasmCloud
+> platform Helm chart, operator, host, httpserver provider, CRC itself) is
+> now also FIRM, re-surveyed and verified live on CRC. Istio and KEDA stay
+> TBD-at-kickoff until their own chapters land.
 
 The Wasm toolchain and WASI/Component Model rows are the r02 pins. The Part 5
-minikube tier is the r06a pins, verified live. The remaining Kubernetes
-deployment-tier rows (Istio, KEDA, CRC) and the wasi-nn rows are not pins
-yet — they are a snapshot to plan against, re-verified live when their
-chapter lands.
+minikube tier is the r06a pins and the Part 5 CRC/OpenShift tier is the r06b
+pins, both verified live. The remaining Kubernetes deployment-tier rows
+(Istio, KEDA) and the wasi-nn rows are not pins yet — they are a snapshot to
+plan against, re-verified live when their chapter lands.
 
 | Component | Version |
 |---|---|
@@ -68,10 +70,15 @@ chapter lands.
 | containerd (in-node) | **v2.3.4** — the in-node containerd minikube v1.39.0/Kubernetes v1.37.1 bundles; the runwasi shim above installs alongside it without replacing it. |
 | ingress-nginx controller | **v1.15.1** — the minikube `ingress` addon bundled with minikube v1.39.0; fronts live verification over the real `nip.io` Ingress path, never a port-forward (DRQ-049). |
 | kubeconform | **v0.8.0**, pinned GitHub release binary `kubeconform-linux-amd64.tar.gz`, SHA-256 `9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883` — the CI static-manifest gate for Part 5 (`kubectl kustomize | kubeconform -strict -kubernetes-version 1.37.1`, DRQ-053); CI-only, never exercises a live cluster. |
+| **Part 5 CRC/OpenShift deployment tier (FIRM, verified live 2026-10-21, r06b)** | |
+| wasmcloud-platform Helm chart | **v1 `0.1.2`** (`oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2`) — bundles operator **0.1.5** (image `ghcr.io/wasmcloud/wasmcloud-operator:0.4.0`), nats **1.2.3** (nats image 2.10.19), wadm **0.2.7** (binary v0.14.0), and the host subchart **0.8.4**. This is the last tagged v1 release; the v1 operator repo is now archived upstream. Confirmed live on CRC r06b (DRQ-054). |
+| wasmCloud host | **1.9.1**, pinned via `WasmCloudHostConfig.spec.version` — NOT the chart's default **1.2.1**, which is too old for the httpserver provider below and triggers a wRPC version-skew HTTP 500. |
+| httpserver capability provider | **`ghcr.io/wasmcloud/http-server:0.27.0`** — the same pin as the Part 4/minikube tier, reused unchanged for the CRC deployment. |
+| CRC / OpenShift Local | **2.64.0** / OCP **4.22.14** — `restricted-v2` SCC throughout; no privileged MachineConfig. Firms the r02 snapshot row below for this component. |
+| Note | The wasmCloud **v2** rewrite (runtime-operator chart 2.10.x) uses a different, non-OAM/non-`WasmCloudHostConfig` model that diverges from this book's Part 4 contract spine; the book pins the **v1 chart 0.1.2** instead of tracking v2. |
 | **Kubernetes deployment tier (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
 | Istio | Snapshot: **1.31.2**, released 2026-10-16. Source: https://github.com/istio/istio/releases/tag/1.31.2 — re-verify live when Ch25 (Istio + Wasm) lands |
 | KEDA | Snapshot: **v2.21.0**, released 2026-09-23. Source: https://github.com/kedacore/keda/releases/tag/v2.21.0 — re-verify live when Ch23 (scale-to-zero) lands |
-| CRC / OpenShift Local | Snapshot: **2.64.0-4.22.14** (crc v2.64.0), released 2026-09-24. Source: https://github.com/crc-org/crc/releases/tag/2.64.0-4.22.14 — re-verify live when Ch19 lands |
 | **wasi-nn (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
 | wasi-nn backend (OpenVINO) | Snapshot: the `wasmtime-wasi-nn` crate tracks wasmtime's version directly (v50.0.0 as of this survey; source https://crates.io/crates/wasmtime-wasi-nn). The OpenVINO backend toolkit itself is at **2026.4.1**, released 2026-10-01. Source: https://github.com/openvinotoolkit/openvino/releases/tag/2026.4.1 — re-verify live when Ch27 lands |
 

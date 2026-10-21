@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="90" width="1140" height="440" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="110" font-size="12" font-weight="700" fill="#1d1d1d">project wasmcloud — a normal OpenShift project, governed by restricted-v2</text>
+<rect x="20" y="10" width="320" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="180.0" y="38.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">curl --cacert &lt;combined-ca&gt;</text>
+<text x="180.0" y="55.0" font-size="11.5" fill="#555555" text-anchor="middle">https://cargo-http-wasmcloud.apps-crc.testing/cargo/{id}</text>
+<rect x="420" y="10" width="300" height="50" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="570.0" y="33.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">never -k, never oc port-forward,</text>
+<text x="570.0" y="50.0" font-size="11.5" fill="#555555" text-anchor="middle">never NodePort</text>
+<rect x="60" y="130" width="260" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="190.0" y="155.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">OpenShift router</text>
+<text x="190.0" y="172.5" font-size="11.5" fill="#555555" text-anchor="middle">edge-TLS Route cargo-http</text>
+<text x="190.0" y="187.5" font-size="11.5" fill="#555555" text-anchor="middle">TLS terminates here</text>
+<rect x="60" y="240" width="260" height="90" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="190.0" y="268.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Service cargo-http:8000</text>
+<text x="190.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">ClusterIP, SELECTOR &lt;none&gt;</text>
+<text x="190.0" y="300.0" font-size="11.5" fill="#555555" text-anchor="middle">operator-written EndpointSlice</text>
+<text x="190.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">points at the host pod IP</text>
+<rect x="420" y="240" width="300" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="570.0" y="265.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">endpoints(slices)/restricted</text>
+<text x="570.0" y="282.5" font-size="11.5" fill="#555555" text-anchor="middle">ClusterRole grant</text>
+<text x="570.0" y="297.5" font-size="11.5" fill="#555555" text-anchor="middle">(not an SCC/anyuid exception)</text>
+<rect x="60" y="380" width="480" height="120" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="300.0" y="423.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmcloud-host pod  (restricted-v2, UID 1000670000)</text>
+<text x="300.0" y="440.0" font-size="11.5" fill="#555555" text-anchor="middle">httpserver provider 0.27.0 listens 0.0.0.0:8000</text>
+<text x="300.0" y="455.0" font-size="11.5" fill="#555555" text-anchor="middle">link -&gt; wrpc call -&gt; wasi:http/incoming-handler</text>
+<text x="300.0" y="470.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-http component (app.wasm, sha256 eff7f5ee…)</text>
+<rect x="620" y="380" width="320" height="70" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="780.0" y="413.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">same app.wasm Chapters 14/15/18 run</text>
+<text x="780.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">byte-identical, no rebuild</text>
+<rect x="800" y="130" width="340" height="100" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="970.0" y="163.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">every pod in this project</text>
+<text x="970.0" y="180.0" font-size="11.5" fill="#555555" text-anchor="middle">runs restricted-v2:</text>
+<text x="970.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">no anyuid, namespace-range UID,</text>
+<text x="970.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">drop ALL, seccomp RuntimeDefault</text>
+<path d="M190,70 L190,130" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="196.0" y="94.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">HTTPS</text>
+<text x="196.0" y="94.0" font-size="11" fill="#555" text-anchor="middle">HTTPS</text>
+<path d="M190,200 L190,240" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M320,275 L420,275" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="376.0" y="269.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">needs</text>
+<text x="376.0" y="269.0" font-size="11" fill="#b8650a" text-anchor="middle">needs</text>
+<path d="M190,330 L190,380" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="196.0" y="349.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">endpoint</text>
+<text x="196.0" y="349.0" font-size="11" fill="#555" text-anchor="middle">endpoint</text>
+<path d="M540,440 L620,415" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M320,165 L800,180" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="566.0" y="166.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">SCC admission</text>
+<text x="566.0" y="166.5" font-size="11" fill="#555" text-anchor="middle">SCC admission</text>
+<text x="590" y="530" font-size="12" fill="#555555" text-anchor="middle">Readiness here means a real HTTP 200 through the Route, not the host Deployment reporting Ready — the router rewires its backend a beat later.</text>
+<text x="590" y="548" font-size="12" fill="#555555" text-anchor="middle">Verified live 2026-10-21 (CRC 2.64.0 / OCP 4.22.14 / wasmcloud host 1.9.1).</text>
+</svg>

@@ -68,6 +68,26 @@
 #      — it is NOT a CI step, same treatment Part 4's wasmCloud lattice gets
 #      above.
 #
+#      r06b extends this same job to cover Part 5's OTHER path — OpenShift —
+#      with a matching STATIC check: the two authored
+#      examples/part5-kubernetes/openshift/ manifests (wasmcloud-host.yaml, a
+#      WasmCloudHostConfig CRD instance the wasmCloud operator reconciles; and
+#      wadm.yaml, an OAM core.oam.dev Application) are piped straight through
+#      the same pinned kubeconform binary with -ignore-missing-schemas (both
+#      are CRD instances with no built-in kubeconform schema, same reasoning
+#      as the RuntimeClass/Ingress case above) — no `kubectl kustomize`
+#      rendering, since these aren't kustomize-managed. The upstream
+#      `oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2` Helm chart
+#      (installed by deploy.sh with values-crc.yaml) is NOT rendered or
+#      validated in CI — an OCI chart pull adds a flaky external network
+#      dependency this gate doesn't need to prove the authored YAML is
+#      well-formed. Part 5 now has a STATIC gate on both deployment targets:
+#      minikube (kustomize render) and OpenShift (raw CRD manifests). The LIVE
+#      CRC run (operator install, host + lattice up, wadm deploy, HTTPS Route
+#      traffic) is, like the minikube run above, verified by hand with
+#      evidence committed under examples/part5-kubernetes/openshift/evidence/
+#      — never a CI step.
+#
 # Don't duplicate pages.yml's Jekyll build/deploy logic here, and don't
 # duplicate this validation step in pages.yml (see pages.yml's own note on
 # this job landing in "a later iteration").
@@ -353,6 +373,14 @@ jobs:
     # valid just because kubeconform's bundled schema set doesn't carry them.
     # Modeled on the WebSockets sibling site's k8s-manifests job
     # (../../api-patterns-and-practices-websockets/.github/workflows/contracts.yml).
+    #
+    # r06b: this job now covers BOTH of Part 5's deployment targets, still
+    # fully offline — minikube (kustomize render above) AND OpenShift (the
+    # two authored examples/part5-kubernetes/openshift/ CRD-instance
+    # manifests, validated as-committed with no templating step, below). Both
+    # targets' LIVE cluster runs are evidence-only, verified by hand and
+    # committed under each target's own evidence/ directory — never a CI
+    # step.
     name: Validate Part 5 Kubernetes manifests (kustomize render, offline)
     runs-on: ubuntu-latest
     steps:
@@ -388,3 +416,17 @@ jobs:
         run: |
           kubectl kustomize examples/part5-kubernetes/k8s/overlays/minikube \
             | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+
+      # OpenShift path (r06b): these two files are hand-authored CRD
+      # instances, not kustomize-managed, so they're validated as-committed —
+      # no `kubectl kustomize` render step. Both kinds (WasmCloudHostConfig
+      # from the wasmCloud operator, core.oam.dev Application from wadm) are
+      # CRDs with no built-in kubeconform schema, hence -ignore-missing-
+      # schemas, same as the RuntimeClass/Ingress kinds above. This only
+      # checks the YAML is well-formed and schema-shaped; it does not install
+      # the operator, the chart, or reach any cluster.
+      - name: Validate Part 5 OpenShift manifests (kubeconform) — wasmCloudHostConfig + wadm Application
+        run: |
+          kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
+            examples/part5-kubernetes/openshift/wasmcloud-host.yaml \
+            examples/part5-kubernetes/openshift/wadm.yaml
