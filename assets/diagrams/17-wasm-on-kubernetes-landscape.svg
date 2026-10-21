@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 620" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="20" width="260" height="56" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="150.0" y="53.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">project</text>
+<rect x="300" y="20" width="440" height="56" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="520.0" y="53.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">mechanism</text>
+<rect x="760" y="20" width="400" height="56" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="960.0" y="53.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">scope / status</text>
+<rect x="20" y="96" width="260" height="80" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="150.0" y="134.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">runwasi</text>
+<text x="150.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">containerd-shim-wasmtime</text>
+<rect x="300" y="96" width="440" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="520.0" y="134.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">generic containerd shim + RuntimeClass;</text>
+<text x="520.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">node-install or DaemonSet installer</text>
+<rect x="760" y="96" width="400" height="80" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="960.0" y="134.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">any wasi:http/proxy or wasi:cli component;</text>
+<text x="960.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">THIS BOOK&#x27;s mechanism (v0.6.1 verified)</text>
+<rect x="20" y="196" width="260" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="150.0" y="234.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">SpinKube</text>
+<text x="150.0" y="251.0" font-size="11.5" fill="#555555" text-anchor="middle">containerd-shim-spin</text>
+<rect x="300" y="196" width="440" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="520.0" y="234.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">containerd shim + SpinApp CRD +</text>
+<text x="520.0" y="251.0" font-size="11.5" fill="#555555" text-anchor="middle">spin-operator</text>
+<rect x="760" y="196" width="400" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="960.0" y="234.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Spin applications specifically,</text>
+<text x="960.0" y="251.0" font-size="11.5" fill="#555555" text-anchor="middle">not arbitrary components — Part 6</text>
+<rect x="20" y="296" width="260" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="150.0" y="341.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud operator</text>
+<rect x="300" y="296" width="440" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="520.0" y="334.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">schedules a wasmCloud host as a Pod;</text>
+<text x="520.0" y="351.0" font-size="11.5" fill="#555555" text-anchor="middle">wadm deploys onto that in-cluster lattice</text>
+<rect x="760" y="296" width="400" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="960.0" y="334.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">fallback if the raw shim hits a gap;</text>
+<text x="960.0" y="351.0" font-size="11.5" fill="#555555" text-anchor="middle">the path ch19&#x27;s CRC appendix uses</text>
+<rect x="20" y="396" width="260" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="150.0" y="441.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Krustlet</text>
+<rect x="300" y="396" width="440" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="520.0" y="434.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">kubelet-replacement (virtual kubelet)</text>
+<text x="520.0" y="451.0" font-size="11.5" fill="#555555" text-anchor="middle">running wasmtime/WAGI providers</text>
+<rect x="760" y="396" width="400" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="960.0" y="434.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ARCHIVED — superseded by the</text>
+<text x="960.0" y="451.0" font-size="11.5" fill="#555555" text-anchor="middle">containerd-shim approach above</text>
+<rect x="20" y="510" width="1140" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="590.0" y="548.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">None of these four compete head-on: pick by what you&#x27;re deploying</text>
+<text x="590.0" y="565.0" font-size="11.5" fill="#555555" text-anchor="middle">(a generic component, a Spin app, or a wasmCloud lattice) and what you control (the node image)</text>
+</svg>
