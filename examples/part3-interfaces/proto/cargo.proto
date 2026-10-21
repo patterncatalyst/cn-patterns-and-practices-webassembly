@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+// Protobuf contract for the cargo domain, shared by the two ch12 artifacts:
+//
+//   1. proto-component (prost-in-Wasm): a WebAssembly component that uses prost
+//      to DECODE a GetCargoRequest and ENCODE a GetCargoResponse entirely inside
+//      the sandbox. Only the MESSAGES are used there (prost-build); the service
+//      is ignored by a messages-only generator.
+//
+//   2. grpc-bridge (tonic): a native host that TERMINATES gRPC using this
+//      CargoService and, per RPC, dispatches over WIT to the unchanged part2
+//      Rust provider instantiated with wasmtime.
+//
+// The point ch12 makes: gRPC-the-transport needs the host bridge (no in-Wasm
+// gRPC server is claimed), but Protobuf-the-serialization runs fully
+// server-side inside a component.
+package patterncatalyst.cargo.v1;
+
+message Location {
+  string unlocode = 1;
+  string name = 2;
+  string country = 3;
+}
+
+message Money {
+  string amount = 1;
+  string currency = 2;
+}
+
+message Cargo {
+  string tracking_id = 1;
+  Location origin = 2;
+  Location destination = 3;
+  double weight_kg = 4;
+}
+
+message GetCargoRequest {
+  string tracking_id = 1;
+}
+
+message GetCargoResponse {
+  // Populated on success.
+  Cargo cargo = 1;
+  Money price = 2;
+  // Non-empty when the cargo could not be produced (for example a tracking id
+  // that is not a CARGO-{ORIGIN}-{DEST} triple, mapping a domain
+  // cargo-error::not-found onto a response-level error string).
+  string error = 3;
+}
+
+message BookCargoRequest {
+  Location origin = 1;
+  Location destination = 2;
+  string arrival_deadline = 3;
+  double weight_kg = 4;
+}
+
+message BookCargoResponse {
+  string booking_id = 1;
+  string cargo_id = 2;
+  Money price = 3;
+  string status = 4;
+  string error = 5;
+}
+
+service CargoService {
+  rpc GetCargo(GetCargoRequest) returns (GetCargoResponse);
+  rpc BookCargo(BookCargoRequest) returns (BookCargoResponse);
+}

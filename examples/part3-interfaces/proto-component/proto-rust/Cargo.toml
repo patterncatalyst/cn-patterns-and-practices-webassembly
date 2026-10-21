@@ -1,0 +1,33 @@
+[package]
+name = "cargo-proto-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+# prost runs INSIDE the component (wasm32-wasip1). Pinned exact; Cargo.lock
+# committed. `default-features = false` drops prost's `std`-only extras that are
+# unnecessary here and keeps the wasm build lean; `prost-derive` is pulled in by
+# the derive feature for #[derive(Message)].
+prost = { version = "=0.14.4", default-features = false, features = ["derive"] }
+
+[build-dependencies]
+# prost-build invokes protoc at build time to turn proto/cargo.proto into Rust
+# message structs. Messages only — the service in the .proto is ignored by this
+# messages-only generator (the gRPC service is handled by the tonic bridge).
+prost-build = "=0.14.4"
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.component]
+package = "patterncatalyst:cargo-proto"
+
+[package.metadata.component.target]
+path = "wit"
+world = "cargo-proto"
+
+[package.metadata.component.target.dependencies]
+"patterncatalyst:cargo" = { path = "../../../../contracts/wit" }
+
+[package.metadata.component.dependencies]

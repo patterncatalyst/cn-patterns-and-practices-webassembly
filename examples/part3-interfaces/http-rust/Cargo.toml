@@ -1,0 +1,37 @@
+[package]
+name = "cargo-http-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+# This component targets a LOCAL world (wit/world.wit) that INCLUDES
+# wasi:http/proxy (exported incoming-handler) and IMPORTS the three cargo
+# interfaces. cargo-component does NOT auto-scan wit/deps the way wasm-tools
+# does; every WIT package the local world references must be declared here as a
+# target dependency. The wasi:* packages are vendored under wit/deps (pinned to
+# an internally consistent 0.2.8 set from the wasi-http v0.2.8 release);
+# `patterncatalyst:cargo` points at the repository contract, which stays
+# pristine (no copy, no edit).
+[package.metadata.component]
+package = "patterncatalyst:cargo-http"
+
+[package.metadata.component.target]
+path = "wit"
+world = "cargo-http"
+
+[package.metadata.component.target.dependencies]
+"patterncatalyst:cargo" = { path = "../../../contracts/wit" }
+"wasi:http" = { path = "wit/deps/http" }
+"wasi:io" = { path = "wit/deps/io" }
+"wasi:clocks" = { path = "wit/deps/clocks" }
+"wasi:random" = { path = "wit/deps/random" }
+"wasi:cli" = { path = "wit/deps/cli" }
+"wasi:filesystem" = { path = "wit/deps/filesystem" }
+"wasi:sockets" = { path = "wit/deps/sockets" }
+
+[package.metadata.component.dependencies]

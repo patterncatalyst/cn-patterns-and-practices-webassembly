@@ -1,0 +1,28 @@
+[package]
+name = "cargo-grpc-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# gRPC-in-FRONT-of-Wasm bridge (ch12). A native host TERMINATES gRPC with tonic
+# and, per RPC, instantiates the UNCHANGED part2 Rust provider with wasmtime and
+# dispatches over WIT. There is no in-component gRPC server; the bridge is the
+# artifact. tonic/prost are pinned exact and Cargo.lock is committed.
+[dependencies]
+tonic = "=0.14.6"
+tonic-prost = "=0.14.6"
+prost = "=0.14.4"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+wasmtime = "50"
+wasmtime-wasi = "50"
+anyhow = "1"
+
+[dev-dependencies]
+tokio-stream = { version = "0.1", features = ["net"] }
+
+[build-dependencies]
+tonic-prost-build = "=0.14.6"
+
+[[bin]]
+name = "cargo-grpc-bridge"
+path = "src/main.rs"

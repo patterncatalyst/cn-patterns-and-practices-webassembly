@@ -1,0 +1,15 @@
+package patterncatalyst:cargo-proto@0.1.0;
+
+/// Host-side view of the proto component's export. The `codec` interface here is
+/// structurally identical to proto-rust/wit (same package, version, interface,
+/// and signature), so wasmtime links the host to the composed component's
+/// exported `patterncatalyst:cargo-proto/codec@0.1.0`.
+interface codec {
+    get-cargo: func(request: list<u8>) -> result<list<u8>, string>;
+}
+
+/// The host only needs to CALL the codec export; it does not re-expose the cargo
+/// imports (those are internal to the composed component).
+world cargo-proto-codec {
+    export codec;
+}
