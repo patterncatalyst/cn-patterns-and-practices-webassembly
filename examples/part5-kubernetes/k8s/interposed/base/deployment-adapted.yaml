@@ -1,0 +1,74 @@
+# The ADAPTED cargo front door (ch21): provider -> adapter -> http door,
+# wac-plug-composed into one app-adapted.wasm and run as a Wasm Pod via the
+# containerd `wasmtime` shim. The adapter round-trips every book-cargo request
+# through its legacy shape (canonical -> legacy -> canonical) before calling the
+# provider; the live gate proves the exact cargo JSON still comes back.
+#
+#   * runtimeClassName: wasmtime — route this Pod to the Wasm shim, not runc.
+#   * image: cargo-http-adapted:dev — overlays/minikube retags it to :minikube
+#     and forces imagePullPolicy: Never (minikube image load, no registry).
+#   * command: ["/app.wasm"] — module path inside the scratch rootfs.
+#   * probes: tcpSocket on 8080 — GET / is a 404; the HTTP 200 round-trip gate
+#     lives in the verify/capture scripts.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-http-adapted
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: cargo-http-adapted
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cargo-http-adapted
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cargo-http-adapted
+        app.kubernetes.io/part-of: part5-kubernetes
+    spec:
+      runtimeClassName: wasmtime
+      containers:
+        - name: cargo-http-adapted
+          image: cargo-http-adapted:dev
+          imagePullPolicy: IfNotPresent
+          command: ["/app.wasm"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            failureThreshold: 20
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-http-adapted
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: cargo-http-adapted
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: cargo-http-adapted
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

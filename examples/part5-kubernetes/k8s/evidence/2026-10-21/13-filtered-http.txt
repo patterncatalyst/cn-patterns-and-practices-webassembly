@@ -1,0 +1,10 @@
+# path: host -> ingress-nginx -> cargo-http-filtered:8080 -> Pod -> shim -> app-filtered.wasm
+# chain: part2 provider -> sidecar-filter (embargo + log) -> part3 http door
+
+$ curl -s http://cargo-filtered.192.168.49.2.nip.io/cargo/CARGO-USNYC-DEHAM   # normal destination -> exact cargo JSON
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+$ curl -s -w %{http_code} http://cargo-filtered.192.168.49.2.nip.io/cargo/CARGO-USNYC-CUHAV   # embargoed destination -> policy 4xx
+body: {"error":"destination CUHAV is under embargo"}
+code: 400
+$ curl -s -o /dev/null -w %{http_code} http://cargo-filtered.192.168.49.2.nip.io/cargo/NOPE   # unknown -> 404
+404

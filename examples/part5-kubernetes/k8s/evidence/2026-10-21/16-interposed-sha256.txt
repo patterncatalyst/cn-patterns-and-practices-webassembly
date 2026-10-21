@@ -1,0 +1,6 @@
+# filtered + adapted compositions (interposers spliced in; distinct from the plain app.wasm)
+074c631b00a5b4e0665170348f54962d2a03730af82a420ba409ac1742e54cda  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/sidecar-filter/app-filtered.wasm
+858f88d23daa745f8b6effcfc1a015e152e1e87c7de258d197bd9f441bf1468e  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/adapter/app-adapted.wasm
+
+# ambassador (reused sockets-rust resilience component)
+2aad26bd28373b70f5f4a0f0d9d3ec558f58dd89e3d3978868b21a04964172f9  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/ambassador/ambassador.wasm

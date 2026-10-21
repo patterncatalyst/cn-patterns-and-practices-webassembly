@@ -1,0 +1,64 @@
+package patterncatalyst:cargo-adapter@0.1.0;
+
+/// A deliberately-DIFFERENT "legacy" booking shape, defined entirely in this
+/// component's own WIT (the repository contract stays pristine). It models a
+/// pre-contract system that predated the canonical `route-spec`:
+///
+///   * locations were flat UN/LOCODE strings, not structured `location` records
+///     (no name, no country),
+///   * fields were named differently (`origin-code` / `dest-code` /
+///     `cargo-weight` / `needed-by` vs the canonical `route-spec.origin` /
+///     `.destination` / `weight-kg` / `arrival-deadline`),
+///   * it carried a `service-level` enum that has NO counterpart in the
+///     canonical contract.
+///
+/// The adapter translates this shape to the canonical `route-spec` + `weight-kg`
+/// and calls the real provider, returning canonical `booking` / `cargo-error`
+/// values — so a legacy caller interoperates with the modern provider through a
+/// pure shape-translation layer.
+interface legacy {
+    use patterncatalyst:cargo/types@0.1.0.{booking, cargo-error};
+
+    /// Legacy service tiers. The adapter maps these onto the canonical model,
+    /// which has no service-level concept (the field is translation-only).
+    enum legacy-service-level {
+        economy,
+        priority,
+    }
+
+    /// The legacy booking request shape (flat strings, renamed fields, an extra
+    /// enum). Deliberately NOT the canonical `route-spec`.
+    record legacy-booking-request {
+        origin-code: string,
+        dest-code: string,
+        cargo-weight: f64,
+        needed-by: string,
+        service-level: legacy-service-level,
+    }
+
+    /// Book a shipment from the legacy request shape. Translates to the canonical
+    /// contract and delegates to the real provider.
+    book-legacy: func(req: legacy-booking-request) -> result<booking, cargo-error>;
+}
+
+/// A shape-translation ADAPTER for the cargo domain, as a WebAssembly component
+/// (ch21). Like the ch20 filter it is an interposer on the canonical path — it
+/// IMPORTS the canonical cargo interfaces (the real provider, via `wac plug`)
+/// and EXPORTS them back out (consumed by the HTTP front door) — but its
+/// canonical `book-cargo` export ROUND-TRIPS each request through the legacy
+/// shape above (canonical -> legacy -> canonical) before calling the provider,
+/// proving the translation is lossless: the exact cargo JSON still comes back.
+///
+/// It ALSO exports the `legacy` interface directly, so a legacy-shaped caller can
+/// drive the modern provider through the same translation.
+world cargo-adapter {
+    import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
+    import patterncatalyst:cargo/handling@0.1.0;
+
+    export patterncatalyst:cargo/types@0.1.0;
+    export patterncatalyst:cargo/booking@0.1.0;
+    export patterncatalyst:cargo/handling@0.1.0;
+
+    export legacy;
+}

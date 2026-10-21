@@ -1,0 +1,33 @@
+ambassador/build.sh: [1/2] building the Part 3 sockets-rust resilience component (reused, not edited) ...
+  Generating bindings for sockets-client-rust (src/bindings.rs)
+    Finished `release` profile [optimized] target(s) in 0.00s
+ambassador/build.sh: wrote /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/ambassador/ambassador.wasm (sha256 2aad26bd28373b70f5f4a0f0d9d3ec558f58dd89e3d3978868b21a04964172f9)
+ambassador/build.sh: [2/2] local wasmtime -S inherit-network smoke ...
+
+=== SMOKE A: retry + exponential backoff with jitter (dead port 34571, WITH network grant) ===
+sockets-rust: connecting to 127.0.0.1:34571 (up to 4 attempts, base 50ms backoff)
+sockets-rust: attempt 1/4 failed: ErrorCode { code: 14, name: "connection-refused", message: "The TCP connection was forcefully rejected" }
+sockets-rust: backing off 64ms before retry
+sockets-rust: attempt 2/4 failed: ErrorCode { code: 14, name: "connection-refused", message: "The TCP connection was forcefully rejected" }
+sockets-rust: backing off 122ms before retry
+sockets-rust: attempt 3/4 failed: ErrorCode { code: 14, name: "connection-refused", message: "The TCP connection was forcefully rejected" }
+sockets-rust: backing off 225ms before retry
+sockets-rust: attempt 4/4 failed: ErrorCode { code: 14, name: "connection-refused", message: "The TCP connection was forcefully rejected" }
+sockets-rust: giving up after 4 attempts
+ambassador/build.sh: smoke A exit code = 1 (expected 1 — gave up after retries)
+
+=== SMOKE B: connects on attempt 1 (live listener 34572, WITH network grant) ===
+sockets-rust: connecting to 127.0.0.1:34572 (up to 4 attempts, base 50ms backoff)
+sockets-rust: connected to 127.0.0.1:34572 on attempt 1
+ambassador/build.sh: smoke B exit code = 0 (expected 0 — connected)
+
+=== SMOKE C: capability boundary (dead port 34571, WITHOUT network grant) ===
+sockets-rust: connecting to 127.0.0.1:34571 (up to 4 attempts, base 50ms backoff)
+sockets-rust: attempt 1/4 failed: ErrorCode { code: 1, name: "access-denied", message: "Access denied.\n\n            POSIX equivalent: EACCES, EPERM" }
+sockets-rust: network access DENIED by the host capability boundary — grant it with `wasmtime run -S inherit-network`
+ambassador/build.sh: smoke C exit code = 1 (non-zero — failed fast, no retries)
+ambassador/build.sh: smoke C denied egress on the first attempt (no retry) — capability boundary held
+
+ambassador/build.sh: OK — backoff transcript (A), connect (B), and capability-deny (C) all as expected.
+ambassador/build.sh: NOTE — this is the LOCAL ambassador evidence; the cluster-live,
+                     lattice-linked form is a wasmCloud/CRC concern (not the minikube shim path).
