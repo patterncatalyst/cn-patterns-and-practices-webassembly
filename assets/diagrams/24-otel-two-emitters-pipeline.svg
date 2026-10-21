@@ -22,13 +22,13 @@
 <rect x="700" y="310" width="230" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="815.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">rootless OTel Collector</text>
 <text x="815.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">restricted-v2 SCC compatible</text>
-<rect x="990" y="310" width="130" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
-<text x="1055.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">otel-lgtm</text>
-<text x="1055.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">(CRC&#x27;s own stack)</text>
+<rect x="980" y="310" width="150" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="1055.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">debug + file exporters</text>
+<text x="1055.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">evidence via oc logs / exec</text>
 <path d="M340,120 L400,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M680,120 L740,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M320,340 L380,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M640,340 L700,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<path d="M930,340 L990,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M930,340 L980,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="590" y="440" font-size="12" fill="#555555" text-anchor="middle">Two separate clusters, two separate backends: don&#x27;t assume one chapter&#x27;s OTel pipeline describes the other substrate.</text>
 </svg>

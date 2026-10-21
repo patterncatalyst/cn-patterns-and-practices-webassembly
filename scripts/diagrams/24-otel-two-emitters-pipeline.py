@@ -7,9 +7,10 @@ attributed to the shim boundary, not the guest component — straight into an
 in-cluster otel-lgtm stack (Grafana/Tempo/Loki/Prometheus).
 
 CRC (bottom band): the wasmCloud host 1.9.1 is the telemetry source instead.
-It emits a fuller native signal set — traces, metrics, and logs — but under
-restricted-v2 it cannot push directly; a rootless OTel Collector sits in
-front of CRC's own otel-lgtm stack.
+It emits a fuller native signal set — traces, metrics, and logs — into a
+rootless, restricted-v2 OTel Collector whose debug + file exporters are the
+evidence sink, read via `oc logs` / `oc exec`. No otel-lgtm on CRC (Decision
+B holds restricted-v2 with no SCC exception; the dev image cannot run there).
 """
 import sys, os
 sys.path.insert(0, "scripts")
@@ -51,9 +52,9 @@ nodes = [
     {"x": 700, "y": 310, "w": 230, "h": 60,
      "lines": ["rootless OTel Collector", "restricted-v2 SCC compatible"],
      "style": "user"},
-    {"x": 990, "y": 310, "w": 130, "h": 60,
-     "lines": ["otel-lgtm", "(CRC's own stack)"],
-     "style": "user"},
+    {"x": 980, "y": 310, "w": 150, "h": 60,
+     "lines": ["debug + file exporters", "evidence via oc logs / exec"],
+     "style": "ink"},
 ]
 
 edges = [
@@ -62,7 +63,7 @@ edges = [
 
     {"x1": 320, "y1": 340, "x2": 380, "y2": 340},
     {"x1": 640, "y1": 340, "x2": 700, "y2": 340},
-    {"x1": 930, "y1": 340, "x2": 990, "y2": 340},
+    {"x1": 930, "y1": 340, "x2": 980, "y2": 340},
 ]
 
 notes = [
