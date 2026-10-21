@@ -1,0 +1,34 @@
+
+[1m==> 1/4 FILTERED (ch20) via edge-TLS Route — interposer policy + routing over the link[0m
+    ✓ https://cargo-filtered-wasmcloud.apps-crc.testing/cargo/NOPE -> 404 after 0s
+    ✓ FILTERED embargo GET /cargo/CARGO-USNYC-CUHAV -> 400
+    ✓ FILTERED embargo body is the interposer's policy denial
+    ✓ FILTERED unknown GET /cargo/NOPE -> 404
+    ✓ FILTERED valid GET /cargo/CARGO-USNYC-DEHAM -> provider NotFound (per-invocation state loss across the link; see README-interposed.md)
+
+[1m==> 2/4 ADAPTED (ch21) via edge-TLS Route — shape translation over the link[0m
+    ✓ https://cargo-adapted-wasmcloud.apps-crc.testing/cargo/NOPE -> 404 after 0s
+    ✓ ADAPTED unknown GET /cargo/NOPE -> 404
+    ✓ ADAPTED valid GET /cargo/CARGO-USNYC-DEHAM -> provider NotFound (same state gotcha; translation still ran)
+
+[1m==> 3/4 AMBASSADOR (ch21) — outbound REACHES the provider across the granted link[0m
+    ✓ https://cargo-ambassador-wasmcloud.apps-crc.testing/cargo/NOPE -> 404 after 0s
+    ✓ AMBASSADOR GET /cargo/NOPE -> provider answered (outbound reached across the granted link)
+
+[1m==> 4/4 AMBASSADOR negative control — ungranted outbound call is denied (5xx)[0m
+    ✓ operator created Service cargo-ambassador-nogrant
+    ✓ AMBASSADOR no-grant GET /cargo/NOPE -> 500 (ungranted outbound call denied; the unlinked front door is not served)
+
+PASS — ch20/ch21 interposition on OpenShift Local (CRC) as the RUNTIME-LINK form:
+  Three SEPARATE wasmCloud components per app, wired by wadm links over wRPC on
+  the custom patterncatalyst:cargo interface, all through edge-TLS Routes
+  (CA-verified, never -k/port-forward/NodePort):
+    FILTERED  (ch20): interposer embargo policy -> 400; unknown -> 404 across the chain.
+    ADAPTED   (ch21): shape translation over the link; unknown -> 404.
+    AMBASSADOR(ch21): outbound REACHES the provider across the granted link (provider
+                      answers); the ungranted variant is denied (5xx).
+  State gotcha (documented): the stateful book->get round-trip returns the provider's
+  NotFound, not 200 — per-invocation component instantiation resets linear memory, so
+  in-memory state does not survive across a runtime link. The exact cargo JSON needs
+  in-process wac composition (minikube / r06b), not a lattice link.
+exit 0

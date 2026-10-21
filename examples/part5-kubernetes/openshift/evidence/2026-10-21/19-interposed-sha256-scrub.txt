@@ -1,0 +1,6 @@
+--- the four RAW per-component wasms (separate images, runtime-linked) ---
+provider   da12a118c4026b7c2eda7c5dfd2c48896b3c0138520a3202c00a6797e4735147
+frontdoor  a11ecfb8b68be4551fcc4cf9bcc2ff3db54d5ae680adad5d4c01db642e234ad6
+filter     dd9c3f957e7d433cc68587f54da016a63ca8140dd590898cb0b0c6d0421d1aaa
+adapter    9bf89b369547c15e1db55d9f0099204a0405846ddb4d73b557d8c5681c320a15
+secret scrub: no token/password/private-key material found under /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/openshift/evidence/2026-10-21

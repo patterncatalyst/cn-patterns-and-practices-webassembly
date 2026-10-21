@@ -1,0 +1,100 @@
+# wadm application (OAM core.oam.dev/v1beta1) — the ch20 FILTERED interposition
+# as the RUNTIME-LINK form on OpenShift Local.
+#
+# Unlike minikube (one `wac plug` composite .wasm per Pod), here the provider, the
+# sidecar-filter interposer and the HTTP front door run as THREE SEPARATE wasmCloud
+# components, wired by wadm `link` traits at runtime over wRPC on the cargo domain
+# interface. A `link` trait is declared on the SOURCE (the importer); `target`
+# names the EXPORTER it calls:
+#
+#   httpserver   --wasi:http/incoming-handler-->  cargo-filtered (front door)
+#   cargo-filtered  --patterncatalyst:cargo/booking-->  cargo-filter (interposer)
+#   cargo-filter    --patterncatalyst:cargo/booking,handling-->  cargo-provider-f
+#
+# The front door imports only `booking` (+ the pure-type `types`), so the front
+# door -> interposer link is `booking` only; the interposer imports booking AND
+# handling, so its link to the provider carries both. `types` has no functions and
+# is never linked. contracts/wit stays pristine — nothing here edits an interface.
+#
+# deploy-interposed.sh rewrites the __*_REF__ placeholders to the pushed private
+# ghcr component refs. Each component/provider name is globally unique in the
+# lattice so this app coexists with cargo-adapted and cargo-ambassador.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-filtered
+  annotations:
+    version: v0.0.1
+    description: "ch20 sidecar-filter interposition (provider + filter + http front door as three linked wasmCloud components) on OpenShift Local"
+spec:
+  components:
+    # --- the Part 2 cargo provider (exports patterncatalyst:cargo/*) -----------
+    - name: cargo-provider-f
+      type: component
+      properties:
+        image: __PROVIDER_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+
+    # --- the ch20 sidecar-filter INTERPOSER (imports+exports cargo) ------------
+    - name: cargo-filter
+      type: component
+      properties:
+        image: __FILTER_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+        # interposer's cargo IMPORTS -> provider's EXPORTS
+        - type: link
+          properties:
+            target: cargo-provider-f
+            namespace: patterncatalyst
+            package: cargo
+            interfaces:
+              - booking
+              - handling
+
+    # --- the Part 3 HTTP front door (imports cargo/booking, exports wasi:http) --
+    - name: cargo-filtered
+      type: component
+      properties:
+        image: __FRONTDOOR_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+        # front door's cargo IMPORT -> interposer's EXPORT (booking only)
+        - type: link
+          properties:
+            target: cargo-filter
+            namespace: patterncatalyst
+            package: cargo
+            interfaces:
+              - booking
+
+    # --- the httpserver capability provider -----------------------------------
+    - name: httpserver-filtered
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        # provider (source) -> front door (target) on wasi:http/incoming-handler
+        - type: link
+          properties:
+            target: cargo-filtered
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-filtered-listen
+                properties:
+                  address: 0.0.0.0:8000
+        # daemonscaler on the httpserver is what makes the operator create the
+        # Service (named after this Application: cargo-filtered) on port 8000.
+        - type: daemonscaler
+          properties:
+            replicas: 1

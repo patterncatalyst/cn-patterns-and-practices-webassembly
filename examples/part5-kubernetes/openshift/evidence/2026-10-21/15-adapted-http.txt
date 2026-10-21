@@ -1,0 +1,6 @@
+$ curl -w ' [%{http_code}]' https://cargo-adapted-wasmcloud.apps-crc.testing/cargo/NOPE
+{"error":"no cargo NOPE"} [404]
+# valid id: the canonical->legacy->canonical translation runs, then book+get;
+# same per-invocation state gotcha -> provider NotFound (404), not 200.
+$ curl -w ' [%{http_code}]' https://cargo-adapted-wasmcloud.apps-crc.testing/cargo/CARGO-USNYC-DEHAM
+{"error":"no cargo CARGO-USNYC-DEHAM"} [404]

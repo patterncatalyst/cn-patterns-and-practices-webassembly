@@ -1,0 +1,18 @@
+--- wadm Applications (operator aggregated API) ---
+APPLICATION        DEPLOYED VERSION             LATEST VERSION               STATUS
+cargo-adapted      v0.0.1                       v0.0.1                       Deployed
+cargo-ambassador   v0.0.1                       v0.0.1                       Deployed
+cargo-filtered     01M5FSS5N7KHRD64FA1PZ8EE0G   01M5FSS5N7KHRD64FA1PZ8EE0G   Deployed
+
+--- The runtime link graph (verified live over wRPC) ---
+cargo-filtered (ch20):
+  httpserver-filtered --wasi:http/incoming-handler--> cargo-filtered (front door)
+  cargo-filtered      --patterncatalyst:cargo/booking--> cargo-filter (interposer)
+  cargo-filter        --patterncatalyst:cargo/booking,handling--> cargo-provider-f
+cargo-adapted (ch21):
+  httpserver-adapted  --wasi:http/incoming-handler--> cargo-adapted (front door)
+  cargo-adapted       --patterncatalyst:cargo/booking--> cargo-adapter (interposer)
+  cargo-adapter       --patterncatalyst:cargo/booking,handling--> cargo-provider-a
+cargo-ambassador (ch21):
+  httpserver-ambassador --wasi:http/incoming-handler--> cargo-ambassador (front door)
+  cargo-ambassador      --patterncatalyst:cargo/booking--> cargo-provider-am  (the runtime-granted outbound link)
