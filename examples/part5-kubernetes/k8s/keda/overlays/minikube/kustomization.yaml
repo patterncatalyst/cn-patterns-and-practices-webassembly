@@ -1,0 +1,30 @@
+# ch23 serverless scale-to-zero (HTTP half) — the deployable minikube overlay.
+#
+# Carries the SAME image-retag + imagePullPolicy:Never patches as
+# ../../../overlays/minikube (k8s/overlays/minikube) and
+# ../../../scaling/overlays/minikube, because this directory must stand alone
+# for `kubectl kustomize` / kubeconform and for a single `kubectl apply -k` in
+# verify-keda-http-minikube.sh — kustomize does not let one overlay "import"
+# another overlay's patches, only resources.
+#
+# The Ingress host stays the base placeholder here too; verify-keda-http-
+# minikube.sh patches it live to cargo.<minikube-ip>.nip.io, same as the
+# sibling verify scripts.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: cargo-http-wasm
+    newTag: minikube
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-http
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

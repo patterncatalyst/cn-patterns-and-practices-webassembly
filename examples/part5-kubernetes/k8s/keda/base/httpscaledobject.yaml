@@ -1,0 +1,68 @@
+# ch23 serverless scale-to-zero — HTTP half (KEDA HTTP add-on 0.16.0,
+# requires KEDA core >= 2.21).
+#
+# `HTTPScaledObject` (http.keda.sh/v1alpha1) targets the SAME raw-shim
+# `cargo-http` Deployment/Service the ch17/ch18/ch22 examples already deploy
+# (../../base/deployment.yaml) — this is KEDA layered on top of the plain
+# containerd-shim-wasmtime Pod, exactly like ch22's HorizontalPodAutoscaler,
+# but able to go all the way to ZERO replicas (a plain autoscaling/v2 HPA
+# cannot scale a Deployment below 1).
+#
+# `HTTPScaledObject` is DEPRECATED as of the http add-on 0.16 line in favor of
+# `InterceptorRoute` (http.keda.sh/v1beta1) — the house plan for ch23 asked for
+# `HTTPScaledObject` specifically (it is still shipped and functional in 0.16;
+# the deprecation is a future-migration notice, not a removal), so this example
+# uses it and calls out the newer resource in prose for anyone upgrading past
+# this chapter's pinned versions.
+#
+# Field-shape correction from the original plan note: the CURRENT (0.16)
+# `HTTPScaledObject` spec nests replica bounds under `replicas: {min, max}` —
+# there is no top-level `minReplicaCount` field (that name belongs to the
+# separate `keda.sh/v1alpha1` `ScaledObject`/`InterceptorRoute`+`ScaledObject`
+# combination, used by the Kafka half — see ../kafka-scaledobject.yaml). Verified
+# against the upstream CRD (kedacore/http-add-on @ v0.16.0,
+# config/crd/bases/http.keda.sh_httpscaledobjects.yaml) and the v0.16 reference
+# doc (keda.sh/http-add-on/0.16/reference/httpscaledobject/).
+#
+# scalingMetric.concurrency.targetValue: 1 — one in-flight request is enough to
+# scale out; this mirrors ch22's low 50m CPU request (both are tuned so a
+# single curl is enough to demonstrate the mechanism without a load tool).
+#
+# The Ingress in front of this (patched by kustomization.yaml, backed by
+# interceptor-service.yaml) points at the KEDA interceptor's
+# proxy Service, NOT directly at cargo-http: when replicas are 0 there is no
+# Pod to send traffic to, so the interceptor holds the request, asks wadm/KEDA
+# to scale the target up, waits for it to become ready, and only then forwards
+# the request — that hold-and-forward behavior is the whole point of the HTTP
+# add-on, and it only happens if the interceptor is in the path.
+apiVersion: http.keda.sh/v1alpha1
+kind: HTTPScaledObject
+metadata:
+  name: cargo-http
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: cargo-http
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  hosts:
+    - cargo.part5-kubernetes.example
+  pathPrefixes:
+    - /
+  scaleTargetRef:
+    name: cargo-http
+    kind: Deployment
+    apiVersion: apps/v1
+    service: cargo-http
+    port: 8080
+  replicas:
+    min: 0
+    max: 5
+  scalingMetric:
+    concurrency:
+      targetValue: 1
+  # Shortened from the add-on's default (hundreds of seconds): a Wasm
+  # component has no JVM-style warm-up (containerd-shim-wasmtime starts
+  # serving within milliseconds of the Pod going Ready — the same point ch22's
+  # hpa.yaml makes about scaleDown.stabilizationWindowSeconds), so there is no
+  # reason to wait minutes of idleness before scaling back to zero.
+  scaledownPeriod: 30

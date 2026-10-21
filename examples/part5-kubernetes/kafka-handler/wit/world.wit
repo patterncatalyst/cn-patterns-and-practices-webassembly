@@ -1,0 +1,38 @@
+package patterncatalyst:cargo-kafka-handler@0.1.0;
+
+/// The ch23 Kafka message HANDLER for the cargo domain, as a WebAssembly
+/// component — the workload KEDA's `kafka` ScaledObject observes and the wadm
+/// spreadscaler OWNS the replica count for (see ../k8s/wasmcloud/wadm-kafka.yaml
+/// and ../k8s/keda/base/kafka-scaledobject.yaml).
+///
+/// This world EXPORTS `wasmcloud:messaging/handler@0.2.0` — the interface the
+/// wasmCloud `messaging-kafka` capability provider invokes once per delivered
+/// Kafka message (the provider is the CONSUMER that owns the subscription;
+/// this component is the business-logic HANDLER wadm links it to, the same
+/// provider-calls-component shape as the httpserver/cargo-http link in Part 4).
+/// It also exports `wasmcloud:messaging/types` (the `broker-message` record
+/// handler.wit's `use` pulls in) — exported explicitly alongside handler,
+/// matching the house convention of always listing a types-only interface a
+/// world's functional interfaces depend on (see contracts/wit/world.wit:
+/// `export types; export booking; export handling;`).
+///
+/// It IMPORTS the cargo domain's `handling` interface (+ the pure-type
+/// `types`) from the repository contract and calls `register-handling-event`
+/// on every delivered message — a real write against the SAME cargo domain
+/// Parts 2-5 use, not a stub. In the wasmCloud lattice this import is
+/// satisfied at wadm deploy time by a `link` trait to a deployed cargo
+/// provider component (the runtime-link shape from ch20's
+/// wadm-filtered.yaml), NOT by a `wac plug` composition — this component is
+/// deployed standalone, never composed into one .wasm with the provider.
+///
+/// `wasmcloud:messaging@0.2.0` is vendored under wit/deps/messaging (the
+/// upstream wasmCloud/messaging WIT package, verbatim). `patterncatalyst:cargo`
+/// is a path dependency to the repository contract (Cargo.toml) — the contract
+/// stays byte-for-byte pristine; this component defines only its own world.
+world cargo-kafka-handler {
+    export wasmcloud:messaging/types@0.2.0;
+    export wasmcloud:messaging/handler@0.2.0;
+
+    import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/handling@0.1.0;
+}
