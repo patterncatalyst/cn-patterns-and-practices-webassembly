@@ -111,7 +111,7 @@ Evidence is under `evidence/<YYYY-MM-DD>/` (committed): `00-wash-version`,
 - **Readiness = a real `200`.** `wash app status` reporting `deployed` means the
   desired state was *accepted*; it does not by itself mean the component is
   answering. The capture gates on an actual HTTP `200` before asserting.
-- **`wash scale` fights wadm on purpose here.** Scaling to 0 under a managed app
+- **`wash scale` fights wadm here, and that is the point of the demo.** Scaling to 0 under a managed app
   is exactly how you see self-healing: wadm detects the drift and restores the
   declared instance count.
 - **`app.wasm` is gitignored** (293 KiB build output); `build.sh` regenerates it
