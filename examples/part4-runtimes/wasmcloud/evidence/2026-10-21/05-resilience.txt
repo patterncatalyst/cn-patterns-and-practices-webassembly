@@ -1,0 +1,18 @@
+# before: service is healthy
+GET /cargo/CARGO-USNYC-DEHAM -> 200  {"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+
+# scale the component to 0 instances (provider/listener stays up)
+$ wash scale component <host> file:///home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part4-runtimes/wasmcloud/app.wasm cargo_http-cargo_http --max-instances 0
+Component [cargo_http-cargo_http] (ref: [file:///home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part4-runtimes/wasmcloud/app.wasm]) scaled on host [NCQR6FIQCONSILLUFUMAENAPFDCRP223B53PRVRR42HSOA4NYFW3SYPC] to 0 max concurrent instances
+
+# burst while the component is gone: the provider answers but the
+# invoke fails (no component to handle it) -> non-200
+500 
+fail_observed=1
+
+# wadm reconciles the SpreadScaler back to 1 instance; poll to recovery
+recovered after 2s
+
+# after: service healthy again
+GET /cargo/CARGO-USNYC-DEHAM -> 200  {"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+fail_observed=1 recovered=1

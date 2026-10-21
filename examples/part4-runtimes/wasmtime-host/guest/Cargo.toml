@@ -1,0 +1,23 @@
+[package]
+name = "host-demo-guest"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+# The guest targets the LOCAL host-demo world (../wit). It imports host-caps
+# (satisfied by the native host at link time) and exports `run`. No wasi:* is
+# referenced by this world, so the component imports only `patterncatalyst:
+# host-demo/host-caps` — nothing else. The repository contract is untouched.
+[package.metadata.component]
+package = "patterncatalyst:host-demo-guest"
+
+[package.metadata.component.target]
+path = "../wit"
+world = "host-demo"
+
+[package.metadata.component.dependencies]

@@ -1,0 +1,23 @@
+[package]
+name = "host-demo-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# A native host that embeds the wasmtime 50 component-model runtime and drives
+# the ../guest component through four scenarios, asserting that each Store/Engine
+# control actually fires:
+#   * a host-provided import (host-caps) satisfied by a Rust closure,
+#   * fuel metering  -> OutOfFuel trap,
+#   * epoch interruption (+ a ticker thread) -> Interrupt trap,
+#   * a ResourceLimiter capping memory -> denied growth.
+# WASI is supplied with the same idiom as the Part 2 host
+# (wasmtime_wasi::p2::add_to_linker_sync).
+[dependencies]
+wasmtime = "50"
+wasmtime-wasi = "50"
+anyhow = "1"
+
+[[bin]]
+name = "host-demo-host"
+path = "src/main.rs"
