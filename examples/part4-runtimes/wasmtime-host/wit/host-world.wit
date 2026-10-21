@@ -1,0 +1,34 @@
+package patterncatalyst:host-demo@0.1.0;
+
+/// Host-provided capabilities. The HOST (native Rust, ../host) implements these
+/// functions and supplies them to the guest at link time through a wasmtime
+/// `Linker` closure. The guest cannot call anything the host does not wire in —
+/// this interface is the whole of the guest's ambient authority.
+///
+/// This is a LOCAL world for the ch14 embedding example only; it never touches
+/// the repository contract under contracts/wit (which stays pristine). It
+/// deliberately models a host-side capability (a pricing/clock service) rather
+/// than re-exporting the cargo domain, so the example shows the *host import*
+/// direction distinct from the Part 2/3 components that EXPORT the domain.
+interface host-caps {
+    /// A host-computed quote for a cargo id. Pure host logic — the guest has no
+    /// way to produce this itself; it must call across the boundary.
+    host-quote: func(id: string) -> string;
+
+    /// A host-provided clock reading. Returning it from the host keeps the guest
+    /// deterministic and shows a second, numeric host import.
+    host-now: func() -> u64;
+}
+
+/// The guest world: it IMPORTS the host capability and EXPORTS a single `run`
+/// entrypoint the host drives with a mode selector. One guest binary exercises
+/// every Store/Engine control the host asserts:
+///   "clean" -> light work; calls both host imports; returns a summary
+///   "spin"  -> a tight compute loop (drives the fuel and epoch traps)
+///   "grow"  -> repeated linear-memory growth (drives the ResourceLimiter deny)
+world host-demo {
+    import host-caps;
+
+    /// Run `mode` for up to `iterations` steps; returns a human-readable summary.
+    export run: func(mode: string, iterations: u64) -> string;
+}

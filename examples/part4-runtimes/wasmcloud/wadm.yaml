@@ -1,0 +1,57 @@
+# wadm application manifest (wadm 0.21.x / OAM core.oam.dev/v1beta1) for the
+# ch15 wasmCloud example.
+#
+# Two things run in the lattice:
+#   * cargo-http  — our component, the SAME app.wasm that `wasmtime serve` runs.
+#                   It exports wasi:http/incoming-handler. Referenced as a local
+#                   file (file://./app.wasm) so no registry push is needed;
+#                   `wash up` and `wash app deploy` are both run from this
+#                   directory so the host resolves the relative path. build.sh
+#                   writes app.wasm here.
+#   * httpserver  — the wasmCloud HTTP server capability provider. It opens the
+#                   TCP socket and translates inbound HTTP into
+#                   wasi:http/incoming-handler calls on the component.
+#
+# The link makes the provider (source) call the component (target) on
+# wasi:http/incoming-handler, and carries the listen address as source config.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-http
+  annotations:
+    version: v0.0.1
+    description: "Cargo HTTP front door (Part 2 provider composed under the Part 3 http-rust world) on wasmCloud"
+spec:
+  components:
+    - name: cargo-http
+      type: component
+      properties:
+        # Local build output (build.sh writes it next to this manifest). The
+        # same bytes also run under `wasmtime serve` — see ch16 / prove-same-bytes.sh.
+        image: file://./app.wasm
+      traits:
+        # Keep one instance of the component running.
+        - type: spreadscaler
+          properties:
+            instances: 1
+
+    - name: httpserver
+      type: capability
+      properties:
+        # Latest released HTTP server provider; speaks wasi:http 0.2.x and is
+        # compatible with the wasmcloud host 1.9.1 bundled in wash 0.43.
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        # The provider (source) is linked to the component (target) on
+        # wasi:http/incoming-handler. source_config supplies the listen address.
+        - type: link
+          properties:
+            target: cargo-http
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-http-listen
+                properties:
+                  address: 0.0.0.0:8000

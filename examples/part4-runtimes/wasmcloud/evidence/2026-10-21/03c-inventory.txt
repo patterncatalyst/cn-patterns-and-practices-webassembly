@@ -1,0 +1,19 @@
+$ wash get inventory
+
+                                                                                        
+  Host ID                                                      Friendly name            
+  NCQR6FIQCONSILLUFUMAENAPFDCRP223B53PRVRR42HSOA4NYFW3SYPC     sparkling-sunset-0738    
+                                                                                        
+  Host labels                                                                           
+  hostcore.arch                 x86_64                                                  
+  hostcore.os                   linux                                                   
+  hostcore.osfamily             unix                                                    
+                                                                                        
+  Component ID                  Name                           Max count                
+  cargo_http-cargo_http         N/A                            1                        
+                                                                                        
+  Provider ID                   Name                                                    
+  cargo_http-httpserver         http-server-provider                                    
+                                                                                        
+                                                                                        
+

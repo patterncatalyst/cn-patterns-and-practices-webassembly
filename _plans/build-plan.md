@@ -179,16 +179,66 @@ provider components from Part 2 (DRQ-036).
 
 **Part 3 (Interfaces, Ch11–Ch13) is now COMPLETE.**
 
-## Deferred to later iterations (r05+)
+## r05 — Part 4: Runtimes (wasmtime & wasmCloud)
 
-- Part 4–Part 7 chapter prose (Ch14–Ch28), to the house depth standard:
+Ch14 (wasmtime embedding, CLI, and the host API), Ch15 (wasmCloud lattice,
+providers, and links), and Ch16 (wasmtime and wasmCloud together), backed by
+a new `examples/part4-runtimes/` tree: a `wasmtime-host/` component + native
+Rust host, CI-gated like Part 2/3, and a `wasmcloud/` application (wadm
+manifest + the same cargo component, httpserver provider 0.27.0 linked over
+`wasi:http/incoming-handler`), verified live rather than in CI (DRQ-042).
+
+- **Ch14 wasmtime-host**: the native host demonstrates three host-provided
+  controls, each proven against a clean contrast run — fuel exhaustion
+  (`OutOfFuel`), an epoch deadline (`Interrupt`), and a `ResourceLimiter`
+  denying `memory.grow` (DRQ-043).
+- **Ch15 wasmCloud**: `wash up` launches nats-server 2.11.3 + wadm 0.21.1 +
+  wasmcloud host 1.9.1 (DRQ-041); the wadm manifest links the httpserver
+  provider 0.27.0 to the cargo component's `wasi:http/incoming-handler`
+  export at `0.0.0.0:8000` (DRQ-044). The orchestrator ran `wash up` → `wash
+  app deploy` → the httpserver link → a curl against the running component →
+  a resilience check headless, and committed the run as evidence under
+  `examples/part4-runtimes/wasmcloud/evidence/2026-10-21/` (DRQ-042).
+- **Ch16 wasmtime and wasmCloud together**: one `app.wasm` (sha256
+  `eff7f5ee…`) runs unmodified under `wasmtime serve -S cli` and on
+  wasmCloud — the same-bytes proof (DRQ-046). This also delivers the
+  wasmCloud resilience story deferred from Ch13 (DRQ-039). A real behavior
+  difference surfaced in the process: wasmCloud ignores the cargo domain's
+  exported component resource, documented upstream as unsupported; the HTTP
+  path is unaffected, so Ch16 carries this as a caveat, not a blocker
+  (DRQ-045).
+- wasmCloud CLI pin corrected during this iteration: **wash 0.43.0 stable**,
+  not the docs' phantom "2.10.1" and not the 2.0 release-candidate line
+  (DRQ-041).
+- Build gotchas recorded for Ch14–16: `wasmtime::Error` needs a `.wc()` shim
+  plus a `Trap` downcast, not `anyhow`; a denied `memory.grow` surfaces as a
+  trap, not a clean `Err`; `wash app status: deployed` means accepted, not
+  ready — the gate is an HTTP 200; and `file://./app.wasm` resolves against
+  `wash`'s working directory (DRQ-047).
+
+**Part 4 (Runtimes, Ch14–16) is now COMPLETE.**
+
+## r06 — Part 5: Deploying to Kubernetes
+
+The big cluster Part — Kubernetes deployment is this book's subject, not an
+appendix (DRQ-010). Ch17 (Wasm on Kubernetes: the containerd Wasm shim /
+runwasi, and a `RuntimeClass`), Ch18 (deploying on minikube: docker driver +
+containerd runtime + the Wasm shim, plus the wasmCloud operator), Ch19
+(OpenShift Local / CRC, a numbered chapter per DRQ-007), Ch20 (sidecar),
+Ch21 (ambassador/adapter), Ch22 (HPA scaling), Ch23 (serverless
+scale-to-zero with KEDA — the HTTP add-on plus the Kafka scaler, per
+DRQ-006), and Ch24 (observability: OTel + the LGTM stack). Both the minikube
+and CRC paths are verified live headless (DRQ-010); minikube and CRC are
+already installed on this box (both currently stopped).
+
+## Deferred to later iterations (r07+)
+
+- Part 6–Part 7 chapter prose (Ch25–Ch28), to the house depth standard:
   paired SVG+Excalidraw diagrams, the house chapter spine (Learning
   objectives + Why this matters at the top, For deeper coverage at the end).
-- Runnable examples for Part 4 onward, each with its own verify step,
-  following the Part 2/3 pattern of one shared WIT world built in both Rust
-  and Go.
-- minikube manifests (containerd Wasm shim + wasmCloud operator + Istio) and
-  the CRC deployment tier — both verified live headless.
+- Runnable examples for Part 6 onward, each with its own verify step,
+  following the Part 2/3/4 pattern of one shared WIT world built in both
+  Rust and Go.
 - A dev compose for supporting services plus the LGTM observability stack.
 - The companion deck(s) — built LAST, after every chapter and example.
 
@@ -213,11 +263,14 @@ Roadmap sketch:
   tree. **Part 3 (Ch11–Ch13) is now COMPLETE** (this iteration).
 - **r05** — Part 4 Runtimes: wasmtime & wasmCloud — Ch14 wasmtime embedding,
   CLI, and the host API; Ch15 wasmCloud lattice, providers, and links
-  (`wash` gets installed here); Ch16 wasmtime and wasmCloud together,
-  including the wasmCloud resilience story deferred from Ch13 (DRQ-039).
-  **Next up.**
-- **r06+** — Part 5 Kubernetes deployment tiers: minikube first, then CRC,
-  both verified live headless; HPA, then KEDA scale-to-zero.
+  (`wash` installed here, pinned at 0.43.0, DRQ-041); Ch16 wasmtime and
+  wasmCloud together, including the wasmCloud resilience story deferred from
+  Ch13 (DRQ-039). **Part 4 (Ch14–Ch16) is now COMPLETE** (this iteration).
+- **r06** — Part 5 Kubernetes deployment tiers: Ch17 Wasm on Kubernetes
+  (runwasi/containerd shim, `RuntimeClass`), Ch18 minikube, Ch19 OpenShift
+  Local/CRC (numbered per DRQ-007), Ch20 sidecar, Ch21 ambassador/adapter,
+  Ch22 HPA, Ch23 KEDA scale-to-zero, Ch24 observability (OTel+LGTM) — both
+  minikube and CRC verified live headless. **Next up.**
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey
   (Spin), wasi-nn.
 - **r0N** — Part 7 Final project.

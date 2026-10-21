@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="20" width="260" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="150.0" y="55.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">axis</text>
+<rect x="300" y="20" width="330" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="465.0" y="48.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmtime</text>
+<text x="465.0" y="65.0" font-size="11.5" fill="#555555" text-anchor="middle">single process, you own the host</text>
+<rect x="650" y="20" width="330" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="815.0" y="48.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud</text>
+<text x="815.0" y="65.0" font-size="11.5" fill="#555555" text-anchor="middle">distributed lattice, wadm owns placement</text>
+<rect x="20" y="100" width="260" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="150.0" y="145.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Control</text>
+<rect x="300" y="100" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="465.0" y="138.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">embed it or wasmtime serve it;</text>
+<text x="465.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">you write the host code</text>
+<rect x="650" y="100" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="815.0" y="138.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">declare it in wadm.yaml;</text>
+<text x="815.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">the lattice places and links it</text>
+<rect x="20" y="200" width="260" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="150.0" y="245.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Operational surface</text>
+<rect x="300" y="200" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="465.0" y="238.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">one binary, one process;</text>
+<text x="465.0" y="255.0" font-size="11.5" fill="#555555" text-anchor="middle">lowest surface to operate</text>
+<rect x="650" y="200" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="815.0" y="238.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">NATS + wadm + host(s) + providers;</text>
+<text x="815.0" y="255.0" font-size="11.5" fill="#555555" text-anchor="middle">more moving parts to run</text>
+<rect x="20" y="300" width="260" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="150.0" y="345.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Resilience</text>
+<rect x="300" y="300" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="465.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">no built-in restart;</text>
+<text x="465.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">whatever supervises the process</text>
+<rect x="650" y="300" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="815.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">SpreadScaler self-heals;</text>
+<text x="815.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">scale-to-0 recovered in ~2s (ch15)</text>
+<rect x="20" y="400" width="260" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="150.0" y="445.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Scale</text>
+<rect x="300" y="400" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="465.0" y="445.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">more processes, your orchestration</text>
+<rect x="650" y="400" width="330" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="815.0" y="438.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">multi-host lattice scale-out,</text>
+<text x="815.0" y="455.0" font-size="11.5" fill="#555555" text-anchor="middle">built into the platform</text>
+<rect x="300" y="510" width="680" height="90" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="640.0" y="553.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 5 adds a THIRD, orthogonal axis: Kubernetes schedules</text>
+<text x="640.0" y="570.0" font-size="11.5" fill="#555555" text-anchor="middle">either runtime as a pod — same choice, one layer up</text>
+<text x="520" y="625" font-size="12" fill="#555555" text-anchor="middle">Neither column is the default: pick the row that matches what this deployment needs to own.</text>
+</svg>

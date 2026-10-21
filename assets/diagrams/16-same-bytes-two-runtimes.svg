@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 660" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="120" width="540" height="420" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="140" font-size="12" font-weight="700" fill="#1d1d1d">wasmtime serve -S cli  (ch14)</text>
+<rect x="620" y="120" width="540" height="420" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="632" y="140" font-size="12" font-weight="700" fill="#1d1d1d">wasmCloud lattice  (ch15)</text>
+<rect x="340" y="16" width="500" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="590.0" y="49.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">app.wasm — built ONCE by build.sh</text>
+<text x="590.0" y="66.0" font-size="11.5" fill="#555555" text-anchor="middle">sha256 eff7f5ee81db5f9f...4c9909b3</text>
+<rect x="50" y="160" width="480" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="186.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">single process; wasmtime loads the</text>
+<text x="290.0" y="203.0" font-size="11.5" fill="#555555" text-anchor="middle">component directly, no lattice</text>
+<rect x="50" y="232" width="480" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="265.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">GET /cargo/CARGO-USNYC-DEHAM</text>
+<rect x="50" y="304" width="480" height="72" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="290.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">200  tracking_id=CARGO-USNYC-DEHAM</text>
+<text x="290.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">origin=USNYC destination=DEHAM weight=1200.5</text>
+<rect x="50" y="392" width="480" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="425.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">GET /cargo/NOPE  -&gt;  404</text>
+<rect x="650" y="160" width="480" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="186.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">httpserver provider  &lt;--link--&gt;  cargo-http</text>
+<text x="890.0" y="203.0" font-size="11.5" fill="#555555" text-anchor="middle">component, wired by wadm.yaml</text>
+<rect x="650" y="232" width="480" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="265.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">GET /cargo/CARGO-USNYC-DEHAM</text>
+<rect x="650" y="304" width="480" height="72" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="890.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">200  tracking_id=CARGO-USNYC-DEHAM</text>
+<text x="890.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">origin=USNYC destination=DEHAM weight=1200.5</text>
+<rect x="650" y="392" width="480" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="425.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">GET /cargo/NOPE  -&gt;  404</text>
+<rect x="240" y="500" width="700" height="80" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="590.0" y="538.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">IDENTICAL JSON on both sides, IDENTICAL sha256 on both sides</text>
+<text x="590.0" y="555.0" font-size="11.5" fill="#555555" text-anchor="middle">one build, two runtimes, no rebuild in between</text>
+<path d="M500,86 L290,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M680,86 L890,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,216 L290,232" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,288 L290,304" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,376 L290,392" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,216 L890,232" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,288 L890,304" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,376 L890,392" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,448 L400,500" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M890,448 L780,500" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="590" y="610" font-size="12" fill="#555555" text-anchor="middle">Caveat: wasmCloud ignores EXPORTED component resources (our cargo-tracker) — a WARN at start, harmless here</text>
+<text x="590" y="628" font-size="12" fill="#555555" text-anchor="middle">because the HTTP path only uses booking. wasmtime serve runs the component as-is, resource and all.</text>
+</svg>

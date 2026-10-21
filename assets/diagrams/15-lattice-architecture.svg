@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 660" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="60" width="1140" height="560" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="80" font-size="12" font-weight="700" fill="#1d1d1d">lattice — everything `wash up -d` starts</text>
+<rect x="330" y="150" width="790" height="440" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="342" y="170" font-size="12" font-weight="700" fill="#1d1d1d">wasmcloud host 1.9.1  (sparkling-sunset-0738)</text>
+<rect x="470" y="20" width="240" height="50" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="590.0" y="50.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">curl http://127.0.0.1:8000/cargo/{id}</text>
+<rect x="60" y="110" width="220" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="170.0" y="135.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">NATS 2.11.3</text>
+<text x="170.0" y="152.5" font-size="11.5" fill="#555555" text-anchor="middle">lattice message bus — wash, wadm,</text>
+<text x="170.0" y="167.5" font-size="11.5" fill="#555555" text-anchor="middle">and the host all talk over it</text>
+<rect x="60" y="210" width="220" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="170.0" y="235.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wadm 0.21.1</text>
+<text x="170.0" y="252.5" font-size="11.5" fill="#555555" text-anchor="middle">reconciles wadm.yaml against</text>
+<text x="170.0" y="267.5" font-size="11.5" fill="#555555" text-anchor="middle">actual lattice state (OAM)</text>
+<rect x="360" y="200" width="330" height="110" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="525.0" y="238.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">httpserver capability provider  0.27.0</text>
+<text x="525.0" y="255.0" font-size="11.5" fill="#555555" text-anchor="middle">image: ghcr.io/wasmcloud/http-server:0.27.0</text>
+<text x="525.0" y="270.0" font-size="11.5" fill="#555555" text-anchor="middle">opens 0.0.0.0:8000, translates inbound</text>
+<text x="525.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">HTTP into wasi:http/incoming-handler calls</text>
+<rect x="360" y="350" width="330" height="100" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="525.0" y="383.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-http component</text>
+<text x="525.0" y="400.0" font-size="11.5" fill="#555555" text-anchor="middle">image: file://./app.wasm</text>
+<text x="525.0" y="415.0" font-size="11.5" fill="#555555" text-anchor="middle">spreadscaler: instances: 1</text>
+<text x="525.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">exports wasi:http/incoming-handler@0.2.8</text>
+<rect x="760" y="230" width="320" height="150" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="920.0" y="280.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">the LINK</text>
+<text x="920.0" y="297.5" font-size="11.5" fill="#555555" text-anchor="middle">namespace: wasi  package: http</text>
+<text x="920.0" y="312.5" font-size="11.5" fill="#555555" text-anchor="middle">interfaces: [incoming-handler]</text>
+<text x="920.0" y="327.5" font-size="11.5" fill="#555555" text-anchor="middle">source_config: cargo-http-listen</text>
+<text x="920.0" y="342.5" font-size="11.5" fill="#555555" text-anchor="middle">address: 0.0.0.0:8000</text>
+<rect x="360" y="500" width="330" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="525.0" y="528.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">same app.wasm Chapter 14 runs</text>
+<text x="525.0" y="545.0" font-size="11.5" fill="#555555" text-anchor="middle">under wasmtime serve (Ch16)</text>
+<path d="M590,70 L525,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="563.5" y="129.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">HTTP GET</text>
+<text x="563.5" y="129.0" font-size="11" fill="#555" text-anchor="middle">HTTP GET</text>
+<path d="M170,180 L170,210" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M280,160 L500,200" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="396.0" y="174.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">deploys / reconciles</text>
+<text x="396.0" y="174.0" font-size="11" fill="#555" text-anchor="middle">deploys / reconciles</text>
+<path d="M525,310 L525,350" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M690,255 L760,280" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="731.0" y="261.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">link</text>
+<text x="731.0" y="261.5" font-size="11" fill="#b8650a" text-anchor="middle">link</text>
+<path d="M760,340 L690,400" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="731.0" y="364.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wrpc:http/incoming-handler</text>
+<text x="731.0" y="364.0" font-size="11" fill="#b8650a" text-anchor="middle">wrpc:http/incoming-handler</text>
+<path d="M525,450 L525,500" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="590" y="630" font-size="12" fill="#555555" text-anchor="middle">One `wash up -d` starts NATS + wadm + the host; `wash app deploy wadm.yaml` starts the provider + component and establishes the link.</text>
+<text x="590" y="648" font-size="12" fill="#555555" text-anchor="middle">The provider owns the socket; the component only ever sees a WIT call — it never parses raw HTTP.</text>
+</svg>

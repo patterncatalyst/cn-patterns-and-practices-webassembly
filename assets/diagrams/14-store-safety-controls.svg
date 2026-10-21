@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="1040" height="60" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">guest: run(&quot;spin&quot;, N) or run(&quot;grow&quot;, N) — same component, three Stores</text>
+<rect x="20" y="92" width="330" height="520" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="112" font-size="12" font-weight="700" fill="#1d1d1d">Fuel</text>
+<rect x="375" y="92" width="330" height="520" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="387" y="112" font-size="12" font-weight="700" fill="#1d1d1d">Epoch interruption</text>
+<rect x="730" y="92" width="330" height="520" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="742" y="112" font-size="12" font-weight="700" fill="#1d1d1d">ResourceLimiter</text>
+<rect x="45" y="36" width="280" height="24" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="185.0" y="53.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">run(&quot;spin&quot;, 1_000_000_000)</text>
+<rect x="45" y="130" width="280" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="185.0" y="163.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Config::consume_fuel(true)</text>
+<rect x="45" y="198" width="280" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="185.0" y="231.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">store.set_fuel(100_000)</text>
+<rect x="45" y="266" width="280" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="185.0" y="306.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">budget exhausted mid-loop</text>
+<rect x="45" y="350" width="280" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="185.0" y="383.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">trapped with OutOfFuel</text>
+<rect x="45" y="430" width="280" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="185.0" y="463.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">contrast: set_fuel(50_000_000)</text>
+<text x="185.0" y="480.0" font-size="11.5" fill="#555555" text-anchor="middle">clean mode=ok, fuel remaining logged</text>
+<rect x="400" y="130" width="280" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="540.0" y="163.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Config::epoch_interruption(true)</text>
+<rect x="400" y="198" width="280" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="540.0" y="231.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">store.set_epoch_deadline(1)</text>
+<rect x="400" y="266" width="280" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="540.0" y="299.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ticker thread: sleep(5ms);</text>
+<text x="540.0" y="316.0" font-size="11.5" fill="#555555" text-anchor="middle">engine.increment_epoch()</text>
+<rect x="400" y="350" width="280" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="540.0" y="383.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">trapped with Interrupt</text>
+<rect x="400" y="430" width="280" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="540.0" y="463.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">contrast: set_epoch_deadline(1_000_000)</text>
+<text x="540.0" y="480.0" font-size="11.5" fill="#555555" text-anchor="middle">far deadline: clean run ok</text>
+<rect x="755" y="130" width="280" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="895.0" y="156.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">StoreLimitsBuilder</text>
+<text x="895.0" y="173.0" font-size="11.5" fill="#555555" text-anchor="middle">  .memory_size(8 * 1024 * 1024)</text>
+<rect x="755" y="198" width="280" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="895.0" y="231.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">store.limiter(|s| &amp;mut s.limits)</text>
+<rect x="755" y="266" width="280" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="895.0" y="299.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">run(&quot;grow&quot;, 64) needs 64 MiB</text>
+<text x="895.0" y="316.0" font-size="11.5" fill="#555555" text-anchor="middle">growth past 8 MiB cap DENIED</text>
+<rect x="755" y="350" width="280" height="56" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="895.0" y="376.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">allocator abort -&gt; trap</text>
+<text x="895.0" y="393.0" font-size="11.5" fill="#555555" text-anchor="middle">(UnreachableCodeReached)</text>
+<rect x="755" y="430" width="280" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="895.0" y="463.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">contrast: memory_size(256 MiB)</text>
+<text x="895.0" y="480.0" font-size="11.5" fill="#555555" text-anchor="middle">same grow -&gt; 64 blocks, 67108864 bytes</text>
+<path d="M185,60 L185,130" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,60 L540,130" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M895,60 L895,130" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M185,186 L185,198" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,186 L540,198" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M895,186 L895,198" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M185,254 L185,266" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,254 L540,266" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M895,254 L895,266" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M185,336 L185,350" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,336 L540,350" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M895,336 L895,350" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="540" y="610" font-size="12" fill="#555555" text-anchor="middle">Each column gates the SAME guest; the contrast row below each trap is the proof the control fired rather than the guest simply failing.</text>
+</svg>

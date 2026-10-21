@@ -1,0 +1,8 @@
+# Composed deployable component — build.sh regenerates it deterministically from
+# the Part 2 provider + Part 3 http-rust front door. Not committed (293 KiB).
+app.wasm
+
+# prove-same-bytes.sh scratch log (normally cleaned up on exit).
+.serve.log
+
+# The evidence/ directory IS committed (the live-run proof) — do not ignore it.

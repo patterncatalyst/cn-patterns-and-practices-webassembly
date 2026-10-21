@@ -1,0 +1,6 @@
+# Rust build output (both crates). Cargo.lock and src/bindings.rs ARE committed,
+# matching the Part 2/3 example convention.
+target/
+
+# Stray built components, if any are produced at the example root.
+*.wasm

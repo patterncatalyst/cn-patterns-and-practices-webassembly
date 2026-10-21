@@ -1,0 +1,5 @@
+$ wash --version
+wash          v0.43.0
+├ nats-server v2.11.3
+├ wadm        v0.21.1
+└ wasmcloud   v1.9.1

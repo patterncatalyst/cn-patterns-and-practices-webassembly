@@ -1,0 +1,10 @@
+$ wash app status cargo-http
+
+cargo-http@ - Deployed                                                                    
+                                                                    
+  Name                                     Kind           Status    
+  cargo_http                               SpreadScaler   Deployed  
+  httpserver -(wasi:http)-> cargo_http     LinkScaler     Deployed  
+  httpserver                               SpreadScaler   Deployed  
+                                                                    
+

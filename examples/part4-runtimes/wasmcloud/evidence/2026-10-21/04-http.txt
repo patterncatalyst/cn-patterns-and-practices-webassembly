@@ -1,0 +1,4 @@
+$ curl -s http://127.0.0.1:8000/cargo/CARGO-USNYC-DEHAM
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+$ curl -s -o /dev/null -w %{http_code} http://127.0.0.1:8000/cargo/NOPE
+404
