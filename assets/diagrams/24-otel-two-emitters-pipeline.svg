@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="40" width="1140" height="180" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">minikube — shim-level traces only (wasmtime does not natively instrument metrics/logs)</text>
+<rect x="20" y="260" width="1140" height="180" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="280" font-size="12" font-weight="700" fill="#1d1d1d">CRC — wasmCloud host native traces + metrics + logs, via a rootless Collector</text>
+<rect x="60" y="90" width="280" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">containerd-shim-wasmtime v0.6.1</text>
+<text x="200.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">per-pod Wasm runtime shim</text>
+<rect x="400" y="90" width="280" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="540.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">shim-level OTel traces</text>
+<text x="540.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">span per invocation, shim-origin only</text>
+<rect x="740" y="90" width="380" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="930.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">otel-lgtm</text>
+<text x="930.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">Grafana / Tempo / Loki / Prometheus</text>
+<rect x="60" y="310" width="260" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="190.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud host 1.9.1</text>
+<text x="190.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">lattice host process</text>
+<rect x="380" y="310" width="260" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="510.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">native traces + metrics + logs</text>
+<text x="510.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">host- and provider-level telemetry</text>
+<rect x="700" y="310" width="230" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="815.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">rootless OTel Collector</text>
+<text x="815.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">restricted-v2 SCC compatible</text>
+<rect x="990" y="310" width="130" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="1055.0" y="338.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">otel-lgtm</text>
+<text x="1055.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">(CRC&#x27;s own stack)</text>
+<path d="M340,120 L400,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M680,120 L740,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M320,340 L380,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M640,340 L700,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M930,340 L990,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="590" y="440" font-size="12" fill="#555555" text-anchor="middle">Two separate clusters, two separate backends: don&#x27;t assume one chapter&#x27;s OTel pipeline describes the other substrate.</text>
+</svg>

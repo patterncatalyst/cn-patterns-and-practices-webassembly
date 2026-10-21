@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="20" width="1000" height="240" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">time-to-ready, same scale-up event</text>
+<rect x="40" y="70" width="230" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="155.0" y="98.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Wasm replica</text>
+<text x="155.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">(raw-shim or wasmCloud)</text>
+<rect x="300" y="70" width="60" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="330.0" y="105.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">~ms</text>
+<rect x="380" y="70" width="600" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="680.0" y="98.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ready in single-digit to low-hundreds of ms</text>
+<text x="680.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">(instantiate, not boot)</text>
+<rect x="40" y="170" width="230" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="155.0" y="205.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Container / JVM workload</text>
+<rect x="300" y="170" width="680" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="640.0" y="198.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ready in several seconds</text>
+<text x="640.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">process init, classloading, JIT warmup</text>
+<rect x="40" y="280" width="960" height="130" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="520.0" y="320.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">HPA&#x27;s default syncPeriod / readiness-probe cadence and scale-up</text>
+<text x="520.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">stabilizationWindowSeconds are tuned for container-class startup.</text>
+<text x="520.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">A wasm replica can be ready and serving before the next HPA sync</text>
+<text x="520.0" y="367.5" font-size="11.5" fill="#555555" text-anchor="middle">tick even fires — shorten probe intervals and the scale-up window</text>
+<text x="520.0" y="382.5" font-size="11.5" fill="#555555" text-anchor="middle">for wasm Deployments, or the autoscaler reacts a full cycle late.</text>
+<path d="M850,55 L850,225" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="856.0" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">~15s typical HPA sync interval</text>
+<text x="856.0" y="134.0" font-size="11" fill="#555" text-anchor="middle">~15s typical HPA sync interval</text>
+<text x="520" y="410" font-size="12" fill="#555555" text-anchor="middle">Cold-start speed is an HPA-tuning input, not just a nice-to-have: it changes which window settings are correct.</text>
+</svg>
