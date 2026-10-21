@@ -533,8 +533,10 @@ async fn tonic_client_roundtrip() {
 That test is a complete gRPC client talking real HTTP/2 to a real tonic server, over a real TCP socket, nothing mocked, nothing stubbed. Run it, and the real output is this:
 
 ```
-test result: ok. 1 passed
 grpc-bridge: tonic client round trip OK (GetCargo + BookCargo through Wasm)
+test tonic_client_roundtrip ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
 `GetCargo` and `BookCargo` both complete as real gRPC RPCs over real HTTP/2, and both payloads trace back to the same Wasm provider's domain logic a native Rust host has called since Chapter 6. The bridge can also run as a standalone server (`cargo run --release`, defaulting to `127.0.0.1:50051`) and answer `grpcurl` the same way, which is the shape anyone deploying this in front of real traffic would actually run.
