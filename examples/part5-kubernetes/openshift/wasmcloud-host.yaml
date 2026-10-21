@@ -1,0 +1,42 @@
+# WasmCloudHostConfig — the in-cluster wasmCloud host the operator reconciles
+# into a Deployment (wasmCloud host container + a NATS leaf sidecar). This is
+# the OpenShift counterpart to the minikube RuntimeClass/containerd shim: on
+# OpenShift we run a managed host instead of node-level shim surgery.
+#
+# Pinned on purpose:
+#   version 1.9.1                    — the host version Part 4 proved against the
+#                                      http-server:0.27.0 provider. The chart's
+#                                      default host (appVersion 1.2.1) is too old
+#                                      for provider 0.27.0's wRPC protocol:
+#                                      invocations fail with "failed to shutdown
+#                                      synchronous parameter channel: not
+#                                      connected" (HTTP 500). 1.9.1 speaks
+#                                      wasi:http 0.2.x and runs our
+#                                      wasi:http/incoming-handler@0.2.8 component
+#                                      (same app.wasm Part 2/3/4 run).
+#   natsAddress                      — the chart publishes the NATS Service as
+#                                      nats.<namespace>.svc.cluster.local:4222;
+#                                      we install in the "wasmcloud" project.
+#   registryCredentialsSecret        — a docker-registry secret (deploy.sh
+#                                      creates it) so the host can pull the
+#                                      PRIVATE ghcr component image. No public
+#                                      artifact; ghcr's cert chains to a public
+#                                      CA so there is no registry-TLS dance.
+#
+# No securityContext is pinned here: the operator leaves the host/leaf
+# containers' securityContext unset, so OpenShift's restricted-v2 SCC admission
+# assigns a namespace-range UID and applies drop-ALL / no-privilege-escalation /
+# seccomp=RuntimeDefault itself. (schedulingOptions.podTemplateAdditions.spec is
+# available for pod-level overrides if a future host image needs them.)
+apiVersion: k8s.wasmcloud.dev/v1alpha1
+kind: WasmCloudHostConfig
+metadata:
+  name: wasmcloud-host
+  namespace: wasmcloud
+spec:
+  hostReplicas: 1
+  lattice: default
+  version: "1.9.1"
+  natsAddress: nats://nats.wasmcloud.svc.cluster.local
+  registryCredentialsSecret: ghcr-pull
+  allowLatest: false

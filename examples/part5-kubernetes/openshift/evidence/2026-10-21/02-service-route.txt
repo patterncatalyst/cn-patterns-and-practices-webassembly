@@ -1,0 +1,6 @@
+--- Service (operator-created) ---
+SVC          TYPE        PORT   SELECTOR
+cargo-http   ClusterIP   8000   <none>
+--- Route (edge TLS) ---
+ROUTE        HOST                                    TERMINATION   PORT
+cargo-http   cargo-http-wasmcloud.apps-crc.testing   edge          8000

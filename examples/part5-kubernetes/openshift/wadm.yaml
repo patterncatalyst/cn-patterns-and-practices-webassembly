@@ -1,0 +1,67 @@
+# wadm application manifest (OAM core.oam.dev/v1beta1) for the Part 5 OpenShift
+# deploy — the SAME two-thing lattice as part4-runtimes/wasmcloud/wadm.yaml
+# (our component + the httpserver provider + a link), with ONE operator-specific
+# change: both the component and the provider use a `daemonscaler` instead of a
+# `spreadscaler`.
+#
+# Why daemonscaler (the required edit for the operator path): the wasmCloud
+# operator auto-creates a Kubernetes Service for an application ONLY when its
+# httpserver provider is scaled with a daemonscaler — spreadscaler Service
+# creation is not implemented in the operator. The operator names that Service
+# after this Application (metadata.name == "cargo-http") and exposes the
+# provider's listen port (8000). deploy.sh then puts an edge-TLS Route in front
+# of that Service so the proof curls over real HTTPS.
+#
+# The component image is a placeholder that deploy.sh rewrites to the pushed
+# ghcr ref (ghcr.io/<owner>/cargo-http:<tag>): the in-cluster host pulls it,
+# instead of the file://./app.wasm local ref the single-host Part 4 run uses.
+# It is byte-for-byte the SAME component (sha256 eff7f5ee…). contracts/wit stays
+# pristine — nothing here edits an interface.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-http
+  annotations:
+    version: v0.0.1
+    description: "Cargo HTTP front door (Part 2 provider composed under the Part 3 http-rust world) on wasmCloud, deployed by the operator to OpenShift Local"
+spec:
+  components:
+    - name: cargo-http
+      type: component
+      properties:
+        # deploy.sh rewrites __COMPONENT_REF__ -> the pushed ghcr component ref.
+        image: __COMPONENT_REF__
+      traits:
+        # daemonscaler (not spreadscaler): one component instance per host.
+        - type: daemonscaler
+          properties:
+            replicas: 1
+
+    - name: httpserver
+      type: capability
+      properties:
+        # Reused verbatim from part4-runtimes/wasmcloud/wadm.yaml: the latest
+        # released HTTP server provider, speaks wasi:http 0.2.x, compatible with
+        # the host versions in this project.
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        # The provider (source) calls the component (target) on
+        # wasi:http/incoming-handler; source_config carries the listen address.
+        # On Kubernetes with the operator the port is configurable but the
+        # address MUST be 0.0.0.0.
+        - type: link
+          properties:
+            target: cargo-http
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-http-listen
+                properties:
+                  address: 0.0.0.0:8000
+        # daemonscaler on the httpserver provider is what makes the operator
+        # create the Service (named "cargo-http", port 8000).
+        - type: daemonscaler
+          properties:
+            replicas: 1

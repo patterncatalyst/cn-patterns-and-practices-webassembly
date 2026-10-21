@@ -523,3 +523,75 @@ runner is never a CI step — the live bring-up and verification happen by
 hand (the same posture DRQ-042 set for wasmCloud) and the result is
 committed as evidence, matching the headless-verification house rule
 (DRQ-050).
+
+## DRQ-054 — Ch19 CRC deploy mechanism: the wasmCloud operator (v1 chart 0.1.2), not the raw runwasi shim
+
+Ch19's OpenShift Local (CRC) deployment path is the **wasmCloud operator**,
+installed via the v1 Helm chart
+`oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2` — the opposite
+choice from Ch18's minikube path (DRQ-048). The raw
+`containerd-shim-wasmtime` used on minikube needs a privileged RHCOS
+MachineConfig to install on the node, which does not fit the
+`restricted-v2` SCC the CRC chapters hold to; the operator model stays
+inside `restricted-v2` with no node-level surgery. Confirmed live on CRC
+2.64.0 / OCP 4.22.14.
+
+## DRQ-055 — Same app.wasm ships to CRC via a private registry, not a direct node load
+
+The same `app.wasm` (sha256 `eff7f5ee…`, the same-bytes artifact from
+DRQ-046) deploys to OpenShift. It is pushed to a **private**
+`ghcr.io/patterncatalyst/cargo-http:crc` image rather than loaded directly
+onto the node the way minikube's `minikube image load` does (DRQ-051) — CRC
+has no equivalent. The in-cluster wasmCloud host pulls it through a
+`ghcr-pull` docker-registry Secret, referenced by
+`WasmCloudHostConfig.spec.registryCredentialsSecret`.
+
+## DRQ-056 — Ch19 verification: CA-verified curl through an edge-TLS Route, never -k/port-forward/NodePort
+
+Ch19's live check is a **CA-verified** `curl` — using a combined bundle of
+the system trust store plus the cluster's ingress CA — through an edge-TLS
+Route. No `curl -k`, no `oc port-forward`, and no NodePort: the DRQ-049
+no-port-forward rule holds on OpenShift the same way it does on minikube's
+Ingress path, and skipping certificate verification would leave the same
+gap a port-forward does — it would prove the pod answers, not that the
+Route does.
+
+## DRQ-057 — Eight CRC live gotchas recorded for Ch19
+
+1. The operator's manually created EndpointSlice is rejected by
+   `RestrictedEndpointsAdmission`; the fix is a narrow
+   `endpoints`/`endpointslices` `restricted` RBAC grant scoped to the
+   operator's service account — a network RBAC grant, not an SCC exception.
+2. Host-to-provider wRPC version skew: the chart's default host 1.2.1 is too
+   old for the httpserver provider 0.27.0 and surfaces as an HTTP 500; the
+   fix is pinning the host to **1.9.1** via `WasmCloudHostConfig.spec.version`.
+3. NATS has to run standalone (`cluster.enabled: false`) on a single-node
+   CRC — the chart's default clustered NATS never reaches quorum.
+4. `nats-box` CrashLoops under `restricted-v2` and is disabled.
+5. The OAM application has to live in the same namespace as the
+   `WasmCloudHostConfig`.
+6. Teardown has to delete the stale `v1beta1.core.oam.dev` APIService first,
+   or namespace deletion stalls waiting on it.
+7. Readiness is gated on a real HTTP 200 from the Route, not a pod-Ready
+   status.
+8. The chart's NATS DNS needs repointing to `*.wasmcloud.svc`.
+
+## DRQ-058 — restricted-v2: nulling the wadm subchart's hard-coded runAsUser/runAsGroup
+
+The wadm subchart hard-codes `runAsUser`/`runAsGroup: 1000` in its pod spec,
+which falls outside the namespace's platform-assigned UID range under
+`restricted-v2` and is rejected. The fix is nulling both fields in the Helm
+values so OpenShift assigns a UID from the namespace range itself. Every
+other component in the chart already runs platform-assigned non-root with
+no override needed.
+
+## DRQ-059 — CI for Ch19 stays a static manifest gate; the live CRC run is evidence-only
+
+Consistent with DRQ-053's static-only posture for Part 5's other chapters,
+Ch19's CI contribution is static too: the raw OpenShift CRD manifests
+(`WasmCloudHostConfig`, the OAM `Application`, etc.) are validated with
+`kubeconform -ignore-missing-schemas`, since the CRDs ship no published
+OpenAPI schema for strict mode to check against. Standing up CRC inside a CI
+runner is not a CI step; the live run is evidence-only, captured by hand and
+committed, matching DRQ-042's wasmCloud posture and DRQ-050's
+headless-verification gate.

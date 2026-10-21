@@ -1,0 +1,59 @@
+# Helm values overlay for the wasmcloud-platform chart (0.1.2) on OpenShift
+# Local (CRC), in a dedicated namespace under restricted-v2. The chart's bundled
+# defaults already enable nats + wadm + operator and disable the manual host
+# subchart and hostConfig (we apply our own WasmCloudHostConfig —
+# wasmcloud-host.yaml — so we can pin the host version, wire the ghcr pull
+# secret, and keep securityContext unset for restricted-v2).
+#
+# Two reasons this overlay exists:
+#   1. The chart hard-codes NATS DNS at *.default.svc.cluster.local. We install
+#      into the "wasmcloud" namespace (a normal project, so it gets restricted-v2
+#      — the "default" namespace is PodSecurity "privileged" and would NOT prove
+#      restricted-v2), so every NATS address has to be repointed at
+#      *.wasmcloud.svc.cluster.local (here for wadm; in wasmcloud-host.yaml for
+#      the host/operator lattice connection).
+#   2. The wadm subchart hard-codes securityContext.runAsUser/runAsGroup: 1000,
+#      which is OUTSIDE a restricted-v2 namespace's assigned UID range and would
+#      be rejected. We drop those two keys (null) so OpenShift assigns a
+#      namespace-range UID, and keep the rest of wadm's already-good hardening
+#      (runAsNonRoot, drop ALL, no privilege escalation, seccomp RuntimeDefault).
+#
+# nats and the operator set no runAsUser, so restricted-v2 assigns their UIDs
+# with no override needed.
+nats:
+  # nats-box is a CLI debug sidecar Deployment whose entrypoint does `cd /root`;
+  # under restricted-v2 it runs as an arbitrary UID with no access to /root and
+  # CrashLoops ("can't cd to /root: Permission denied"), which would hang
+  # `helm --wait`. It is not used by wadm/the operator/the host, so disable it.
+  natsBox:
+    enabled: false
+  config:
+    cluster:
+      # Standalone NATS, not a cluster. CRC is a single node; the chart default
+      # (cluster.enabled: true) makes the server block on "Waiting for routing
+      # to be established" to peers that never exist, so JetStream never elects a
+      # meta leader and the startup probe 503s forever. Standalone JetStream is
+      # correct for one node and is all wadm/the operator need here.
+      enabled: false
+    jetstream:
+      fileStore:
+        pvc:
+          # 10Gi default -> 2Gi: plenty for wadm state on a demo box.
+          size: 2Gi
+
+wadm:
+  wadm:
+    config:
+      nats:
+        server: "nats://nats-headless.wasmcloud.svc.cluster.local"
+  securityContext:
+    # Drop the chart's fixed UID/GID so restricted-v2 assigns one in range.
+    runAsUser: null
+    runAsGroup: null
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - "ALL"
+    seccompProfile:
+      type: RuntimeDefault
