@@ -1,0 +1,25 @@
+# minikube overlay — retags the Wasm image to the tag build.sh builds and
+# `minikube image load`s, and forces imagePullPolicy: Never so the kubelet never
+# tries a registry pull for an image that only exists in minikube's local
+# containerd store (DRQ convention: docker driver + containerd, no registry).
+#
+# The Ingress host stays the base placeholder here; verify-minikube.sh patches
+# it live to cargo.<minikube-ip>.nip.io (the IP is only known at run time).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: cargo-http-wasm
+    newTag: minikube
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-http
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

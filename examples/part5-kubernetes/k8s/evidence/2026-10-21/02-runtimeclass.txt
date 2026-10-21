@@ -1,0 +1,16 @@
+$ kubectl get runtimeclass wasmtime -o yaml
+apiVersion: node.k8s.io/v1
+handler: wasmtime
+kind: RuntimeClass
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"node.k8s.io/v1","handler":"wasmtime","kind":"RuntimeClass","metadata":{"annotations":{},"name":"wasmtime"}}
+  creationTimestamp: "2026-10-21T14:17:08Z"
+  name: wasmtime
+  resourceVersion: "398"
+  uid: b5131ede-76f8-4bf1-89a1-238ceca53495
+
+# containerd runtime registration on the node (config.toml)
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmtime]
+          runtime_type = "io.containerd.wasmtime.v1"
