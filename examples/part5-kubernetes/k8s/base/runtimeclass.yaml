@@ -1,0 +1,19 @@
+# RuntimeClass that selects the runwasi containerd `wasmtime` shim.
+#
+# `handler: wasmtime` must match the CRI runtime key install-shim.sh registers
+# in the node's /etc/containerd/config.toml
+# ([plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmtime] with
+# runtime_type "io.containerd.wasmtime.v1"). A Pod that sets
+# `runtimeClassName: wasmtime` is scheduled onto this shim instead of runc, and
+# the shim runs our Wasm component (no Linux userland in the image) behind its
+# built-in hyper server — the same behaviour as `wasmtime serve`.
+#
+# This is a cluster-scoped object; install-shim.sh applies it (the shim binary
+# has to exist on the node first, so it lives with the install step, not in the
+# app kustomization — but it is referenced by base/kustomization.yaml so
+# `kustomize build` stays complete and valid).
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: wasmtime
+handler: wasmtime
