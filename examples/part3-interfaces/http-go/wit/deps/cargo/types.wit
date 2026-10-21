@@ -1,0 +1,118 @@
+package patterncatalyst:cargo@0.1.0;
+
+/// Shared records, enums, and the shared error type for the shipping and
+/// cargo domain: locations, money, cargo, bookings, routes, and handling
+/// events. No functions live here; `booking` and `handling` use these
+/// types and add behavior.
+interface types {
+    /// A location identified by its UN/LOCODE (for example "USNYC" for
+    /// New York).
+    record location {
+        unlocode: string,
+        name: string,
+        country: string,
+    }
+
+    /// An amount of money.
+    record money {
+        /// Decimal string representation of the amount (for example
+        /// "1250.00"), not a float, so currency arithmetic never loses
+        /// cents to binary rounding.
+        amount: string,
+        currency: string,
+    }
+
+    /// A unit of cargo tracked through the system from booking to
+    /// delivery.
+    record cargo {
+        tracking-id: string,
+        origin: location,
+        destination: location,
+        weight-kg: f64,
+    }
+
+    /// The customer's routing request: where the cargo must originate,
+    /// where it must arrive, and the deadline for arrival.
+    record route-spec {
+        origin: location,
+        destination: location,
+        arrival-deadline: string,
+    }
+
+    /// A requested shipment: a cargo bound to a route specification and
+    /// an agreed price.
+    record booking {
+        booking-id: string,
+        cargo-id: string,
+        route-spec: route-spec,
+        price: money,
+        status: routing-status,
+    }
+
+    /// One transport segment of an itinerary: a single voyage moving
+    /// cargo from one location to another within a time window.
+    record leg {
+        voyage-id: string,
+        load-location: location,
+        unload-location: location,
+        load-time: string,
+        unload-time: string,
+        status: transport-status,
+    }
+
+    /// A concrete, planned sequence of legs fulfilling a booking's route
+    /// spec.
+    record itinerary {
+        booking-id: string,
+        legs: list<leg>,
+    }
+
+    /// A single recorded event in a cargo's handling history: load,
+    /// unload, customs clearance, and so on.
+    record handling-event {
+        cargo-id: string,
+        event-type: handling-event-type,
+        location: location,
+        voyage-id: string,
+        recorded-at: string,
+    }
+
+    /// The kind of handling event recorded against a cargo. `unspecified`
+    /// is the explicit zero value so callers cannot mistake an unset
+    /// field for a real event type.
+    enum handling-event-type {
+        unspecified,
+        received,
+        loaded,
+        unloaded,
+        customs,
+        claimed,
+    }
+
+    /// Whether a booking has an assigned route yet. `unspecified` is the
+    /// explicit zero value.
+    enum routing-status {
+        unspecified,
+        not-routed,
+        routed,
+        misrouted,
+    }
+
+    /// The transport status of a single leg. `unspecified` is the
+    /// explicit zero value.
+    enum transport-status {
+        unspecified,
+        planned,
+        in-transit,
+        completed,
+        delayed,
+    }
+
+    /// Errors returned by the booking and handling interfaces.
+    variant cargo-error {
+        not-found(string),
+        invalid-booking(string),
+        invalid-location(string),
+        conflict(string),
+    }
+}

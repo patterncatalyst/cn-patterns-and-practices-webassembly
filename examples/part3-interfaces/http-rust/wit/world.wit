@@ -1,0 +1,23 @@
+package patterncatalyst:cargo-http@0.1.0;
+
+/// An HTTP front door for the cargo domain, as a WebAssembly component.
+///
+/// This world INCLUDES `wasi:http/proxy` (so the component exports
+/// `wasi:http/incoming-handler` and `wasmtime serve` can drive it directly) and
+/// additionally IMPORTS the three cargo interfaces from the repository
+/// contract (`patterncatalyst:cargo`, supplied as a path dependency in
+/// Cargo.toml — the contract stays pristine). The handler terminates HTTP and
+/// calls the imported `booking` interface across the component boundary; once
+/// composed with a `cargo` provider via `wac plug`, the import is satisfied and
+/// the result serves live under `wasmtime serve`.
+///
+/// The vendored `wasi:*` packages under wit/deps are pinned to 0.2.8 (an
+/// internally consistent set from the wasi-http v0.2.8 release). wasmtime 50
+/// satisfies any 0.2.x import through semver-compatible component linking.
+world cargo-http {
+    include wasi:http/proxy@0.2.8;
+
+    import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
+    import patterncatalyst:cargo/handling@0.1.0;
+}

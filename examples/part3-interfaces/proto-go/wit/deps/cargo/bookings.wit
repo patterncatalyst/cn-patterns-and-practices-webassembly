@@ -1,0 +1,20 @@
+package patterncatalyst:cargo@0.1.0;
+
+/// Booking lifecycle: book a cargo against a route spec, request candidate
+/// itineraries, assign one, and read a cargo back by tracking ID.
+interface booking {
+    use types.{cargo, booking, route-spec, itinerary, cargo-error};
+
+    /// Book a new cargo shipment against a route specification.
+    book-cargo: func(spec: route-spec, weight-kg: f64) -> result<booking, cargo-error>;
+
+    /// Request the candidate itineraries that satisfy a booking's route
+    /// spec.
+    request-possible-routes: func(booking-id: string) -> result<list<itinerary>, cargo-error>;
+
+    /// Assign one of the candidate itineraries to a booking.
+    assign-route: func(booking-id: string, itinerary: itinerary) -> result<booking, cargo-error>;
+
+    /// Look up a cargo by its tracking ID.
+    get-cargo: func(tracking-id: string) -> result<cargo, cargo-error>;
+}

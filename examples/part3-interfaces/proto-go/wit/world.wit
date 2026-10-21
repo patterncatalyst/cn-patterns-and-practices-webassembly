@@ -1,0 +1,14 @@
+package patterncatalyst:cargo-proto@0.1.0;
+
+/// Protobuf codec for the cargo domain, as a TinyGo WebAssembly component
+/// (ch12, reflection-free path). Same `codec` interface as proto-rust.
+interface codec {
+    get-cargo: func(request: list<u8>) -> result<list<u8>, string>;
+}
+
+world cargo-proto {
+    import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
+
+    export codec;
+}

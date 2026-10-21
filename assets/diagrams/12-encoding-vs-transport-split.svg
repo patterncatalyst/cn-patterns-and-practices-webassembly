@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="16" width="500" height="384" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">PROTOBUF — the encoding</text>
+<rect x="560" y="16" width="500" height="384" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="572" y="36" font-size="12" font-weight="700" fill="#1d1d1d">gRPC — the transport</text>
+<rect x="50" y="70" width="440" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="98.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">varints, length-delimited fields,</text>
+<text x="270.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">fixed64 doubles</text>
+<rect x="50" y="150" width="440" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="178.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">pure computation — decode bytes,</text>
+<text x="270.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">build a struct, encode bytes</text>
+<rect x="50" y="230" width="440" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="270.0" y="263.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">runs fully INSIDE the sandbox</text>
+<text x="270.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">prost (Rust) or a reflection-free codec (TinyGo)</text>
+<rect x="50" y="320" width="440" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="270.0" y="348.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">needs nothing the component model denies —</text>
+<text x="270.0" y="365.0" font-size="11.5" fill="#555555" text-anchor="middle">no network, no server socket</text>
+<rect x="600" y="70" width="420" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="810.0" y="98.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">HTTP/2 framing, trailers,</text>
+<text x="810.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">bidirectional streaming</text>
+<rect x="600" y="150" width="420" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="810.0" y="178.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">needs a listening server socket</text>
+<text x="810.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">and an HTTP/2 stack</text>
+<rect x="600" y="230" width="420" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="810.0" y="263.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">no component HTTP/2 server surface today</text>
+<text x="810.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">(wasi:http exports a request handler, not this)</text>
+<rect x="600" y="320" width="420" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="810.0" y="348.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">terminated by a host-mediated bridge</text>
+<text x="810.0" y="365.0" font-size="11.5" fill="#555555" text-anchor="middle">(tonic) in front of the component</text>
+<path d="M270,130 L270,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M270,210 L270,230" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M270,300 L270,320" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M810,130 L810,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M810,210 L810,230" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M810,300 L810,320" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="540" y="410" font-size="12" fill="#555555" text-anchor="middle">Same proto/cargo.proto, two different verdicts: the message format runs in Wasm; the RPC transport does not, yet.</text>
+</svg>

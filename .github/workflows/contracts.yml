@@ -29,6 +29,15 @@
 #      build and the rest of the toolchain install only happen once per
 #      run.
 #
+#      r04 extends this same job to also build + run
+#      examples/part3-interfaces/ (wasi-http front doors, protobuf-in-Wasm,
+#      the tonic gRPC bridge, and wasi-sockets reconnect), which reuses the
+#      Part 2 providers by building them with their own recipes and composes
+#      Part 3's components on top with `wac plug`. This needs one more
+#      pinned tool — `protoc` — for prost-build/tonic-prost-build, and adds
+#      the three Part 3 Rust bindings.rs files plus the three Part 3 Go
+#      internal/ trees to the same drift gate.
+#
 # Don't duplicate pages.yml's Jekyll build/deploy logic here, and don't
 # duplicate this validation step in pages.yml (see pages.yml's own note on
 # this job landing in "a later iteration").
@@ -72,7 +81,7 @@ jobs:
     name: Build + run the examples, check generated bindings for drift
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       RUST_VERSION: "1.99.1"
       CARGO_COMPONENT_VERSION: "0.21.1"
@@ -86,7 +95,10 @@ jobs:
       WASMTIME_SHA256: "77c19ee0437991f9ac7837b9c269d9c7076744f85dad263fea5214cc2723c7ff"
       WAC_VERSION: "0.12.0"
       WAC_SHA256: "7cd490edbd452221ef89e6750fc43eacc9b71b1242095eb577cb9a3bf0d3beda"
+      PROTOC_VERSION: "36.2"
+      PROTOC_SHA256: "121f6c7afe1d4d0e3ea6aab9432038599250134cbf4474cb1167d2c7decd4278"
       EXAMPLE_DIR: "examples/part2-building-components"
+      PART3_DIR: "examples/part3-interfaces"
     steps:
       - uses: actions/checkout@v5
 
@@ -186,6 +198,20 @@ jobs:
           sudo install -m 0755 "/tmp/${bin}" /usr/local/bin/wac
           wac --version
 
+      # protoc is a build-dep for the Part 3 protobuf-in-Wasm components and
+      # the tonic gRPC bridge — prost-build / tonic-prost-build both invoke
+      # `protoc` from PATH to turn proto/cargo.proto into Rust at build time.
+      - name: Install protoc ${{ env.PROTOC_VERSION }} (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          archive="protoc-${PROTOC_VERSION}-linux-x86_64.zip"
+          curl -fsSL -o "/tmp/${archive}" \
+            "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${archive}"
+          echo "${PROTOC_SHA256}  /tmp/${archive}" | sha256sum -c -
+          unzip -q -o "/tmp/${archive}" -d /tmp/protoc
+          sudo install -m 0755 /tmp/protoc/bin/protoc /usr/local/bin/protoc
+          protoc --version
+
       # verify.sh exports PATH itself (~/.cargo/bin, ~/.local/bin, ~/go/bin,
       # ~/.local/tinygo/bin) — matches exactly where each install step above
       # placed its binary, so no further PATH wiring is needed here. It
@@ -199,13 +225,26 @@ jobs:
       - name: Build + run the examples (verify.sh)
         run: ${{ env.EXAMPLE_DIR }}/verify.sh
 
+      # Part 3 (Interfaces: HTTP, gRPC, sockets) reuses the Part 2 provider
+      # components by building them from their own recipes (verify.sh does
+      # this itself) and composes Part 3's HTTP/proto/sockets components on
+      # top with `wac plug`. This also regenerates every Part 3 generated
+      # binding (cargo-component's src/bindings.rs for the three Rust
+      # components, wit-bindgen-go's internal/ tree for the three Go/TinyGo
+      # components) from contracts/wit and http-go/proto-go/sockets-go's own
+      # vendored WIT, which the drift gate below then checks.
+      - name: Build + run the Part 3 examples (verify.sh)
+        run: ${{ env.PART3_DIR }}/verify.sh
+
       # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
       # building — the two providers (Rust + Go) AND the two consumers
-      # (Rust + Go) it now also builds before composing. If that
-      # regeneration produced any diff — modified lines OR new/removed
-      # generated files — the committed bindings are stale relative to the
-      # contract and the build fails here.
+      # (Rust + Go) it now also builds before composing — plus the Part 3
+      # verify.sh regenerated the Part 3 Rust bindings.rs files and Go
+      # internal/ trees. If any of that regeneration produced any diff —
+      # modified lines OR new/removed generated files — the committed
+      # bindings are stale relative to the contract and the build fails
+      # here.
       - name: Check committed generated bindings are not stale (drift gate)
         run: |
           set -euo pipefail
@@ -213,11 +252,24 @@ jobs:
           RUST_BINDINGS="${EXAMPLE_DIR}/rust/src/bindings.rs"
           CONSUMER_GO_BINDINGS="${EXAMPLE_DIR}/consumer-go/internal"
           CONSUMER_RUST_BINDINGS="${EXAMPLE_DIR}/consumer-rust/src/bindings.rs"
-          CHANGED="$(git status --porcelain -- "$GO_BINDINGS" "$RUST_BINDINGS" "$CONSUMER_GO_BINDINGS" "$CONSUMER_RUST_BINDINGS")"
+          PART3_HTTP_RUST_BINDINGS="${PART3_DIR}/http-rust/src/bindings.rs"
+          PART3_HTTP_GO_BINDINGS="${PART3_DIR}/http-go/internal"
+          PART3_PROTO_RUST_BINDINGS="${PART3_DIR}/proto-component/proto-rust/src/bindings.rs"
+          PART3_PROTO_GO_BINDINGS="${PART3_DIR}/proto-go/internal"
+          PART3_SOCKETS_RUST_BINDINGS="${PART3_DIR}/sockets-rust/src/bindings.rs"
+          PART3_SOCKETS_GO_BINDINGS="${PART3_DIR}/sockets-go/internal"
+          ALL_BINDINGS=(
+            "$GO_BINDINGS" "$RUST_BINDINGS" "$CONSUMER_GO_BINDINGS" "$CONSUMER_RUST_BINDINGS"
+            "$PART3_HTTP_RUST_BINDINGS" "$PART3_HTTP_GO_BINDINGS"
+            "$PART3_PROTO_RUST_BINDINGS" "$PART3_PROTO_GO_BINDINGS"
+            "$PART3_SOCKETS_RUST_BINDINGS" "$PART3_SOCKETS_GO_BINDINGS"
+          )
+          CHANGED="$(git status --porcelain -- "${ALL_BINDINGS[@]}")"
           if [[ -n "$CHANGED" ]]; then
             echo "::error::Committed generated bindings are stale relative to contracts/wit:"
             echo "$CHANGED"
-            git --no-pager diff -- "$GO_BINDINGS" "$RUST_BINDINGS" "$CONSUMER_GO_BINDINGS" "$CONSUMER_RUST_BINDINGS" || true
+            git --no-pager diff -- "${ALL_BINDINGS[@]}" || true
             exit 1
           fi
-          echo "ok — committed bindings (${GO_BINDINGS}, ${RUST_BINDINGS}, ${CONSUMER_GO_BINDINGS}, ${CONSUMER_RUST_BINDINGS}) match a fresh regeneration from contracts/wit"
+          echo "ok — committed bindings match a fresh regeneration from contracts/wit:"
+          printf '  %s\n' "${ALL_BINDINGS[@]}"

@@ -1,0 +1,22 @@
+[package]
+name = "cargo-proto-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Native host that drives the protobuf-in-Wasm round trip: it prost-ENCODES a
+# GetCargoRequest on the outside, calls the composed component's `codec.get-cargo`
+# over the component boundary, prost-DECODES the GetCargoResponse, and asserts the
+# fields. This proves the component did the (de)serialization itself.
+[dependencies]
+wasmtime = "50"
+wasmtime-wasi = "50"
+anyhow = "1"
+prost = "=0.14.4"
+
+[build-dependencies]
+prost-build = "=0.14.4"
+
+[[bin]]
+name = "cargo-proto-host"
+path = "src/main.rs"

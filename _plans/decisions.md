@@ -324,3 +324,70 @@ wasip1, embed the WIT world, then `wasm-tools component new
 --adapt=command.wasm` using the wasmtime v50 COMMAND adapter recorded in the
 version matrix — substituting the command adapter for the reactor adapter
 since the consumer exports `wasi:cli/run`, not a reactor interface.
+
+## DRQ-036 — Part 3 examples: a new tree, depending on the pristine contract and reusing the Part 2 providers
+
+Part 3 (Ch11–Ch13) examples live under a **new** `examples/part3-interfaces/`
+tree rather than extending `examples/part2-building-components/` in place.
+The new tree depends on the pristine `contracts/wit` package (DRQ-015,
+DRQ-029) and **builds on, without editing,** the Rust and Go provider
+components from Part 2 — Part 3 is about putting new interfaces in front of
+an unchanged provider, not about changing the provider itself.
+
+## DRQ-037 — Ch11 wasi-http: `wasi:http/proxy` world, wac-composed, served with `wasmtime serve -S cli`
+
+Ch11's components export `wasi:http/incoming-handler` under the
+`wasi:http/proxy` world, composed with the Part 2 provider via `wac plug`
+(DRQ-027), and served with `wasmtime serve -S cli`. Both the Rust
+(`cargo-component`) and TinyGo (reactor) builds run and return
+byte-identical JSON. Two build gotchas recorded for the chapter:
+`wasmtime serve` needs the `-S cli` flag, because the proxy-world linker
+otherwise omits `wasi:cli/environment` and `wasi:filesystem`; and
+`cargo-component` does **not** auto-scan `wit/deps` — every `wasi:*`
+interface plus the cargo contract itself must be declared as an explicit
+path dependency.
+
+## DRQ-038 — Ch12 gRPC: two-pronged — in-component protobuf wire codec, host-mediated gRPC bridge
+
+Ch12 ships **two** artifacts, both user-directed, because neither alone
+tells the whole story:
+
+1. **Protobuf runs server-side inside a component.** The Rust side uses
+   `prost` directly (runnable, see version-matrix for the 0.14.4/0.14.6
+   pins). The Go side cannot use `google.golang.org/protobuf` the same way —
+   it **compiles** under TinyGo 0.43 but **traps at runtime**
+   (`reflect.Type.MethodByName` is unimplemented in TinyGo's reflection
+   support) — so the Go component ships a hand-written, reflection-free wire
+   codec instead, verified byte-identical to the Rust `prost` output.
+2. **A fully in-component gRPC server is not possible today**: no Wasm
+   component runtime exposes an HTTP/2 server surface a component can bind
+   to. The chapter instead builds a host-mediated **tonic bridge** — a
+   native Rust process using `tonic`/`tonic-prost` that terminates gRPC and
+   HTTP/2 on the host side, then calls into the unchanged Wasm provider
+   component over its existing WIT interface. The house framing for this is
+   "gRPC in front of Wasm," not "gRPC inside Wasm."
+
+Both artifacts are runnable and both ship in the example tree.
+
+## DRQ-039 — Ch13 wasi-sockets: Rust is the live proof, TinyGo stays build-and-validate only
+
+Ch13's outbound TCP client (reconnect with exponential backoff and jitter)
+demonstrates **capability-scoped networking**: it requires wasmtime's
+`-S inherit-network` flag and returns `access-denied` without it. The Rust
+build is the chapter's live, running proof. TinyGo's `wasi:sockets` bindings
+have no clean runtime path on TinyGo 0.43: the command-world build traps on
+a `random_get` adapter assertion at `_start`, and the reactor-world build's
+asyncify-based `pollable.block` never resolves a `connect` or timer call
+under a hand-rolled host. The Go side is therefore kept at
+build-and-validate (compiles, type-checks against the WIT world) rather than
+claimed as a second live runtime proof. wasmCloud's link/lattice-level
+resilience story is **deferred to Part 4** and only cross-referenced here,
+not built in Ch13.
+
+## DRQ-040 — CI: `contracts.yml` extended for Part 3
+
+The `contracts.yml` examples job is extended to install a pinned **protoc
+36.2** alongside the existing pinned wasm-tools/wac binaries, run
+`examples/part3-interfaces/verify.sh`, and add the Part 3 Rust/Go bindings
+to the existing drift gate (DRQ-024). The job timeout is raised to 60
+minutes to accommodate the added build and serve steps.
