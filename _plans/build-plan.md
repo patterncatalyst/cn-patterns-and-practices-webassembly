@@ -137,13 +137,55 @@ found for the provider (DRQ-035).
 Ch0 Setup, which shipped in r03a, every chapter in Parts 0–2 has prose, a
 runnable example, and a passing CI gate.
 
-## Deferred to later iterations (r04+)
+## r04 — Part 3: Interfaces (HTTP & gRPC)
 
-- Part 3–Part 7 chapter prose (Ch11–Ch28), to the house depth standard:
+Ch11 (HTTP from a component), Ch12 (gRPC with Wasm), and Ch13
+(wasi-sockets: networking, reconnect, resilience), backed by a **new**
+example tree, `examples/part3-interfaces/`, that depends on the pristine
+`contracts/wit` package and builds on — without editing — the Rust and Go
+provider components from Part 2 (DRQ-036).
+
+- **Ch11 wasi-http**: components export `wasi:http/incoming-handler` under
+  the `wasi:http/proxy` world, wac-composed with the Part 2 provider, served
+  with `wasmtime serve -S cli`. Both the Rust (`cargo-component`) and TinyGo
+  (reactor) builds run and return byte-identical JSON (DRQ-037). Two build
+  gotchas recorded for the chapter: `wasmtime serve` needs `-S cli`, because
+  the proxy-world linker otherwise omits `wasi:cli/environment` and
+  `wasi:filesystem`; and `cargo-component` does not auto-scan `wit/deps`, so
+  every `wasi:*` interface and the cargo contract itself need an explicit
+  path dependency.
+- **Ch12 gRPC** ships two artifacts (DRQ-038): protobuf running
+  server-side **inside** a component — `prost` in Rust (runnable), and a
+  hand-written reflection-free wire codec in TinyGo, byte-identical to the
+  Rust output, because `google.golang.org/protobuf` compiles under TinyGo
+  0.43 but traps at runtime (`reflect.Type.MethodByName` unimplemented);
+  and a host-mediated **tonic bridge**, because a fully in-component gRPC
+  server isn't possible today (no Wasm runtime exposes an HTTP/2 server
+  surface) — the bridge terminates gRPC/HTTP/2 on the host and calls the
+  unchanged Wasm provider, the "gRPC in front of Wasm" pattern. Both
+  artifacts are runnable.
+- **Ch13 wasi-sockets**: an outbound TCP client with reconnect and
+  exponential-backoff-with-jitter, demonstrating capability-scoped
+  networking (`wasmtime -S inherit-network`; `access-denied` without it).
+  Rust is the live, running proof. TinyGo's `wasi:sockets` support has no
+  clean runtime path on 0.43 — command-world traps on a `random_get`
+  adapter assertion at `_start`, reactor-world's asyncify `pollable.block`
+  never resolves `connect`/timer calls under a hand-rolled host — so the Go
+  side stays build-and-validate only (DRQ-039). wasmCloud link/lattice
+  resilience is deferred to Part 4, cross-referenced here only.
+- CI: `contracts.yml` extended with a pinned protoc 36.2, the Part 3
+  `verify.sh`, and the Part 3 bindings added to the drift gate; job timeout
+  raised to 60 minutes (DRQ-040).
+
+**Part 3 (Interfaces, Ch11–Ch13) is now COMPLETE.**
+
+## Deferred to later iterations (r05+)
+
+- Part 4–Part 7 chapter prose (Ch14–Ch28), to the house depth standard:
   paired SVG+Excalidraw diagrams, the house chapter spine (Learning
   objectives + Why this matters at the top, For deeper coverage at the end).
-- Runnable examples for Part 3 onward, each with its own verify step,
-  following the Part 2 pattern of one shared WIT world built in both Rust
+- Runnable examples for Part 4 onward, each with its own verify step,
+  following the Part 2/3 pattern of one shared WIT world built in both Rust
   and Go.
 - minikube manifests (containerd Wasm shim + wasmCloud operator + Istio) and
   the CRC deployment tier — both verified live headless.
@@ -165,9 +207,15 @@ Roadmap sketch:
 - **r03b** — Ch8–Ch10 (composing/polyglot, debugging, error handling), on
   the r03a components extended with two consumer components and a 4-way wac
   composition. **Part 2 (Ch6–Ch10) is now COMPLETE** (this iteration).
-- **r04** — Part 3 Interfaces: HTTP & gRPC — Ch11 HTTP from a component,
-  Ch12 gRPC with Wasm, Ch13 networking/reconnect/resilience. **Next up.**
-- **r05** — Part 4 Runtimes: wasmtime & wasmCloud.
+- **r04** — Part 3 Interfaces: HTTP & gRPC — Ch11 wasi-http, Ch12 gRPC
+  (in-component protobuf + a host-mediated tonic bridge), Ch13
+  wasi-sockets/reconnect/resilience, on a new `examples/part3-interfaces/`
+  tree. **Part 3 (Ch11–Ch13) is now COMPLETE** (this iteration).
+- **r05** — Part 4 Runtimes: wasmtime & wasmCloud — Ch14 wasmtime embedding,
+  CLI, and the host API; Ch15 wasmCloud lattice, providers, and links
+  (`wash` gets installed here); Ch16 wasmtime and wasmCloud together,
+  including the wasmCloud resilience story deferred from Ch13 (DRQ-039).
+  **Next up.**
 - **r06+** — Part 5 Kubernetes deployment tiers: minikube first, then CRC,
   both verified live headless; HPA, then KEDA scale-to-zero.
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="40" y="220" width="220" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="150.0" y="255.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">caller (host or test)</text>
+<text x="150.0" y="272.5" font-size="11.5" fill="#555555" text-anchor="middle">GetCargoRequest bytes</text>
+<text x="150.0" y="287.5" font-size="11.5" fill="#555555" text-anchor="middle">(prost-encoded, 19 bytes)</text>
+<rect x="330" y="80" width="420" height="360" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="540.0" y="265.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">codec.get-cargo(list&lt;u8&gt;) -&gt; result&lt;list&lt;u8&gt;, string&gt;</text>
+<rect x="360" y="140" width="360" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="540.0" y="168.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">decode: prost (Rust) / wire.go (TinyGo)</text>
+<text x="540.0" y="185.0" font-size="11.5" fill="#555555" text-anchor="middle">GetCargoRequest bytes -&gt; tracking_id</text>
+<rect x="360" y="220" width="360" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="540.0" y="248.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">dispatch over WIT</text>
+<text x="540.0" y="265.0" font-size="11.5" fill="#555555" text-anchor="middle">booking.book-cargo / booking.get-cargo</text>
+<rect x="360" y="300" width="360" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="540.0" y="328.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">encode: prost (Rust) / wire.go (TinyGo)</text>
+<text x="540.0" y="345.0" font-size="11.5" fill="#555555" text-anchor="middle">Cargo + Money -&gt; GetCargoResponse bytes</text>
+<rect x="830" y="220" width="210" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="935.0" y="255.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">caller decodes response</text>
+<text x="935.0" y="272.5" font-size="11.5" fill="#555555" text-anchor="middle">91 bytes, byte-identical</text>
+<text x="935.0" y="287.5" font-size="11.5" fill="#555555" text-anchor="middle">Rust prost &lt;-&gt; TinyGo wire codec</text>
+<path d="M260,265 L360,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="316.0" y="211.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">list&lt;u8&gt;</text>
+<text x="316.0" y="211.5" font-size="11" fill="#555" text-anchor="middle">list&lt;u8&gt;</text>
+<path d="M540,200 L540,220" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,280 L540,300" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M690,330 L830,265" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="766.0" y="291.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">list&lt;u8&gt;</text>
+<text x="766.0" y="291.5" font-size="11" fill="#b8650a" text-anchor="middle">list&lt;u8&gt;</text>
+<text x="540" y="40" font-size="13" fill="#1d1d1d" text-anchor="middle" font-weight="700">INSIDE THE WASM SANDBOX — no network, no gRPC transport, just bytes in and bytes out</text>
+<text x="540" y="495" font-size="12" fill="#555555" text-anchor="middle">Protobuf is varints, length-delimited fields, fixed64 doubles — pure computation, so it runs in a component with no transport capability at all.</text>
+</svg>
