@@ -1,0 +1,17 @@
+CRC version: 2.64.0+458092
+OpenShift version: 4.22.14
+MicroShift version: 4.22.13
+Server Version: 4.22.14
+Kubernetes Version: v1.35.6
+--- helm release ---
+NAME              	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                   	APP VERSION
+wasmcloud-platform	wasmcloud	1       	2026-10-21 11:34:35.898055691 -0400 EDT	deployed	wasmcloud-platform-0.1.2	1.2.1      
+--- chart pin: oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2 ---
+--- operator image ---
+ghcr.io/wasmcloud/wasmcloud-operator:0.4.0
+--- wasmCloud host version (WasmCloudHostConfig) ---
+version=1.9.1
+--- httpserver provider tag (wadm) ---
+  image: ghcr.io/wasmcloud/http-server:0.27.0
+--- component ref ---
+  ghcr.io/patterncatalyst/cargo-http:crc

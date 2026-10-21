@@ -267,6 +267,49 @@ the real `nip.io` Ingress path (DRQ-049), and evidence capture.
 
 **Ch17 and Ch18 are COMPLETE. Part 5 (Ch17–Ch24) is IN PROGRESS.**
 
+## r06b — Part 5: Deploying to Kubernetes (OpenShift Local / CRC)
+
+Ch19, OpenShift Local (CRC) — the numbered chapter inside Part 5 per
+DRQ-007 — deploying the same cargo component to a second cluster target
+through the **wasmCloud operator** rather than the raw runwasi shim Ch18
+used on minikube (DRQ-054), backed by the new
+`examples/part5-kubernetes/openshift/` tree: the v1 wasmCloud platform Helm
+chart, the `WasmCloudHostConfig` and OAM `Application` manifests, a
+`ghcr-pull` image-pull Secret, and evidence capture.
+
+- The CRC path diverges from minikube by design, not by default: the raw
+  containerd Wasm shim needs a privileged RHCOS MachineConfig that doesn't
+  fit the `restricted-v2` SCC these chapters hold to, so Ch19 installs the
+  **wasmCloud operator** (v1 chart `0.1.2`) instead, pinning the host to
+  **1.9.1** over the chart's stale 1.2.1 default (DRQ-054).
+- The same `app.wasm` (sha256 `eff7f5ee…`) that ran on minikube and under
+  the Part 4 wasmtime/wasmCloud pair deploys here too, delivered through a
+  **private** `ghcr.io/patterncatalyst/cargo-http:crc` image and a
+  `ghcr-pull` docker-registry Secret rather than a direct node-image load
+  (DRQ-055).
+- Live verification is a **CA-verified curl** through an edge-TLS Route —
+  no `-k`, no `oc port-forward`, no NodePort — holding the DRQ-049
+  no-port-forward rule on OpenShift the same way Ch18 held it on minikube's
+  Ingress path (DRQ-056).
+- Eight CRC-specific gotchas recorded for the chapter, covering the
+  EndpointSlice RBAC grant, the host/provider wRPC version pin, standalone
+  NATS, disabling `nats-box`, the OAM-application namespace requirement,
+  stale-APIService teardown, HTTP-200 readiness, and the chart's NATS DNS
+  repoint (DRQ-057).
+- `restricted-v2` compliance required nulling the wadm subchart's
+  hard-coded `runAsUser`/`runAsGroup: 1000` so OpenShift assigns a
+  platform UID instead; every other chart component already runs
+  platform-assigned non-root (DRQ-058).
+- CI stays a static manifest gate — `kubeconform -ignore-missing-schemas`
+  against the raw OpenShift CRD manifests — with the live CRC bring-up and
+  verification captured by hand as evidence, never run inside CI (DRQ-059).
+- The version matrix's Part 5 CRC/OpenShift tier (wasmcloud-platform chart
+  0.1.2, operator 0.1.5, host 1.9.1, httpserver provider 0.27.0, CRC 2.64.0
+  / OCP 4.22.14) is now FIRM, re-surveyed and verified live rather than a
+  snapshot.
+
+**Ch19 is COMPLETE. Part 5 is now Ch17–Ch19 done, Ch20–Ch24 remaining.**
+
 ## Deferred to later iterations (r07+)
 
 - Part 6–Part 7 chapter prose (Ch25–Ch28), to the house depth standard:
@@ -312,8 +355,9 @@ Roadmap sketch:
   port-forwarding) + `examples/part5-kubernetes/`. **Ch17/Ch18 COMPLETE, Part
   5 IN PROGRESS (this iteration).**
 - **r06b** — Ch19 OpenShift Local/CRC (wasmCloud operator, `restricted-v2`,
-  edge-TLS Routes, verified live headless). **Next up.**
-- **r06c** — Ch20 sidecar + Ch21 ambassador/adapter.
+  edge-TLS Routes, verified live headless). **Ch19 COMPLETE, Part 5 at
+  Ch17–Ch19 done (this iteration).**
+- **r06c** — Ch20 sidecar + Ch21 ambassador/adapter. **Next up.**
 - **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero + Ch24 observability
   (OTel+LGTM). **Part 5 (Ch17–Ch24) COMPLETE** at the end of r06d.
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey

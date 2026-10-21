@@ -1,0 +1,1 @@
+no secrets found under /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/openshift/evidence/2026-10-21

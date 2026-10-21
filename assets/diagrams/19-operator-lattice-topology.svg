@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="20" width="1140" height="560" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">wasmcloud-platform chart 0.1.2 — project wasmcloud, restricted-v2</text>
+<rect x="60" y="70" width="300" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="210.0" y="95.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">install-operator.sh</text>
+<text x="210.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">helm upgrade --install (--dependency-update)</text>
+<text x="210.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">+ endpoints(slices)/restricted RBAC</text>
+<rect x="420" y="60" width="240" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="540.0" y="80.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">NATS</text>
+<text x="540.0" y="97.5" font-size="11.5" fill="#555555" text-anchor="middle">standalone (cluster.enabled: false)</text>
+<text x="540.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">nats-box disabled</text>
+<rect x="420" y="140" width="240" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="540.0" y="160.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wadm</text>
+<text x="540.0" y="177.5" font-size="11.5" fill="#555555" text-anchor="middle">runAsUser/runAsGroup nulled</text>
+<text x="540.0" y="192.5" font-size="11.5" fill="#555555" text-anchor="middle">(values-crc.yaml edit)</text>
+<rect x="420" y="220" width="240" height="50" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="540.0" y="250.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud operator 0.4.0</text>
+<rect x="60" y="310" width="300" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="210.0" y="345.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">deploy.sh</text>
+<text x="210.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">wash push app.wasm -&gt; ghcr (private)</text>
+<text x="210.0" y="377.5" font-size="11.5" fill="#555555" text-anchor="middle">oc create secret ghcr-pull</text>
+<rect x="420" y="310" width="300" height="90" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="570.0" y="345.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">WasmCloudHostConfig</text>
+<text x="570.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">version: &quot;1.9.1&quot; (pinned, not chart default 1.2.1)</text>
+<text x="570.0" y="377.5" font-size="11.5" fill="#555555" text-anchor="middle">registryCredentialsSecret: ghcr-pull</text>
+<rect x="780" y="310" width="320" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="940.0" y="335.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">host Deployment</text>
+<text x="940.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">(operator-reconciled from the CR)</text>
+<text x="940.0" y="367.5" font-size="11.5" fill="#555555" text-anchor="middle">restricted-v2, UID 1000670000</text>
+<rect x="420" y="440" width="300" height="100" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="570.0" y="473.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wadm.yaml (OAM Application)</text>
+<text x="570.0" y="490.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-http component: daemonscaler</text>
+<text x="570.0" y="505.0" font-size="11.5" fill="#555555" text-anchor="middle">httpserver provider 0.27.0: daemonscaler</text>
+<text x="570.0" y="520.0" font-size="11.5" fill="#555555" text-anchor="middle">link: wasi:http/incoming-handler</text>
+<rect x="780" y="440" width="320" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="940.0" y="463.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">operator auto-creates</text>
+<text x="940.0" y="480.0" font-size="11.5" fill="#555555" text-anchor="middle">Service cargo-http:8000</text>
+<text x="940.0" y="495.0" font-size="11.5" fill="#555555" text-anchor="middle">(ONLY because of the daemonscaler —</text>
+<text x="940.0" y="510.0" font-size="11.5" fill="#555555" text-anchor="middle">spreadscaler Service-creation is unsupported)</text>
+<path d="M360,95 L420,90" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="396.0" y="86.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">installs</text>
+<text x="396.0" y="86.5" font-size="11" fill="#555" text-anchor="middle">installs</text>
+<path d="M360,110 L420,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M360,125 L420,245" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M210,140 L210,310" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="216.0" y="219.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">then</text>
+<text x="216.0" y="219.0" font-size="11" fill="#555" text-anchor="middle">then</text>
+<path d="M540,270 L540,310" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="546.0" y="284.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">reconciles</text>
+<text x="546.0" y="284.0" font-size="11" fill="#555" text-anchor="middle">reconciles</text>
+<path d="M360,355 L420,355" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="396.0" y="349.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">pull secret</text>
+<text x="396.0" y="349.0" font-size="11" fill="#555" text-anchor="middle">pull secret</text>
+<path d="M720,345 L780,345" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="756.0" y="339.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">Deployment</text>
+<text x="756.0" y="339.0" font-size="11" fill="#b8650a" text-anchor="middle">Deployment</text>
+<path d="M540,400 L540,440" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="546.0" y="414.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">applied in HostConfig&#x27;s namespace</text>
+<text x="546.0" y="414.0" font-size="11" fill="#555" text-anchor="middle">applied in HostConfig&#x27;s namespace</text>
+<path d="M720,480 L780,480" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="756.0" y="474.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">daemonscaler -&gt; Service</text>
+<text x="756.0" y="474.0" font-size="11" fill="#b8650a" text-anchor="middle">daemonscaler -&gt; Service</text>
+<text x="590" y="560" font-size="12" fill="#555555" text-anchor="middle">deploy.sh then puts an edge-TLS Route in front of the operator-created Service — Figure 19.1 traces that live request.</text>
+<text x="590" y="578" font-size="12" fill="#555555" text-anchor="middle">Verified live 2026-10-21 (CRC 2.64.0 / OCP 4.22.14 / wasmcloud host 1.9.1).</text>
+</svg>
