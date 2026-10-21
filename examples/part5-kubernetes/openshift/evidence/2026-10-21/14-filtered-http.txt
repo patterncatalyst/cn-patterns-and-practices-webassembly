@@ -1,0 +1,13 @@
+# CA-verified against the cluster ingress CA, never -k, never port-forward.
+# ch20 headline: the embargo POLICY fires IN the interposer, across the link,
+# before the provider is called.
+$ curl -w ' [%{http_code}]' https://cargo-filtered-wasmcloud.apps-crc.testing/cargo/CARGO-USNYC-CUHAV   (embargoed destination)
+{"error":"destination CUHAV is under embargo"} [400]
+$ curl -w ' [%{http_code}]' https://cargo-filtered-wasmcloud.apps-crc.testing/cargo/NOPE      (unknown id, full chain front door->filter->provider)
+{"error":"no cargo NOPE"} [404]
+# The state gotcha (documented): a valid id -> book-cargo then get-cargo are TWO
+# separate wRPC calls; wasmCloud resets component memory per invocation, so the
+# booking does not survive and the provider answers NotFound (404). The exact
+# cargo JSON (200) needs in-process wac composition (minikube/r06b), not a link.
+$ curl -w ' [%{http_code}]' https://cargo-filtered-wasmcloud.apps-crc.testing/cargo/CARGO-USNYC-DEHAM
+{"error":"no cargo CARGO-USNYC-DEHAM"} [404]

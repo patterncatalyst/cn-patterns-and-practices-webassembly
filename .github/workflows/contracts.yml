@@ -86,7 +86,25 @@
 #      CRC run (operator install, host + lattice up, wadm deploy, HTTPS Route
 #      traffic) is, like the minikube run above, verified by hand with
 #      evidence committed under examples/part5-kubernetes/openshift/evidence/
-#      — never a CI step.
+#      - never a CI step.
+#
+#      r06c extends Part 5 to cover the interposition patterns (sidecar
+#      filter, protocol adapter, ambassador). The examples job now also
+#      builds the two new small component crates -
+#      examples/part5-kubernetes/{sidecar-filter,adapter}/ - which regenerate
+#      their own committed src/bindings.rs via cargo-component, same as every
+#      other Rust component crate in this job; both paths join the drift
+#      gate's ALL_BINDINGS. (The ambassador pattern reuses Part 3's
+#      sockets-rust component as-is - no new crate, so nothing new to build
+#      or drift-check for it.) The k8s-manifests job adds a STATIC render +
+#      kubeconform check for the new
+#      examples/part5-kubernetes/k8s/interposed/overlays/minikube kustomize
+#      overlay (sidecar-filter + adapter Deployments/Ingresses), and adds the
+#      four new OAM Application CRD instances -
+#      examples/part5-kubernetes/openshift/wadm-{filtered,adapted,ambassador,
+#      ambassador-nogrant}.yaml - to the existing OpenShift kubeconform step.
+#      No wac plug, no docker, no wash, no minikube/CRC cluster for any of
+#      this - same offline-only treatment as r06a/r06b.
 #
 # Don't duplicate pages.yml's Jekyll build/deploy logic here, and don't
 # duplicate this validation step in pages.yml (see pages.yml's own note on
@@ -150,6 +168,7 @@ jobs:
       EXAMPLE_DIR: "examples/part2-building-components"
       PART3_DIR: "examples/part3-interfaces"
       PART4_DIR: "examples/part4-runtimes"
+      PART5_DIR: "examples/part5-kubernetes"
     steps:
       - uses: actions/checkout@v5
 
@@ -312,6 +331,29 @@ jobs:
       - name: Build the ch15 wasmCloud component (build.sh)
         run: ${{ env.PART4_DIR }}/wasmcloud/build.sh
 
+      # r06c: the two Part 5 interposition components — sidecar-filter (a
+      # wasi-http middleware that composes in front of an upstream component)
+      # and adapter (a protocol-shape adapter) — are small cargo-component
+      # crates, same recipe as every other Rust component crate in this job.
+      # `cargo component build --release` regenerates each crate's committed
+      # src/bindings.rs as a side effect, which the drift gate below then
+      # checks. No `wac plug`, no docker, no wash, no minikube/CRC — just the
+      # component builds, same scope as the rest of this job. (The
+      # ambassador pattern reuses Part 3's sockets-rust component unchanged —
+      # already built above by Part 3's verify.sh — so there's no new crate
+      # to build here for it.)
+      - name: Build the Part 5 sidecar-filter component
+        run: |
+          set -euo pipefail
+          cd "${PART5_DIR}/sidecar-filter"
+          cargo component build --release
+
+      - name: Build the Part 5 adapter component
+        run: |
+          set -euo pipefail
+          cd "${PART5_DIR}/adapter"
+          cargo component build --release
+
       # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
       # building — the two providers (Rust + Go) AND the two consumers
@@ -328,6 +370,13 @@ jobs:
       # Part 2/3 Rust crates do. ch15 wasmcloud's build.sh only recomposes
       # already-built Part 2/3 components with `wac plug` — it does not
       # generate any bindings of its own, so nothing new to add there.
+      #
+      # r06c adds two more: the Part 5 sidecar-filter and adapter crates built
+      # above each regenerate their own committed src/bindings.rs the same
+      # way every other cargo-component crate in this job does. The
+      # ambassador pattern has no new crate (it reuses Part 3's sockets-rust
+      # as-is, already covered by PART3_SOCKETS_RUST_BINDINGS above), so
+      # nothing new to add there.
       - name: Check committed generated bindings are not stale (drift gate)
         run: |
           set -euo pipefail
@@ -342,12 +391,15 @@ jobs:
           PART3_SOCKETS_RUST_BINDINGS="${PART3_DIR}/sockets-rust/src/bindings.rs"
           PART3_SOCKETS_GO_BINDINGS="${PART3_DIR}/sockets-go/internal"
           PART4_WASMTIME_HOST_GUEST_BINDINGS="${PART4_DIR}/wasmtime-host/guest/src/bindings.rs"
+          PART5_SIDECAR_FILTER_BINDINGS="${PART5_DIR}/sidecar-filter/src/bindings.rs"
+          PART5_ADAPTER_BINDINGS="${PART5_DIR}/adapter/src/bindings.rs"
           ALL_BINDINGS=(
             "$GO_BINDINGS" "$RUST_BINDINGS" "$CONSUMER_GO_BINDINGS" "$CONSUMER_RUST_BINDINGS"
             "$PART3_HTTP_RUST_BINDINGS" "$PART3_HTTP_GO_BINDINGS"
             "$PART3_PROTO_RUST_BINDINGS" "$PART3_PROTO_GO_BINDINGS"
             "$PART3_SOCKETS_RUST_BINDINGS" "$PART3_SOCKETS_GO_BINDINGS"
             "$PART4_WASMTIME_HOST_GUEST_BINDINGS"
+            "$PART5_SIDECAR_FILTER_BINDINGS" "$PART5_ADAPTER_BINDINGS"
           )
           CHANGED="$(git status --porcelain -- "${ALL_BINDINGS[@]}")"
           if [[ -n "$CHANGED" ]]; then
@@ -381,6 +433,15 @@ jobs:
     # targets' LIVE cluster runs are evidence-only, verified by hand and
     # committed under each target's own evidence/ directory — never a CI
     # step.
+    #
+    # r06c adds the interposition patterns' manifests to both existing
+    # checks, still fully offline: the new
+    # examples/part5-kubernetes/k8s/interposed/overlays/minikube kustomize
+    # overlay (sidecar-filter + adapter Deployments/Ingresses) joins the
+    # minikube render below, and the four new OAM Application CRD instances —
+    # openshift/wadm-{filtered,adapted,ambassador,ambassador-nogrant}.yaml —
+    # join the existing OpenShift kubeconform step. No new tooling; same
+    # pinned kubeconform + kubectl kustomize as above.
     name: Validate Part 5 Kubernetes manifests (kustomize render, offline)
     runs-on: ubuntu-latest
     steps:
@@ -417,6 +478,14 @@ jobs:
           kubectl kustomize examples/part5-kubernetes/k8s/overlays/minikube \
             | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
 
+      # r06c: the interposition patterns' minikube overlay (sidecar-filter +
+      # adapter Deployments/Ingresses) — same offline kustomize render +
+      # kubeconform treatment as the base/minikube overlay above.
+      - name: Validate Part 5 Kubernetes manifests (kubeconform) — interposed minikube overlay
+        run: |
+          kubectl kustomize examples/part5-kubernetes/k8s/interposed/overlays/minikube \
+            | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+
       # OpenShift path (r06b): these two files are hand-authored CRD
       # instances, not kustomize-managed, so they're validated as-committed —
       # no `kubectl kustomize` render step. Both kinds (WasmCloudHostConfig
@@ -425,8 +494,17 @@ jobs:
       # schemas, same as the RuntimeClass/Ingress kinds above. This only
       # checks the YAML is well-formed and schema-shaped; it does not install
       # the operator, the chart, or reach any cluster.
-      - name: Validate Part 5 OpenShift manifests (kubeconform) — wasmCloudHostConfig + wadm Application
+      #
+      # r06c adds the four interposition-pattern OAM Application CRD
+      # instances (wadm-filtered, wadm-adapted, wadm-ambassador,
+      # wadm-ambassador-nogrant) to this same step — same CRD kind as wadm.yaml
+      # above, same -ignore-missing-schemas reasoning, still no cluster.
+      - name: Validate Part 5 OpenShift manifests (kubeconform) — wasmCloudHostConfig + wadm Applications
         run: |
           kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
             examples/part5-kubernetes/openshift/wasmcloud-host.yaml \
-            examples/part5-kubernetes/openshift/wadm.yaml
+            examples/part5-kubernetes/openshift/wadm.yaml \
+            examples/part5-kubernetes/openshift/wadm-filtered.yaml \
+            examples/part5-kubernetes/openshift/wadm-adapted.yaml \
+            examples/part5-kubernetes/openshift/wadm-ambassador.yaml \
+            examples/part5-kubernetes/openshift/wadm-ambassador-nogrant.yaml

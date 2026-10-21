@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="40" width="550" height="440" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">minikube: one instance, two calls, shared memory</text>
+<rect x="610" y="40" width="550" height="440" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="622" y="60" font-size="12" font-weight="700" fill="#1d1d1d">CRC: two instances, one call each, reset memory</text>
+<rect x="60" y="90" width="470" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="295.0" y="125.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">GET /cargo/CARGO-USNYC-DEHAM  (ONE HTTP request)</text>
+<rect x="60" y="190" width="470" height="150" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="295.0" y="248.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ONE provider component instance</text>
+<text x="295.0" y="265.0" font-size="11.5" fill="#555555" text-anchor="middle">call 1: book-cargo  -&gt; HashMap.insert(booking)</text>
+<text x="295.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">call 2: get-cargo   -&gt; HashMap.get(booking)  &lt;- SAME map</text>
+<text x="295.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">same linear memory for both calls</text>
+<rect x="60" y="380" width="470" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="295.0" y="413.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">200  exact cargo JSON</text>
+<text x="295.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">tracking_id, origin, destination, weight_kg, price</text>
+<rect x="650" y="90" width="470" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="885.0" y="125.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">GET /cargo/CARGO-USNYC-DEHAM  (ONE HTTP request)</text>
+<rect x="650" y="190" width="470" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="885.0" y="223.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wRPC call 1: book-cargo</text>
+<text x="885.0" y="240.0" font-size="11.5" fill="#555555" text-anchor="middle">fresh provider instance A -&gt; HashMap.insert(booking)</text>
+<rect x="650" y="280" width="470" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="885.0" y="313.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wRPC call 2: get-cargo</text>
+<text x="885.0" y="330.0" font-size="11.5" fill="#555555" text-anchor="middle">fresh provider instance B -&gt; HashMap is EMPTY</text>
+<rect x="650" y="380" width="470" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="885.0" y="413.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">404  {&quot;error&quot;:&quot;no cargo ...&quot;}</text>
+<text x="885.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">the provider&#x27;s own NotFound, not a crash</text>
+<path d="M295,150 L295,190" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M295,340 L295,380" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M885,150 L885,190" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M885,260 L885,280" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="891.0" y="264.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">fresh instance</text>
+<text x="891.0" y="264.0" font-size="11" fill="#b8650a" text-anchor="middle">fresh instance</text>
+<path d="M885,350 L885,380" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="590" y="505" font-size="12" fill="#555555" text-anchor="middle">Compile-time composition shares state; runtime links give independent lifecycle but not in-memory state.</text>
+</svg>

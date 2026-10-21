@@ -1,0 +1,3 @@
+$ minikube image ls | grep cargo-http
+docker.io/library/cargo-http-adapted:minikube
+docker.io/library/cargo-http-filtered:minikube

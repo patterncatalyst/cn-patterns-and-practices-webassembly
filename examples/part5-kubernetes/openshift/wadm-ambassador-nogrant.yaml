@@ -1,0 +1,61 @@
+# wadm application (OAM core.oam.dev/v1beta1) — the ch21 ambassador NEGATIVE
+# CONTROL: the SAME front door + provider, but with the outbound cargo link
+# DELIBERATELY REMOVED. Without a link the front door's cargo IMPORT is
+# unsatisfiable, so the wasmCloud host never admits the component as a healthy
+# backend: the operator-created Service gets NO endpoints and the edge Route fails
+# fast with a router 5xx (503 "Application is not available") on every path. Egress
+# is a GRANT, not a default — remove the grant and the outbound call simply cannot
+# be served.
+#
+# This is the cluster-live analog of the Part 1 local smoke C (capability boundary).
+# Compare with wadm-ambassador.yaml, which carries the link and whose cargo path
+# reaches the provider (404, the provider's own answer). verify-interposed-crc.sh
+# brings this up transiently on a separate port and tears it down.
+# deploy-interposed.sh rewrites __*_REF__.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-ambassador-nogrant
+  annotations:
+    version: v0.0.1
+    description: "ch21 ambassador negative control — outbound cargo link removed; the lattice denies the ungranted outbound call (5xx)"
+spec:
+  components:
+    - name: cargo-provider-amn
+      type: component
+      properties:
+        image: __PROVIDER_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+
+    - name: cargo-ambassador-nogrant
+      type: component
+      properties:
+        image: __FRONTDOOR_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+        # NO patterncatalyst:cargo link here on purpose — the grant is absent.
+
+    - name: httpserver-ambassador-nogrant
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        - type: link
+          properties:
+            target: cargo-ambassador-nogrant
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-ambassador-nogrant-listen
+                properties:
+                  address: 0.0.0.0:8003
+        - type: daemonscaler
+          properties:
+            replicas: 1

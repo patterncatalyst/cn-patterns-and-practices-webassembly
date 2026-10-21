@@ -1,0 +1,83 @@
+# wadm application (OAM core.oam.dev/v1beta1) — the ch21 ADAPTED interposition as
+# the RUNTIME-LINK form on OpenShift Local. Same three-component link graph as
+# cargo-filtered, with the shape-translation adapter in the interposer slot:
+#
+#   httpserver   --wasi:http/incoming-handler-->  cargo-adapted (front door)
+#   cargo-adapted  --patterncatalyst:cargo/booking-->  cargo-adapter (interposer)
+#   cargo-adapter  --patterncatalyst:cargo/booking,handling-->  cargo-provider-a
+#
+# The adapter's canonical `book-cargo` round-trips each request canonical ->
+# legacy -> canonical before calling the provider; the round-trip is lossless, so
+# the exact cargo JSON still comes back through the Route. deploy-interposed.sh
+# rewrites the __*_REF__ placeholders. Names are globally unique so this coexists
+# with cargo-filtered and cargo-ambassador. contracts/wit stays pristine.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-adapted
+  annotations:
+    version: v0.0.1
+    description: "ch21 shape-translation adapter interposition (provider + adapter + http front door as three linked wasmCloud components) on OpenShift Local"
+spec:
+  components:
+    - name: cargo-provider-a
+      type: component
+      properties:
+        image: __PROVIDER_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+
+    - name: cargo-adapter
+      type: component
+      properties:
+        image: __ADAPTER_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+        - type: link
+          properties:
+            target: cargo-provider-a
+            namespace: patterncatalyst
+            package: cargo
+            interfaces:
+              - booking
+              - handling
+
+    - name: cargo-adapted
+      type: component
+      properties:
+        image: __FRONTDOOR_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+        - type: link
+          properties:
+            target: cargo-adapter
+            namespace: patterncatalyst
+            package: cargo
+            interfaces:
+              - booking
+
+    - name: httpserver-adapted
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        - type: link
+          properties:
+            target: cargo-adapted
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-adapted-listen
+                properties:
+                  address: 0.0.0.0:8001
+        - type: daemonscaler
+          properties:
+            replicas: 1

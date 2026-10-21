@@ -1,0 +1,7 @@
+# path: host -> ingress-nginx -> cargo-http-adapted:8080 -> Pod -> shim -> app-adapted.wasm
+# chain: part2 provider -> adapter (canonical<->legacy round-trip) -> part3 http door
+
+$ curl -s http://cargo-adapted.192.168.49.2.nip.io/cargo/CARGO-USNYC-DEHAM   # round-trip must still yield the exact cargo JSON
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+$ curl -s -o /dev/null -w %{http_code} http://cargo-adapted.192.168.49.2.nip.io/cargo/NOPE   # unknown -> 404
+404
