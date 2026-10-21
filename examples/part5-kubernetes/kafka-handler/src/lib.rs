@@ -20,7 +20,7 @@
 // handler is the KEDA/wadm scaling story (../_docs ch23), not the message
 // envelope, so the parser stays small and dependency-free. Every malformed or
 // unrecognized message is a genuine rejected `result<_, string>`, not a silent
-// drop — the handler is honest about what it can and cannot process.
+// drop — the handler surfaces what it can and cannot process.
 #[allow(warnings)]
 mod bindings;
 

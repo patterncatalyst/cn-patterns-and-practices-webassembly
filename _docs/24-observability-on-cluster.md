@@ -135,13 +135,13 @@ tempo_json="$(http_in_pod "$tempo_url" || true)"
 ```
 {% endraw %}
 
-<!-- LIVE-OUTPUT ch24 minikube Tempo trace: fill from k8s/observability/evidence/<date>/03-tempo-*.txt after the gated run --> *(verified-live output lands here after the cluster run: a Tempo `/api/search` response containing at least one `"traceID"` for `service.name="containerd-shim-wasmtime"`.)*
+<!-- LIVE-OUTPUT ch24 minikube Tempo trace: fill from k8s/observability/evidence/<date>/03-tempo.txt after the gated run --> *(verified-live output lands here after the cluster run: a Tempo `/api/search` response containing at least one `"traceID"` for `service.name="containerd-shim-wasmtime"`.)*
 
 The same pattern repeats against Prometheus, querying `otelcol_receiver_accepted_spans_total`, the Collector's own ingestion counter, and against Loki, querying the last hour of any job's log stream:
 
-<!-- LIVE-OUTPUT ch24 minikube Prometheus metric vector: fill from k8s/observability/evidence/<date>/04-prometheus-*.txt after the gated run --> *(verified-live output lands here after the cluster run: a `"resultType":"vector"` response with at least one `"value":[...]` sample for `otelcol_receiver_accepted_spans_total`.)*
+<!-- LIVE-OUTPUT ch24 minikube Prometheus metric vector: fill from k8s/observability/evidence/<date>/04-prometheus.txt after the gated run --> *(verified-live output lands here after the cluster run: a `"resultType":"vector"` response with at least one `"value":[...]` sample for `otelcol_receiver_accepted_spans_total`.)*
 
-<!-- LIVE-OUTPUT ch24 minikube Loki log line: fill from k8s/observability/evidence/<date>/05-loki-*.txt after the gated run --> *(verified-live output lands here after the cluster run: a Loki `query_range` response with at least one `"values":[...]` stream entry.)*
+<!-- LIVE-OUTPUT ch24 minikube Loki log line: fill from k8s/observability/evidence/<date>/05-loki.txt after the gated run --> *(verified-live output lands here after the cluster run: a Loki `query_range` response with at least one `"values":[...]` stream entry.)*
 
 The script's own comment on the Loki query is direct about what that third result actually proves: the shim emits traces only, no logs of its own, so Loki's evidence here is the `otel-lgtm` stack's self-observability rather than anything describing the Wasm workload. That distinction matters for reading the evidence correctly once it lands: a reviewer scanning three green checks (Tempo, Prometheus, Loki) could reasonably assume three signals about the Wasm Pod arrived, when the accurate statement is one signal about the Wasm Pod's shim (a trace) and two signals about the backend's own health. Figure 24.2's metrics and logs rows for the minikube column exist precisely to keep that distinction in front of a reader who only skims the pass/fail summary.
 
@@ -289,11 +289,11 @@ echo "$LOG" | grep -qi 'LogRecord #' \
 ```
 {% endraw %}
 
-<!-- LIVE-OUTPUT ch24 CRC collector debug-exporter trace excerpt: fill from openshift/evidence/<date>/05-collector-debug-*.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter trace block containing a real `TraceID` line.)*
+<!-- LIVE-OUTPUT ch24 CRC collector debug-exporter trace excerpt: fill from openshift/evidence/<date>/04-collector-debug-log.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter trace block containing a real `TraceID` line.)*
 
-<!-- LIVE-OUTPUT ch24 CRC collector handle_rpc_message.duration metric excerpt: fill from openshift/evidence/<date>/05-collector-debug-*.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter metric block for the `wasmcloud_host.handle_rpc_message.duration` series.)*
+<!-- LIVE-OUTPUT ch24 CRC collector handle_rpc_message.duration metric excerpt: fill from openshift/evidence/<date>/04-collector-debug-log.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter metric block for the `wasmcloud_host.handle_rpc_message.duration` series.)*
 
-<!-- LIVE-OUTPUT ch24 CRC collector LogRecord excerpt: fill from openshift/evidence/<date>/05-collector-debug-*.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter log block containing a `LogRecord #` entry.)*
+<!-- LIVE-OUTPUT ch24 CRC collector LogRecord excerpt: fill from openshift/evidence/<date>/04-collector-debug-log.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter log block containing a `LogRecord #` entry.)*
 
 The file-exporter cross-check is a second, redundant read alongside the `oc logs` read: two different code paths inside the same collector binary, two different places to read the output, both expected to agree on the same metric series actually having arrived.
 
@@ -305,7 +305,7 @@ echo "$FILE_SAMPLE" | grep -q 'wasmcloud_host.handle_rpc_message.duration' \
 ```
 {% endraw %}
 
-<!-- LIVE-OUTPUT ch24 CRC collector file-exporter cross-check excerpt: fill from openshift/evidence/<date>/06-collector-file-*.txt after the gated run --> *(verified-live output lands here after the cluster run: a `/data/otel-output.json` tail independently containing the same `wasmcloud_host.handle_rpc_message.duration` metric series.)*
+<!-- LIVE-OUTPUT ch24 CRC collector file-exporter cross-check excerpt: fill from openshift/evidence/<date>/05-collector-file-export.txt after the gated run --> *(verified-live output lands here after the cluster run: a `/data/otel-output.json` tail independently containing the same `wasmcloud_host.handle_rpc_message.duration` metric series.)*
 
 `wasmcloud_host.handle_rpc_message.duration` is the metric to call out on its own: it is the time the host spends handling one invocation dispatched over wRPC, which means it exists precisely at the link boundary Chapter 20 and Chapter 21 both already made the center of their state-contrast findings. A reader who ran those two chapters' interposition chains on CRC and watched a valid tracking id return a 404 instead of a 200 can, with this chapter's pipeline wired up, actually watch that same request's individual `book-cargo` and `get-cargo` invocations show up as separate durations in the host's own metrics, direct confirmation that each call really did land on an independent instance rather than a shared one. The telemetry in this chapter is not a new finding standing apart from Chapters 20 and 21; it is the instrument that would let an operator see the state-boundary finding those chapters already proved by HTTP response alone.
 

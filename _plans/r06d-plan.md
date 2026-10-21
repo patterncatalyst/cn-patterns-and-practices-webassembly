@@ -19,7 +19,7 @@ footers flip to "verified live <date>" ONLY after BOTH cluster PASSes)
 - **ch22 Scaling Wasm Workloads: HPA** (order 22). minikube = real CPU HPA (metrics-server addon)
   on the raw-shim plain Deployment, synthetic in-cluster load → replicas 1→N→1; scaling-math
   (Wasm sub-second replica vs container seconds). CRC = wadm spreadscaler (no K8s HPA on the host
-  Deployment — would fight the operator). Honest per-substrate asymmetry (Decision 2).
+  Deployment — would fight the operator). Clear per-substrate asymmetry (Decision 2).
 - **ch23 Serverless Wasm: scale-to-zero with KEDA** (order 23). Two models:
   - Half 1 HTTP add-on (KEDA DRIVES): minikube raw-shim Deployment, HTTPScaledObject minReplicas 0,
     idle→0, cold request via nip.io Ingress→interceptor→0→1→200 + cold-start latency. CRC = CMA/KEDA
@@ -44,7 +44,7 @@ footers flip to "verified live <date>" ONLY after BOTH cluster PASSes)
      build.sh; committed bindings.rs).
    - HTTP half: `install-keda.sh` (KEDA 2.21.0 + HTTP add-on 0.16.0 Helm, pinned), HTTPScaledObject,
      overlay, verify/capture (minikube raw shim).
-   - Kafka half: `install-strimzi.sh` (Strimzi 1.3.0/Kafka 4.1.0) + Kafka/KafkaTopic CRs (multi-
+   - Kafka half: `install-strimzi.sh` (Strimzi 1.3.0/Kafka 4.3.1) + Kafka/KafkaTopic CRs (multi-
      partition); `k8s/wasmcloud/` minikube wasmCloud-platform (chart 0.1.2, host 1.9.1) +
      WasmCloudHostConfig + messaging-kafka provider + `wadm-kafka.yaml`; KEDA kafka ScaledObject
      (+ TriggerAuthentication if secured); producer-burst script; verify/capture (minikube + CRC).
@@ -82,7 +82,7 @@ footers flip to "verified live <date>" ONLY after BOTH cluster PASSes)
   footers flipped only after both PASSes; box clean after.
 
 ## Risks
-- HPA no-signal on tiny Wasm (minikube) → sustained load + 50m CPU request; honest report, never fake.
+- HPA no-signal on tiny Wasm (minikube) → sustained load + 50m CPU request; report what it took, never fake.
 - KEDA partition ceiling (replicas ≤ partitions) → multi-partition topic.
 - KEDA HTTP cold-start flakiness → bounded retry, assert real 200.
 - wasmCloud-on-minikube bring-up (new path) → mirror r06b; readiness=real-200.
@@ -91,7 +91,7 @@ footers flip to "verified live <date>" ONLY after BOTH cluster PASSes)
 
 ## Pins (survey-confirm at kickoff; 2026-10-21 confirmed-live)
 KEDA 2.21.0 · HTTP add-on 0.16.0 · CRC CMA CSV (TBD) · metrics-server minikube addon (~0.9.0) ·
-Strimzi 1.3.0 / Kafka 4.1.0 · messaging-kafka provider tag (TBD, host-1.9.1-compatible) ·
+Strimzi 1.3.0 / Kafka 4.3.1 · messaging-kafka provider tag (TBD, host-1.9.1-compatible) ·
 wasmcloud-platform chart 0.1.2 / host 1.9.1 (now minikube too) · otel-lgtm 0.33.1 (minikube) ·
 otel/opentelemetry-collector[-contrib] tag (TBD, CRC) · reused: shim v0.6.1, minikube 1.39.0 /
 k8s 1.37.1, kubeconform 0.8.0, httpserver 0.27.0.
