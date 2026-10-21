@@ -67,7 +67,7 @@ mod conv {
 ```
 {% endraw %}
 
-`up` names the import-side type tree (the real provider, upstream of the filter), and `dn` names the export-side tree — the front door, downstream of the filter. Every record that crosses the interposer passes through one of these converters: `Location`, `Money`, `RouteSpec`, `Booking`, `Cargo`, `Leg`, `Itinerary`, `HandlingEvent`, `CargoError`, and each enum (`HandlingEventType`, `RoutingStatus`, `TransportStatus`) gets its own `match` translating variant-by-variant. None of this is generic or macro-derived; it is sixteen small hand-written functions, because `wit-bindgen` has no way to know two independently-generated type trees happen to line up field-for-field. This is the gotcha worth internalizing before writing any component that both imports and exports the same package: budget for a conversion module the moment a world declares a symmetric import/export pair, and expect it to be the single largest chunk of otherwise-mechanical code in the file.
+`up` names the import-side type tree (the real provider, upstream of the filter), and `dn` names the export-side tree — the front door, downstream of the filter. Every record that crosses the interposer passes through one of these converters: `Location`, `Money`, `RouteSpec`, `Booking`, `Cargo`, `Leg`, `Itinerary`, `HandlingEvent`, `CargoError`, and each enum (`HandlingEventType`, `RoutingStatus`, `TransportStatus`) gets its own `match` translating variant-by-variant. None of this is generic or macro-derived; it is eighteen small hand-written functions, because `wit-bindgen` has no way to know two independently-generated type trees happen to line up field-for-field. This is the gotcha worth internalizing before writing any component that both imports and exports the same package: budget for a conversion module the moment a world declares a symmetric import/export pair, and expect it to be the single largest chunk of otherwise-mechanical code in the file.
 
 Inside the `Guest` implementations, the policy itself is a handful of lines. `book_cargo` and `get_cargo` both check the destination UN/LOCODE against a fixed embargo list before doing anything else:
 
@@ -109,10 +109,12 @@ Deployment follows the identical shape as `k8s/base`: a `wasmtime` `RuntimeClass
 
 {% raw %}
 ```
+$ kubectl get pods -n part5-kubernetes            # IP + trailing columns trimmed for width
 NAME                                   READY   STATUS    RESTARTS   AGE   NODE
 cargo-http-adapted-5fc7597d97-ttzrr    1/1     Running   0          9s    part5
 cargo-http-filtered-5cb7b64795-zwg8s   1/1     Running   0          9s    part5
-Runtime Class Name:  wasmtime
+$ kubectl describe pod ... | grep 'Runtime Class Name'
+Runtime Class Name:  wasmtime                      # both pods
 ```
 {% endraw %}
 
@@ -123,7 +125,7 @@ Runtime Class Name:  wasmtime
 $ curl -s http://cargo-filtered.192.168.49.2.nip.io/cargo/CARGO-USNYC-DEHAM
 {"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
 $ curl -s -w %{http_code} http://cargo-filtered.192.168.49.2.nip.io/cargo/CARGO-USNYC-CUHAV
-{"error":"destination CUHAV is under embargo"}
+body: {"error":"destination CUHAV is under embargo"}
 code: 400
 $ curl -s -o /dev/null -w %{http_code} http://cargo-filtered.192.168.49.2.nip.io/cargo/NOPE
 404
@@ -164,7 +166,7 @@ OpenShift Local runs the wasmCloud operator, not the raw shim, for the reasons C
 ```
 {% endraw %}
 
-A `link` trait is declared on the source (the component doing the importing), and `target` names the exporter it calls. The front door's link names `cargo-filter` as its target for `booking`, not `cargo-provider-f`: at deploy time, the lattice is told to route the front door's cargo calls to the interposer, and the interposer's own link in turn routes to the real provider. Nothing in the front door's compiled component changed to make this happen; the routing lives entirely in the manifest, resolved by `wadm` and carried over wRPC between hosts. The front door imports only `booking` (plus the type-only `types` interface, which has no functions and is never linked), not `handling`, so its link lists `booking` alone, while the interposer's link to the provider lists both, because the interposer itself imports both.
+A `link` trait is declared on the source (the component doing the importing), and `target` names the exporter it calls. The front door's link names `cargo-filter` as its target for `booking`, not `cargo-provider-f`: at deploy time, the lattice is told to route the front door's cargo calls to the interposer, and the interposer's own link in turn routes to the real provider. Nothing in the front door's compiled component changed to make this happen; the routing lives entirely in the manifest, resolved by `wadm` and carried over wRPC between hosts. The front door's world imports the full cargo package, but it only ever *calls* `booking` (the type-only `types` interface has no functions, and `handling` is never invoked), so only `booking` is linked and its link lists `booking` alone, while the interposer's link to the provider lists both, because the interposer itself calls both.
 
 `evidence/2026-10-21/12-interposed-links.txt` records the resolved graph exactly as deployed:
 
