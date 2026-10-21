@@ -595,3 +595,87 @@ OpenAPI schema for strict mode to check against. Standing up CRC inside a CI
 runner is not a CI step; the live run is evidence-only, captured by hand and
 committed, matching DRQ-042's wasmCloud posture and DRQ-050's
 headless-verification gate.
+
+## DRQ-060 — Interposition at the cargo domain interface, not the HTTP incoming-handler
+
+Ch20's sidecar-filter and Ch21's adapter interpose at the
+`patterncatalyst:cargo/*` domain interfaces (plain value records), not at
+WASI's `wasi:http/incoming-handler`. WASI 0.2's `incoming-handler` takes
+non-constructible host resources (`incoming-request`/`response-outparam`),
+which a component-side interposer cannot fabricate, and `wac` itself rejects
+the attempt as a resource mismatch (wac#149). Each interposer gets a local
+WIT world that imports and exports the cargo interfaces as a path
+dependency; `contracts/wit` stays pristine and unmodified.
+
+## DRQ-061 — Two substrate expressions of the same pattern on Ch20/Ch21: compile-time wac vs. runtime wadm links
+
+minikube and CRC realize sidecar/adapter interposition through two different
+mechanisms, not through one portable manifest. On minikube, interposition is
+compile-time: `wac plug` composes provider → interposer → HTTP front door
+into one `app-*.wasm`, because the raw containerd shim can only host a
+single pod-scoped `RuntimeClass` workload on a fixed `:8080` and cannot host
+a pod sidecar (runwasi#1004). On CRC, interposition is a runtime concern:
+three separate components — provider, interposer, front door — are linked
+on `patterncatalyst:cargo/booking` (and `handling`) over wRPC through wadm
+links, which custom-interface component-to-component linking supports on
+wasmCloud host 1.8 and up (verified here on 1.9.1).
+
+## DRQ-062 — The state-across-links finding: wasmCloud components are stateless per invocation
+
+The headline finding for Ch20/Ch21, verified live on both clusters. A
+wasmCloud component gets a fresh instance with reset linear memory on every
+invocation, so the front door's two-call round trip (book, then get) loses
+the in-memory booking it just wrote once that round trip crosses a runtime
+link: a valid booking ID returns 404 on CRC. Under minikube's `wac plug`
+composite, the same two calls run inside one in-process instance, so the
+booking survives and the same ID returns 200. Compile-time composition
+shares state across calls; runtime links give independent lifecycle and let
+the host inject policy or shape changes per hop, but they do not carry
+in-memory state — that has to move to a capability provider or an external
+service. A fallback to a two-component wac-plus-link hybrid would not fix
+this: the front door still issues two calls across the link either way. The
+finding is reported as-is, fully evidenced on both clusters, not as a
+failure to work around.
+
+## DRQ-063 — What each interposer does, and the adapter/ambassador substrate split
+
+Ch20's sidecar-filter enforces a destination-embargo policy plus logging;
+the embargo firing across the CRC runtime link is proven by a host-log
+`POLICY DENY` line at the point of denial. Ch21 ships two interposers: the
+adapter translates a legacy request shape into the canonical cargo shape,
+lossless for every JSON-surfaced field, and the ambassador adds outbound
+calls with backoff and jitter. The ambassador is substrate-asymmetric by the
+user's own confirmation: CRC runs it live, with outbound reachability
+granted (or denied, returning 500) by a runtime lattice link — egress is
+itself a grant — while minikube's raw shim exposes no outbound-network knob,
+so the minikube side is a local `wasmtime run -S inherit-network` smoke
+test, documented as a substitute rather than presented as a live cluster
+run.
+
+## DRQ-064 — Interposer build gotcha: importing and exporting the same interface forks the generated types
+
+A component that both imports and exports the same WIT interface — the
+shape every interposer here takes — gets two distinct generated Rust type
+trees for that interface, one per direction, with no implicit conversion
+between them. Each interposer carries a small, mandatory field-by-field
+`conv` module to cross that boundary. Links are scoped to only the
+interfaces a component actually imports — the front door imports `booking`
+only, not `handling` — keeping the lattice link graph matched to real
+dependencies. CRC readiness for the interposed chain is a 404 from the
+provider on an unknown ID, not a 200, since 200 would mean the chain isn't
+wired through the interposer at all. Separately, wasmtime collapses any
+non-zero guest exit code to host process exit code 1, so a guest-side
+distinction between failure modes is not visible from the shell exit code
+alone.
+
+## DRQ-065 — CI for Ch20/Ch21: interposition examples join the build+drift gate, manifests join the static kubeconform gate
+
+The new `examples/part5-kubernetes/{sidecar-filter,adapter,ambassador}`
+components join the existing examples build job and the bindings-drift
+check already running for the other example trees (DRQ-024), so the
+interposer's local WIT worlds are regenerated and diffed like every other
+component's bindings. The interposed minikube kustomize overlay
+(`k8s/interposed/`) and the OpenShift `wadm-*.yaml` manifests join the
+static kubeconform gate (DRQ-053, DRQ-059) rather than getting a parallel
+gate of their own. No cluster runs inside CI for Ch20/Ch21, matching the
+static-only posture already set for the rest of Part 5.
