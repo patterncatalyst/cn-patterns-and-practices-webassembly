@@ -1,0 +1,12 @@
+$ wash up -d
+👀 Found nats-server version on the disk: nats-server: v2.11.3
+✅ Using nats-server version [v2.11.3]
+ℹ️  NATS server successfully started, using config @ [/home/rsedor/.local/share/wash/downloads/nats.conf]
+ℹ️  NATS server logs written to [/home/rsedor/.local/share/wash/downloads/nats.log]
+👀 Found wadm version on the disk: wadm 0.21.1
+
+🛁 wash up completed successfully
+🕸  NATS is running in the background at 127.0.0.1:4222
+📜 Logs for the host are being written to /home/rsedor/.local/share/wash/downloads/wasmcloud.log
+
+⬇️  To stop wasmCloud, run "wash down"

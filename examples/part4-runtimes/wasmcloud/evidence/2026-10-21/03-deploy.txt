@@ -1,0 +1,3 @@
+$ wash app deploy wadm.yaml
+
+Deployed application "cargo-http", version "v0.0.1"

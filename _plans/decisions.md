@@ -391,3 +391,72 @@ The `contracts.yml` examples job is extended to install a pinned **protoc
 `examples/part3-interfaces/verify.sh`, and add the Part 3 Rust/Go bindings
 to the existing drift gate (DRQ-024). The job timeout is raised to 60
 minutes to accommodate the added build and serve steps.
+
+## DRQ-041 — wasmCloud CLI: wash 0.43.0 stable, not the 2.0 RC; "2.10.1" is a phantom version
+
+The wasmCloud CLI for Part 4 is **wash 0.43.0 (stable)**, chosen over the
+2.0 release-candidate line per the latest-stable/never-prerelease policy.
+The docs install page's "2.10.1" does not correspond to any real wash
+release artifact on GitHub or crates.io — it's a phantom version number, not
+a release this site can pin to. The 2.x rewrite (built-in host, no more
+bundled nats-server/wadm) is release-candidate only
+(`wash-v2.0.0-rc.8`) as of 2026-10-21; revisit when it reaches GA.
+
+## DRQ-042 — wasmCloud verification: live evidence, not a CI gate
+
+wasmCloud verification follows the headless-cluster-verification house rule,
+not the contracts.yml CI gate: the lattice is brought up and exercised by
+hand — `wash up` → `wash app deploy` → the httpserver link → a curl against
+the running component → a resilience check, headless — and the output is
+committed as evidence under
+`examples/part4-runtimes/wasmcloud/evidence/2026-10-21/`. CI continues to
+gate only what it already gated: the buildable component and the native
+wasmtime-host from Ch14, never a lattice — standing up NATS, wadm, and the
+host inside a CI runner each run adds flake risk disproportionate to what it
+would catch.
+
+## DRQ-043 — Ch14 wasmtime-host: fuel, epoch, and ResourceLimiter, each proven against a clean contrast run
+
+Ch14's native wasmtime host demonstrates three host-provided controls over a
+guest component, each asserted against a clean run with the control
+disabled so the chapter shows cause and effect rather than asserting a
+single pass/fail: **fuel** (an `OutOfFuel` trap when the fuel budget is
+exhausted mid-call), **epoch deadlines** (an `Interrupt` trap when an epoch
+tick fires past the deadline), and a **`ResourceLimiter`** (a denied
+`memory.grow` request when the configured cap is hit).
+
+## DRQ-044 — Ch15/16 wadm manifest and the httpserver link
+
+Ch15's wasmCloud application is a wadm manifest wiring the
+**httpserver capability provider 0.27.0** to the cargo component over the
+`wasi:http/incoming-handler` export, with the link's address set to
+`0.0.0.0:8000` — provider as the link source, component as the link target.
+
+## DRQ-045 — Finding: wasmCloud ignores exported component resources
+
+The cargo-domain's exported component resource (`cargo-tracker`) is silently
+ignored by the wasmCloud runtime — wasmCloud's own documentation states that
+exported component resources are not supported. The HTTP path (booking,
+exercised through `wasi:http/incoming-handler`) is unaffected, so the same
+`app.wasm` serves identically under both runtimes, but this is a real
+wasmtime-vs-wasmCloud behavior difference and Ch16 calls it out as a caveat
+rather than leaving it to be rediscovered.
+
+## DRQ-046 — Ch16 same-bytes proof: one app.wasm, two runtimes
+
+Ch16's headline proof is a single component artifact — `app.wasm`, sha256
+`eff7f5ee…` — run unmodified under `wasmtime serve -S cli` and deployed as-is
+onto wasmCloud. Same bytes, same WIT world, two runtimes, modulo the
+exported-resource gap recorded at DRQ-045.
+
+## DRQ-047 — Part 4 build gotchas recorded for Ch14–16
+
+Four gotchas recorded so the chapters teach them directly: wasmtime 50's
+`wasmtime::Error` is not `anyhow::Error`, so the host code needs a `.wc()`
+shim plus a downcast to `wasmtime::Trap` to read the trap reason; a denied
+`memory.grow` from a `ResourceLimiter` surfaces to the guest as an ordinary
+trap, not a clean `Err` return; `wash app status` reporting `deployed` means
+the manifest was accepted, not that the HTTP endpoint is answering — the
+gate is an HTTP 200, not the status string; and `file://./app.wasm` in a
+wadm manifest resolves against `wash`'s current working directory, not the
+manifest file's directory.

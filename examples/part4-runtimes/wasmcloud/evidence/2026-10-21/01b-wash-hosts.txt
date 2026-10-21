@@ -1,0 +1,7 @@
+$ wash get hosts
+
+                                                                                                         
+  Host ID                                                      Friendly name           Uptime (seconds)  
+  NCQR6FIQCONSILLUFUMAENAPFDCRP223B53PRVRR42HSOA4NYFW3SYPC     sparkling-sunset-0738   2                 
+                                                                                                         
+

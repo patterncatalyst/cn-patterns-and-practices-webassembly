@@ -1,0 +1,14 @@
+$ ./build.sh
+build.sh: [1/3] building the Part 2 Rust cargo provider (reused, not edited) ...
+  Generating bindings for cargo-rust (src/bindings.rs)
+    Finished `release` profile [optimized] target(s) in 0.01s
+build.sh: [2/3] building the Part 3 http-rust front door (reused, not edited) ...
+  Generating bindings for cargo-http-rust (src/bindings.rs)
+    Finished `release` profile [optimized] target(s) in 0.00s
+build.sh: [3/3] composing app.wasm (wac plug: provider -> http front door) ...
+build.sh: wrote /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part4-runtimes/wasmcloud/app.wasm
+build.sh: sha256: eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3
+build.sh: exported interfaces:
+world root {
+  export wasi:http/incoming-handler@0.2.8;
+build.sh: OK — app.wasm is a valid component exporting wasi:http/incoming-handler
