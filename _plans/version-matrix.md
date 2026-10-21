@@ -13,11 +13,17 @@ render_with_liquid: false
 > current-stable snapshot taken on the same date for reference, but stay
 > marked TBD-at-kickoff: each gets its own live, dated re-survey and gets
 > pinned as a firm version when the chapter or example that depends on it is
-> written.
+> written. **Updated 2026-10-21 (r06a):** the Part 5 minikube tier (runwasi
+> shim, minikube, Kubernetes, containerd, ingress-nginx, kubeconform) is now
+> FIRM, re-surveyed and verified live on minikube rather than a snapshot.
+> Istio, KEDA, and CRC/OpenShift Local stay TBD-at-kickoff until their own
+> chapters land.
 
-The Wasm toolchain and WASI/Component Model rows are the r02 pins. The
-Kubernetes deployment tier and wasi-nn rows are not pins yet — they are a
-snapshot to plan against, re-verified live when their chapter lands.
+The Wasm toolchain and WASI/Component Model rows are the r02 pins. The Part 5
+minikube tier is the r06a pins, verified live. The remaining Kubernetes
+deployment-tier rows (Istio, KEDA, CRC) and the wasi-nn rows are not pins
+yet — they are a snapshot to plan against, re-verified live when their
+chapter lands.
 
 | Component | Version |
 |---|---|
@@ -55,9 +61,14 @@ snapshot to plan against, re-verified live when their chapter lands.
 | **r05 runtimes toolchain (confirmed, 2026-10-21)** | |
 | wash (wasmCloud CLI) | **0.43.0** — see the corrected row above for the full pin, the bundled nats-server/wadm/host versions, and the wash-2.x-RC correction. |
 | httpserver capability provider | **`ghcr.io/wasmcloud/http-server:0.27.0`** — latest released semver tag, compatible with wasmCloud host 1.9.1 + wasi:http 0.2.x. Links provider source to the component target (`wasi:http/incoming-handler`, address `0.0.0.0:8000`) for ch15/ch16. Source: https://github.com/wasmCloud/capability-providers/pkgs/container/http-server |
+| **Part 5 minikube deployment tier (FIRM, verified live 2026-10-21, r06a)** | |
+| containerd Wasm shim (runwasi) | **containerd-shim-wasmtime v0.6.1**, asset `containerd-shim-wasmtime-x86_64-linux-musl.tar.gz`, SHA-256 `a9b1215ee670f11414c8fd8e970b52679085929c8ec73a0fe6ed9cf215cf9ba1` — installed directly on the minikube node, serving `wasi:http/incoming-handler` components under a `RuntimeClass` named `wasmtime` (DRQ-048). Confirmed live on minikube r06a; upstream runwasi#1004 did not reproduce. Source: https://github.com/containerd/runwasi/releases/tag/v0.6.1 |
+| minikube | **v1.39.0** — docker driver + containerd runtime only, per house convention (podman path removed). Verified live for r06a. Source: https://github.com/kubernetes/minikube/releases/tag/v1.39.0 |
+| Kubernetes | **v1.37.1**, pinned explicitly via `--kubernetes-version` at `minikube start` rather than taking minikube's default. Verified live for r06a. |
+| containerd (in-node) | **v2.3.4** — the in-node containerd minikube v1.39.0/Kubernetes v1.37.1 bundles; the runwasi shim above installs alongside it without replacing it. |
+| ingress-nginx controller | **v1.15.1** — the minikube `ingress` addon bundled with minikube v1.39.0; fronts live verification over the real `nip.io` Ingress path, never a port-forward (DRQ-049). |
+| kubeconform | **v0.8.0**, pinned GitHub release binary `kubeconform-linux-amd64.tar.gz`, SHA-256 `9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883` — the CI static-manifest gate for Part 5 (`kubectl kustomize | kubeconform -strict -kubernetes-version 1.37.1`, DRQ-053); CI-only, never exercises a live cluster. |
 | **Kubernetes deployment tier (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
-| containerd Wasm shim (runwasi) | Snapshot: `containerd-shim-wasmtime` v0.6.1 (sibling shims wasmer/wasmedge/wamr at the same v0.6.1; `containerd-shim-wasm` v1.0.1), released 2026-06-12. Source: https://github.com/containerd/runwasi/releases — re-verify live when Part 5 minikube chapters land |
-| minikube / Kubernetes | Snapshot: minikube **v1.39.0**, released 2026-09-02. Source: https://github.com/kubernetes/minikube/releases/tag/v1.39.0 — re-verify the live combination when Part 5 minikube chapters land; docker driver + containerd runtime only, per house convention |
 | Istio | Snapshot: **1.31.2**, released 2026-10-16. Source: https://github.com/istio/istio/releases/tag/1.31.2 — re-verify live when Ch25 (Istio + Wasm) lands |
 | KEDA | Snapshot: **v2.21.0**, released 2026-09-23. Source: https://github.com/kedacore/keda/releases/tag/v2.21.0 — re-verify live when Ch23 (scale-to-zero) lands |
 | CRC / OpenShift Local | Snapshot: **2.64.0-4.22.14** (crc v2.64.0), released 2026-09-24. Source: https://github.com/crc-org/crc/releases/tag/2.64.0-4.22.14 — re-verify live when Ch19 lands |

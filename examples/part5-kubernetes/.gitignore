@@ -1,0 +1,8 @@
+# Build outputs — regenerated deterministically by build.sh (same bytes as
+# Part 2/3/4; sha256 eff7f5ee…). Never committed.
+app.wasm
+
+# Any stray local tarball of the shim if a script leaves it behind (install-shim.sh
+# downloads to a temp dir, but belt-and-braces).
+*.tar.gz
+containerd-shim-wasmtime-v1

@@ -231,6 +231,42 @@ DRQ-006), and Ch24 (observability: OTel + the LGTM stack). Both the minikube
 and CRC paths are verified live headless (DRQ-010); minikube and CRC are
 already installed on this box (both currently stopped).
 
+## r06a — Part 5: Deploying to Kubernetes (minikube substrate)
+
+Ch17 (Wasm-on-Kubernetes concepts: the containerd Wasm shim landscape,
+`RuntimeClass`, and workload placement) and Ch18 (a live minikube deploy
+through the raw runwasi shim, verified), backed by a new
+`examples/part5-kubernetes/` tree: build/package the component as a `FROM
+scratch` OCI image (DRQ-051), the Kubernetes manifests (base + a minikube
+kustomize overlay), an `install-shim` step that installs
+`containerd-shim-wasmtime` directly on the node, a verify step that exercises
+the real `nip.io` Ingress path (DRQ-049), and evidence capture.
+
+- **Ch17** covers the shim landscape (runwasi's `containerd-shim-wasmtime`
+  alongside the wasmer/wasmedge/wamr siblings), how a `RuntimeClass` routes a
+  Pod to a non-OCI shim, and where a Wasm workload fits in a cluster's
+  placement story relative to an ordinary container Pod.
+- **Ch18** deploys the cargo component live on minikube, go/no-go'd against
+  the raw runwasi shim rather than reaching for the wasmCloud operator:
+  runwasi#1004 did not reproduce, so the operator fallback wasn't needed
+  (DRQ-048). Verified over the real Ingress path, never a port-forward or
+  tunnel (DRQ-049), and verified headless with evidence committed before the
+  footer flips to "verified live" (DRQ-050).
+- Build gotchas recorded for the chapters: the shim binary is a containerd
+  shim, not a CLI; `minikube ssh` can't take a piped heredoc, so the shim
+  install uses `minikube cp` + `sudo bash`; the shim installs (and bounces
+  every Pod on the node) before the ingress addon goes in; and readiness
+  gates on a real HTTP 200, not rollout-Ready (DRQ-052).
+- CI stays a static manifest gate only — `kubectl kustomize | kubeconform
+  -strict` over the Part 5 manifests — never a live cluster bring-up
+  (DRQ-053).
+- The version matrix's Part 5 minikube tier (runwasi shim v0.6.1, minikube
+  v1.39.0, Kubernetes v1.37.1, containerd v2.3.4, ingress-nginx v1.15.1,
+  kubeconform v0.8.0) is now FIRM, re-surveyed and verified live rather than
+  a snapshot.
+
+**Ch17 and Ch18 are COMPLETE. Part 5 (Ch17–Ch24) is IN PROGRESS.**
+
 ## Deferred to later iterations (r07+)
 
 - Part 6–Part 7 chapter prose (Ch25–Ch28), to the house depth standard:
@@ -270,7 +306,16 @@ Roadmap sketch:
   (runwasi/containerd shim, `RuntimeClass`), Ch18 minikube, Ch19 OpenShift
   Local/CRC (numbered per DRQ-007), Ch20 sidecar, Ch21 ambassador/adapter,
   Ch22 HPA, Ch23 KEDA scale-to-zero, Ch24 observability (OTel+LGTM) — both
-  minikube and CRC verified live headless. **Next up.**
+  minikube and CRC verified live headless.
+- **r06a** — Ch17 (Wasm-on-Kubernetes concepts) + Ch18 (live minikube deploy
+  via the raw runwasi shim, verified over the real Ingress path, no
+  port-forwarding) + `examples/part5-kubernetes/`. **Ch17/Ch18 COMPLETE, Part
+  5 IN PROGRESS (this iteration).**
+- **r06b** — Ch19 OpenShift Local/CRC (wasmCloud operator, `restricted-v2`,
+  edge-TLS Routes, verified live headless). **Next up.**
+- **r06c** — Ch20 sidecar + Ch21 ambassador/adapter.
+- **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero + Ch24 observability
+  (OTel+LGTM). **Part 5 (Ch17–Ch24) COMPLETE** at the end of r06d.
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey
   (Spin), wasi-nn.
 - **r0N** — Part 7 Final project.

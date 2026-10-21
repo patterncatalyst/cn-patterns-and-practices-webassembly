@@ -1,0 +1,6 @@
+# Part 5 Kubernetes example — one namespace for the Wasm app. Mirrors the
+# single-namespace convention used across the sibling deploy examples.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: part5-kubernetes

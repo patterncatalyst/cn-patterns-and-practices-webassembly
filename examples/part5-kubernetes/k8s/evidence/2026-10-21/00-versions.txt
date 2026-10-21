@@ -1,0 +1,16 @@
+$ minikube version --short
+v1.39.0
+
+$ kubectl --context part5 version
+Client Version: v1.37.1
+Kustomize Version: v5.8.1
+Server Version: v1.37.1
+
+# runwasi containerd-shim-wasmtime (pinned)
+shim version: v0.6.1
+shim tarball: containerd-shim-wasmtime-x86_64-linux-musl.tar.gz
+shim sha256 : a9b1215ee670f11414c8fd8e970b52679085929c8ec73a0fe6ed9cf215cf9ba1
+
+$ minikube ssh -- containerd --version ; shim binary on node
+containerd containerd v2.3.4 db8809540e1a7a9da5d518876894933ff55692ab
+-rwxr-xr-x. 1 root root 32724488 Oct 21 14:17 /usr/bin/containerd-shim-wasmtime-v1

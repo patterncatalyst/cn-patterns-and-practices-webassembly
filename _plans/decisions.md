@@ -460,3 +460,66 @@ the manifest was accepted, not that the HTTP endpoint is answering — the
 gate is an HTTP 200, not the status string; and `file://./app.wasm` in a
 wadm manifest resolves against `wash`'s current working directory, not the
 manifest file's directory.
+
+## DRQ-048 — Part 5 minikube deploy mechanism: raw runwasi shim + RuntimeClass, confirmed live
+
+Part 5's minikube deployment path is the **raw runwasi
+`containerd-shim-wasmtime`**, installed directly on the node and exposed to
+Kubernetes through a `RuntimeClass` named `wasmtime` — not the wasmCloud
+operator. This passed its go/no-go live on minikube r06a: the open upstream
+regression tracked as runwasi#1004 did not reproduce, so the
+wasmCloud-operator fallback considered for r06a was not needed. CRC (r06b)
+takes the opposite path — the **wasmCloud operator** — because the raw shim
+needs privileged RHCOS node surgery that doesn't fit the `restricted-v2` SCC
+the CRC chapters hold to.
+
+## DRQ-049 — No port-forwarding for live verification: always the real ingress path
+
+User-confirmed house rule, binding for every cluster chapter from here
+forward: live verification goes through the **real ingress path**, never
+`kubectl port-forward`, `minikube tunnel`, or a NodePort. On minikube that's
+a `nip.io` Ingress; on CRC (r06b) that's an edge-TLS Route. Bypassing the
+ingress layer for convenience would verify the pod, not the deployment —
+the thing the live check exists to prove.
+
+## DRQ-050 — Headless verification stays the gate; footer only flips on a live PASS
+
+Both cluster paths (minikube r06a, CRC r06b) are verified **headless** with
+committed evidence, per the existing house rule
+([[feedback_headless_cluster_verification]]). A chapter's footer moves to
+"verified live <date>" only when the automated headless check actually
+passes — never set ahead of a real run.
+
+## DRQ-051 — Component packaging: FROM scratch + COPY app.wasm, built without provenance, loaded directly
+
+The Wasm component ships as a `FROM scratch` OCI image with a single `COPY
+app.wasm /app.wasm` layer, built with `docker build --provenance=false`.
+BuildKit's default provenance attestation manifest confuses image load and
+the shim's platform resolution — without the flag, the shim can't find the
+actual Wasm layer behind the attestation manifest. The image is loaded
+straight onto the minikube node with `minikube image load`; no registry is
+involved.
+
+## DRQ-052 — Part 5 live-run gotchas recorded for Ch17/Ch18
+
+Four gotchas recorded so Ch17/Ch18 teach them directly rather than send
+readers rediscovering them: the `containerd-shim-wasmtime` binary is a
+**containerd shim, not a CLI** — it cannot be invoked directly to run or test
+a component; `minikube ssh`'s PTY hangs on a piped heredoc, so the install
+step uses `minikube cp` to stage the script and a `sudo bash <file>` instead;
+the shim has to be installed — which restarts containerd and bounces every
+Pod on the node — **before** the ingress addon is enabled, or the addon's own
+pods can land ahead of the shim; and readiness is gated on a real HTTP 200,
+not a rollout-Ready status, because `ingress-nginx`'s default backend 404s
+for a window during its own async reload — the check waits on the affinity
+cookie plus an actual 200.
+
+## DRQ-053 — CI stays a static manifest gate; live cluster bring-up is evidence-only
+
+Part 5's CI contribution holds to the same static-only posture as Parts
+2–4's contract gates: `kubectl kustomize | kubeconform -strict` against the
+Kubernetes manifests, nothing more. Standing up minikube or CRC inside a CI
+runner is never a CI step — the live bring-up and verification happen by
+hand (the same posture DRQ-042 set for wasmCloud) and the result is
+committed as evidence, matching the headless-verification house rule
+(DRQ-050).

@@ -1,0 +1,19 @@
+$ kubectl get pods -n part5-kubernetes -o wide
+NAME                          READY   STATUS    RESTARTS   AGE   IP           NODE    NOMINATED NODE   READINESS GATES
+cargo-http-6f4fc58fbb-ns28x   1/1     Running   0          7s    10.244.0.6   part5   <none>           <none>
+
+$ kubectl describe pod (RuntimeClass + node)
+Name:                cargo-http-6f4fc58fbb-ns28x
+Runtime Class Name:  wasmtime
+Node:                part5/192.168.49.2
+Status:              Running
+    Image:         cargo-http-wasm:minikube
+      Started:      Wed, 21 Oct 2026 10:17:53 -0400
+    Ready:          True
+  PodReadyToStartContainers   True 
+  Ready                       True 
+  ContainersReady             True 
+    ConfigMapName:           kube-root-ca.crt
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+  Normal  Pulled     7s    kubelet            spec.containers{cargo-http}: Container image "cargo-http-wasm:minikube" already present on machine and can be accessed by the pod
+  Normal  Started    7s    kubelet            spec.containers{cargo-http}: Container started

@@ -1,0 +1,5 @@
+# request path: host -> ingress-nginx -> Service cargo-http:8080 -> Pod -> shim -> app.wasm
+$ curl -s http://cargo.192.168.49.2.nip.io/cargo/CARGO-USNYC-DEHAM
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+$ curl -s -o /dev/null -w %{http_code} http://cargo.192.168.49.2.nip.io/cargo/NOPE
+404

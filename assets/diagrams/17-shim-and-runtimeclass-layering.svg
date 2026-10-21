@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 700" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="140" width="540" height="500" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="160" font-size="12" font-weight="700" fill="#1d1d1d">no runtimeClassName (default)</text>
+<rect x="620" y="140" width="540" height="500" rx="12" fill="#fff3e0" stroke="#ddd"/>
+<text x="632" y="160" font-size="12" font-weight="700" fill="#1d1d1d">runtimeClassName: wasmtime</text>
+<rect x="340" y="16" width="500" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="590.0" y="44.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">kubelet schedules the Pod</text>
+<text x="590.0" y="61.0" font-size="11.5" fill="#555555" text-anchor="middle">same API, one field differs</text>
+<rect x="60" y="180" width="460" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="213.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">containerd (node runtime)</text>
+<rect x="60" y="252" width="460" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="285.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">resolves handler: runc (default)</text>
+<rect x="60" y="324" width="460" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="357.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">runc creates a Linux container</text>
+<rect x="60" y="396" width="460" height="80" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="290.0" y="434.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">normal container image:</text>
+<text x="290.0" y="451.0" font-size="11.5" fill="#555555" text-anchor="middle">OS userland + language runtime + app</text>
+<rect x="660" y="180" width="460" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="213.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">containerd (node runtime)</text>
+<rect x="660" y="252" width="460" height="68" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="284.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">resolves handler: wasmtime -&gt;</text>
+<text x="890.0" y="301.0" font-size="11.5" fill="#555555" text-anchor="middle">runtime_type io.containerd.wasmtime.v1</text>
+<rect x="660" y="336" width="460" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="369.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">containerd-shim-wasmtime-v1 starts</text>
+<rect x="660" y="408" width="460" height="68" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="440.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">detects wasi:http/incoming-handler,</text>
+<text x="890.0" y="457.0" font-size="11.5" fill="#555555" text-anchor="middle">runs wasmtime serve on 0.0.0.0:8080</text>
+<rect x="660" y="492" width="460" height="80" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="890.0" y="530.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">scratch OCI image: ~290 KiB app.wasm,</text>
+<text x="890.0" y="547.0" font-size="11.5" fill="#555555" text-anchor="middle">no OS userland, no language runtime</text>
+<rect x="240" y="620" width="700" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="590.0" y="648.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">RuntimeClass (handler: wasmtime) is the object that makes</text>
+<text x="590.0" y="665.0" font-size="11.5" fill="#555555" text-anchor="middle">runtimeClassName a valid, resolvable field value on the Pod</text>
+<path d="M500,76 L290,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M680,76 L890,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,236 L290,252" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,308 L290,324" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,380 L290,396" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,236 L890,252" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,320 L890,336" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,392 L890,408" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,476 L890,492" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,476 L400,620" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M890,572 L780,620" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="590" y="110" font-size="12" fill="#555555" text-anchor="middle">Installing the shim restarts containerd on the node — bounces every running Pod, do it before other addons.</text>
+</svg>

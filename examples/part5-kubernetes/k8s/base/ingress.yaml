@@ -1,0 +1,40 @@
+# ingress-nginx Ingress — the ONLY externally reachable path into the cluster
+# for this example. The live curl in verify-minikube.sh / capture-evidence.sh
+# goes host -> Ingress -> Service -> Pod -> shim -> component; no port-forward,
+# no NodePort, no `minikube service` shortcut (house rule).
+#
+# The `host` here is a generic placeholder so base/ stays deployable on any
+# ingress-nginx cluster. verify-minikube.sh patches it live to
+# `cargo.<minikube-ip>.nip.io` (nip.io resolves <anything>.<ip>.nip.io -> <ip>,
+# so the URL's own authority IS a real DNS-resolvable Ingress host — no
+# /etc/hosts edit, no tunnel).
+#
+# No WebSocket/timeout annotations are needed here: this is a plain
+# request/response JSON API (unlike the WebSockets sibling). ingress-nginx
+# proxies the request to the Service, which the kubelet wired to the shim's
+# hyper server on container port 8080.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cargo-http
+  namespace: part5-kubernetes
+  annotations:
+    # Deterministic "my rule actually matched" signal: ingress-nginx stamps
+    # this cookie only on responses that went through THIS Ingress rule, never
+    # on its generic default-backend 404 — verify-minikube.sh waits for it
+    # before trusting the Ingress (a config reload is asynchronous).
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "part5-cargo-affinity"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cargo.part5-kubernetes.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cargo-http
+                port:
+                  number: 8080

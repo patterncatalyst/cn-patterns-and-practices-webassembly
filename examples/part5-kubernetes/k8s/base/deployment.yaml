@@ -1,0 +1,79 @@
+# The cargo HTTP front door, running as a Wasm component on Kubernetes via the
+# containerd `wasmtime` shim.
+#
+# This is the SAME app.wasm (sha256 eff7f5ee…) that `wasmtime serve` runs in
+# Part 3 and wasmCloud runs in Part 4, now wrapped in a scratch OCI image and
+# scheduled onto the shim by `runtimeClassName: wasmtime`.
+#
+# Key fields:
+#   * runtimeClassName: wasmtime  — route this Pod to the Wasm shim, not runc.
+#   * image: cargo-http-wasm:dev  — a placeholder; overlays/minikube retags it to
+#     :minikube and forces imagePullPolicy: Never (the image is loaded straight
+#     into the node's containerd store by `minikube image load`, never pulled).
+#   * command: ["/app.wasm"]      — the module path inside the scratch rootfs; the
+#     shim loads it. (The image ENTRYPOINT sets the same default for `ctr run`.)
+#   * probes: tcpSocket on 8080    — the component answers GET / with 404 (only
+#     /cargo/{id} is a route), so a TCP probe is the right liveness/readiness
+#     signal; the real HTTP 200 gate lives in verify-minikube.sh.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-http
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: cargo-http
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cargo-http
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cargo-http
+        app.kubernetes.io/part-of: part5-kubernetes
+    spec:
+      runtimeClassName: wasmtime
+      containers:
+        - name: cargo-http
+          image: cargo-http-wasm:dev
+          imagePullPolicy: IfNotPresent
+          command: ["/app.wasm"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            failureThreshold: 20
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-http
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: cargo-http
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  selector:
+    app.kubernetes.io/name: cargo-http
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
