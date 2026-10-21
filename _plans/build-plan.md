@@ -427,10 +427,15 @@ Roadmap sketch:
   minikube compile-time `wac plug`, CRC runtime wadm links; the
   state-across-links finding; ambassador substrate asymmetry). **Ch20/Ch21
   COMPLETE, Part 5 at Ch17–Ch21 done (this iteration).**
-- **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero (HTTP add-on + Kafka scaler)
-  + Ch24 observability (OTel from Wasm + the LGTM stack), both verified live
-  on minikube and CRC per the headless-verification rule. **Next up. Part 5
-  (Ch17–Ch24) COMPLETE** at the end of r06d.
+- **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero (HTTP add-on + **live** Kafka
+  scaler, user Decision A = wasmCloud-on-minikube) + Ch24 observability (OTel
+  from Wasm + the LGTM stack; CRC rootless collector, restricted-v2, no SCC
+  exception, user Decision B), both to be verified live on minikube and CRC per
+  the headless-verification rule. One new crate (`kafka-handler`), contracts/wit
+  pristine. DRQ-066..073; pins in version-matrix. **BUILD phase complete
+  (chapters + examples + diagrams + CI + plans, offline, static gates green);
+  LIVE minikube + CRC verification pending (footers flip only after both pass).
+  Part 5 (Ch17–Ch24) COMPLETE at the end of r06d.**
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey
   (Spin), wasi-nn.
 - **r0N** — Part 7 Final project.
