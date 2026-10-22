@@ -40,13 +40,15 @@ done
 KAFKA_NAMESPACE="${KAFKA_NAMESPACE:-kafka}"
 CONSUMER_GROUP="${CONSUMER_GROUP:-cargo-handling}"
 BOOTSTRAP="${BOOTSTRAP:-cargo-kafka-kafka-bootstrap.${KAFKA_NAMESPACE}.svc:9092}"
+TOPIC="${TOPIC:-cargo-handling-events}"
 HOST_IMAGE="${HOST_IMAGE:-cargo-kafka-host:minikube}"
 CLIENT_POD="${CLIENT_POD:-cargo-kafka-capture-client}"
-CLIENT_IMAGE="${CLIENT_IMAGE:-quay.io/strimzi/kafka:0.47.0-kafka-4.3.1}"
+CLIENT_IMAGE="${CLIENT_IMAGE:-quay.io/strimzi/kafka:1.3.0-kafka-4.3.1}"
 BURST_COUNT="${COUNT:-120}"
 ZERO_TIMEOUT="${ZERO_TIMEOUT:-120}"
 LAG_TIMEOUT="${LAG_TIMEOUT:-120}"
 SCALEOUT_TIMEOUT="${SCALEOUT_TIMEOUT:-150}"
+HANDLER_TIMEOUT="${HANDLER_TIMEOUT:-120}"
 DRAIN_TIMEOUT="${DRAIN_TIMEOUT:-240}"
 POST_DRAIN_ZERO_TIMEOUT="${POST_DRAIN_ZERO_TIMEOUT:-120}"
 
@@ -75,6 +77,16 @@ parse_offsets() {
     $1 == grp && $3 ~ /^[0-9]+$/ { cur += $4; end += $5; lag += $6 }
     END { printf "%d %d %d\n", cur + 0, end + 0, lag + 0 }
   ' <<<"$1"
+}
+
+# Summed topic end offset — the backlog KEDA's kafka scaler reads (with
+# offsetResetPolicy: earliest, a consumer group with no committed offset yet is
+# treated as lagging the whole topic). Read from the topic directly, so the
+# signal is available before the consumer group has committed anything.
+topic_end_total() {
+  kubectl exec -i "$CLIENT_POD" -n "$KAFKA_NAMESPACE" -- \
+    bin/kafka-get-offsets.sh --bootstrap-server "$BOOTSTRAP" --topic "$TOPIC" 2>/dev/null \
+    | awk -F: '{ s += $3 } END { printf "%d\n", s + 0 }'
 }
 
 step "ensure the cluster + Kafka + KEDA + the Deployment are up (idempotent)"
@@ -125,25 +137,26 @@ echo "=== 22 deploy-at-zero (idle) ==="
   fi
 } | tee "$OUT/22-deploy-at-zero.txt"
 
-echo "=== 23 lag-after-burst ==="
+echo "=== 23 backlog-after-burst ==="
 {
-  printf '# lag BEFORE the burst\n'
-  describe_group
+  before="$(topic_end_total)"
+  printf '# topic %s end offset BEFORE the burst = %s\n' "$TOPIC" "$before"
   printf '\n$ COUNT=%s %s\n' "$BURST_COUNT" "$KAFKA_DIR/producer-burst.sh"
   PROFILE="$PROFILE" COUNT="$BURST_COUNT" "$KAFKA_DIR/producer-burst.sh" 2>&1
-  printf '\n# polling for lag to rise (timeout %ss)\n' "$LAG_TIMEOUT"
-  waited=0; lagged=0
+  printf '\n# polling for the topic backlog to grow (timeout %ss) — the lag KEDA\n' "$LAG_TIMEOUT"
+  printf '# reads with offsetResetPolicy: earliest before the group commits\n'
+  waited=0; grew=0
   while (( waited < LAG_TIMEOUT )); do
-    read -r cur end lag <<<"$(parse_offsets "$(describe_group)")"
-    printf 't=%ss current-offset=%s log-end-offset=%s lag=%s\n' "$waited" "$cur" "$end" "$lag"
-    if (( lag > 0 )); then lagged=1; break; fi
+    after="$(topic_end_total)"
+    printf 't=%ss topic-end-offset=%s (was %s)\n' "$waited" "$after" "$before"
+    if (( after > before )); then grew=1; break; fi
     sleep 5; waited=$(( waited + 5 ))
   done
-  if [[ "$lagged" -ne 1 ]]; then
-    echo "FAIL — no consumer-group lag observed within ${LAG_TIMEOUT}s of the burst" >&2
+  if [[ "$grew" -ne 1 ]]; then
+    echo "FAIL — topic backlog did not grow within ${LAG_TIMEOUT}s of the burst" >&2
     exit 1
   fi
-} | tee "$OUT/23-lag-after-burst.txt"
+} | tee "$OUT/23-backlog-after-burst.txt"
 
 echo "=== 24 deploy-scaled-out ==="
 {
@@ -170,11 +183,20 @@ echo "=== 24 deploy-scaled-out ==="
 
 echo "=== 25 handler-logs ==="
 {
-  printf '$ kubectl logs -l app=cargo-kafka-host -n %s --all-containers --prefix\n' "$KAFKA_NAMESPACE"
-  handler_logs="$(kubectl logs -l app=cargo-kafka-host -n "$KAFKA_NAMESPACE" --all-containers --prefix --max-log-requests=10 2>/dev/null || true)"
+  # The host Pods are ephemeral — they drain the burst then KEDA scales them to
+  # zero, so their logs vanish. Poll while they are still up (through the drain
+  # and the 30s cooldown), re-reading across all current Pods until a
+  # per-message `outcome=` line appears.
+  printf '$ kubectl logs -l app=cargo-kafka-host -n %s --all-containers --prefix (polled)\n' "$KAFKA_NAMESPACE"
+  waited=0; sawhandler=0; handler_logs=""
+  while (( waited < HANDLER_TIMEOUT )); do
+    handler_logs="$(kubectl logs -l app=cargo-kafka-host -n "$KAFKA_NAMESPACE" --all-containers --prefix --tail=-1 --max-log-requests=10 2>/dev/null || true)"
+    if [[ "$handler_logs" == *"outcome="* ]]; then sawhandler=1; break; fi
+    sleep 3; waited=$(( waited + 3 ))
+  done
   printf '%s\n' "$handler_logs"
-  if [[ "$handler_logs" != *"outcome="* ]]; then
-    echo "FAIL — no per-message 'outcome=' log lines found from cargo-kafka-host" >&2
+  if [[ "$sawhandler" -ne 1 ]]; then
+    echo "FAIL — no per-message 'outcome=' log lines found from cargo-kafka-host within ${HANDLER_TIMEOUT}s" >&2
     exit 1
   fi
 } | tee "$OUT/25-handler-logs.txt"
@@ -249,6 +271,9 @@ if grep -rEl 'BEGIN [A-Z ]*PRIVATE KEY|[Bb]earer [A-Za-z0-9._-]{16,}|client-key-
 fi
 echo "scrub: ok — no secrets in evidence"
 
+# peak is set inside the step-24 `| tee` subshell; recover it from that step's
+# evidence file for the summary line.
+peak="$(awk -F': ' '/^peak-replicas:/ { print $2 }' "$OUT/24-deploy-scaled-out.txt" 2>/dev/null)"
 echo
 echo "PASS — part5-kubernetes ch23 KEDA Kafka half (minikube, docker+containerd, Kubernetes $KUBERNETES_VERSION):"
 echo "  cargo-kafka-host went 0/0 -> idle -> producer burst -> consumer-group lag"

@@ -1,0 +1,9 @@
+# waiting up to 120s for KEDA to scale cargo-kafka-host to 0/0 while idle
+t=0s replicas=1
+t=5s replicas=1
+t=10s replicas=1
+t=15s replicas=
+
+$ kubectl get deploy cargo-kafka-host -n kafka
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+cargo-kafka-host   0/0     0            0           4m3s

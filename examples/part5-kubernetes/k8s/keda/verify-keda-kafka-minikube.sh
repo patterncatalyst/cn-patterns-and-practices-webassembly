@@ -64,16 +64,18 @@ done
 KAFKA_NAMESPACE="${KAFKA_NAMESPACE:-kafka}"
 CONSUMER_GROUP="${CONSUMER_GROUP:-cargo-handling}"
 BOOTSTRAP="${BOOTSTRAP:-cargo-kafka-kafka-bootstrap.${KAFKA_NAMESPACE}.svc:9092}"
+TOPIC="${TOPIC:-cargo-handling-events}"
 HOST_IMAGE="${HOST_IMAGE:-cargo-kafka-host:minikube}"
 CLIENT_POD="${CLIENT_POD:-cargo-kafka-verify-client}"
 # Strimzi ships the broker's own Kafka distribution (with the CLI tools) in
 # this image; reusing it (same as ../kafka/producer-burst.sh) means no extra
 # client image to pin/pull.
-CLIENT_IMAGE="${CLIENT_IMAGE:-quay.io/strimzi/kafka:0.47.0-kafka-4.3.1}"
+CLIENT_IMAGE="${CLIENT_IMAGE:-quay.io/strimzi/kafka:1.3.0-kafka-4.3.1}"
 BURST_COUNT="${COUNT:-120}"
 ZERO_TIMEOUT="${ZERO_TIMEOUT:-120}"
 LAG_TIMEOUT="${LAG_TIMEOUT:-120}"
 SCALEOUT_TIMEOUT="${SCALEOUT_TIMEOUT:-150}"
+HANDLER_TIMEOUT="${HANDLER_TIMEOUT:-120}"
 DRAIN_TIMEOUT="${DRAIN_TIMEOUT:-240}"
 POST_DRAIN_ZERO_TIMEOUT="${POST_DRAIN_ZERO_TIMEOUT:-120}"
 
@@ -163,20 +165,32 @@ parse_offsets() {
   ' <<<"$1"
 }
 
-step "Step 8: producer burst ($BURST_COUNT messages) -> consumer-group lag RISES (read, not assumed)"
+# Summed topic end offset — the backlog KEDA's kafka scaler reads (with
+# offsetResetPolicy: earliest, a consumer group with no committed offset yet is
+# treated as lagging the whole topic). Read from the topic directly, so the
+# signal is available before the consumer group has committed anything.
+topic_end_total() {
+  kubectl exec -i "$CLIENT_POD" -n "$KAFKA_NAMESPACE" -- \
+    bin/kafka-get-offsets.sh --bootstrap-server "$BOOTSTRAP" --topic "$TOPIC" 2>/dev/null \
+    | awk -F: '{ s += $3 } END { printf "%d\n", s + 0 }'
+}
+
+step "Step 8: producer burst ($BURST_COUNT messages) -> topic backlog RISES (read, not assumed)"
+before="$(topic_end_total)"
+echo "verify-keda-kafka-minikube.sh: topic $TOPIC end offset before the burst = $before"
 PROFILE="$PROFILE" COUNT="$BURST_COUNT" "$KAFKA_DIR/producer-burst.sh"
-waited=0; lagged=0
+waited=0; grew=0
 while (( waited < LAG_TIMEOUT )); do
-  read -r cur end lag <<<"$(parse_offsets "$(describe_group)")"
-  if (( lag > 0 )); then
-    lagged=1
-    echo "verify-keda-kafka-minikube.sh: observed lag=$lag (current-offset=$cur, log-end-offset=$end) after ${waited}s"
+  after="$(topic_end_total)"
+  if (( after > before )); then
+    grew=1
+    echo "verify-keda-kafka-minikube.sh: observed topic backlog grow to $after (was $before) after ${waited}s"
     break
   fi
   sleep 5; waited=$(( waited + 5 ))
 done
-if [[ "$lagged" -ne 1 ]]; then
-  echo "verify-keda-kafka-minikube.sh: FAIL — no consumer-group lag observed within ${LAG_TIMEOUT}s of the burst" >&2
+if [[ "$grew" -ne 1 ]]; then
+  echo "verify-keda-kafka-minikube.sh: FAIL — topic backlog did not grow within ${LAG_TIMEOUT}s of the burst" >&2
   exit 1
 fi
 kubectl get scaledobject cargo-kafka-host -n "$KAFKA_NAMESPACE" -o wide
@@ -202,8 +216,19 @@ fi
 echo "verify-keda-kafka-minikube.sh: observed peak replicas=$peak"
 
 step "Step 10: assert the handler actually ran (per-message log lines)"
-handler_logs="$(kubectl logs -l app=cargo-kafka-host -n "$KAFKA_NAMESPACE" --all-containers --prefix --max-log-requests=10 2>/dev/null || true)"
-assert_contains "outcome=" "$handler_logs" "cargo-kafka-host handler activity in kubectl logs"
+# The host Pods are ephemeral (drained then scaled to zero), so poll while they
+# are still up (through the drain + the 30s cooldown) rather than reading once.
+waited=0; sawhandler=0; handler_logs=""
+while (( waited < HANDLER_TIMEOUT )); do
+  handler_logs="$(kubectl logs -l app=cargo-kafka-host -n "$KAFKA_NAMESPACE" --all-containers --prefix --tail=-1 --max-log-requests=10 2>/dev/null || true)"
+  if [[ "$handler_logs" == *"outcome="* ]]; then sawhandler=1; break; fi
+  sleep 3; waited=$(( waited + 3 ))
+done
+if [[ "$sawhandler" -ne 1 ]]; then
+  echo "verify-keda-kafka-minikube.sh: FAIL — no per-message 'outcome=' log lines from cargo-kafka-host within ${HANDLER_TIMEOUT}s" >&2
+  exit 1
+fi
+echo "verify-keda-kafka-minikube.sh: observed handler activity (outcome= log lines)"
 
 step "Step 11: burst drains (CURRENT-OFFSET catches LOG-END-OFFSET, lag -> 0)"
 waited=0; drained=0

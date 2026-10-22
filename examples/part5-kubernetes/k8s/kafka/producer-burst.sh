@@ -39,7 +39,7 @@ BOOTSTRAP="${BOOTSTRAP:-${KAFKA_CLUSTER}-kafka-bootstrap.${KAFKA_NAMESPACE}.svc:
 CLIENT_POD="${CLIENT_POD:-cargo-producer-burst}"
 # Strimzi ships the broker's own Kafka distribution (with the CLI tools) in
 # this image; reusing it means no extra client image to pin/pull.
-CLIENT_IMAGE="${CLIENT_IMAGE:-quay.io/strimzi/kafka:0.47.0-kafka-4.3.1}"
+CLIENT_IMAGE="${CLIENT_IMAGE:-quay.io/strimzi/kafka:1.3.0-kafka-4.3.1}"
 
 kubectl() { command kubectl --context "$PROFILE" "$@"; }
 

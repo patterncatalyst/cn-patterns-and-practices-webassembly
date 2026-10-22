@@ -41,13 +41,16 @@ RUN cargo build --release --locked \
 
 FROM debian:trixie-slim
 
-RUN groupadd --system cargo-kafka \
-    && useradd --system --gid cargo-kafka --no-create-home --shell /usr/sbin/nologin cargo-kafka
+# Fixed numeric uid/gid: a Kubernetes `runAsNonRoot: true` securityContext can
+# only verify a non-root user when the image's USER is numeric, so declare the
+# uid directly rather than by name.
+RUN groupadd --system --gid 10001 cargo-kafka \
+    && useradd --system --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cargo-kafka
 
 COPY --from=builder /build/target/release/cargo-kafka-host /usr/local/bin/cargo-kafka-host
 # kafka-app.wasm is built by ./build.sh on the HOST (wac plug recompose) and
 # COPYed in here, never rebuilt inside the image — see the file header.
 COPY kafka-app.wasm /opt/cargo-kafka/kafka-app.wasm
 
-USER cargo-kafka
+USER 10001
 ENTRYPOINT ["/usr/local/bin/cargo-kafka-host"]

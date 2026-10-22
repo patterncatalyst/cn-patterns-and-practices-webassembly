@@ -62,6 +62,12 @@ lag metric.
 
 ## Build
 
+A local `cargo build` compiles librdkafka from source (the `cmake-build`
+feature), which needs `cmake`, a C toolchain, and the libcurl headers
+(`libcurl-devel` on Fedora/RHEL, `libcurl4-openssl-dev` on Debian/Ubuntu):
+librdkafka's `rdkafka_conf.c` includes `<curl/curl.h>` even with curl disabled.
+The Containerfile and CI install these; a local build needs them on the host.
+
 ```
 ./build.sh
 ```
