@@ -1,0 +1,17 @@
+# ch25 CRC / OpenShift Service Mesh 3 (Sail operator) — findings captured 2026-10-22
+#
+# 1. OSSM 3.1.0 (servicemeshoperator3.v3.1.0) bundles its own supported Istio
+#    versions, which lag upstream: it supports Istio up to v1.26.2 and rejects
+#    the upstream v1.31.2 the minikube path uses via istioctl. The CRC Istio +
+#    IstioCNI CRs are pinned to v1.26.2 (install-ossm.sh). WasmPlugin API
+#    (extensions.istio.io/v1alpha1) is stable across both, so the filter and the
+#    verify assertions are identical; only the mesh version differs per substrate.
+# 2. OSSM 3 / Sail does NOT auto-create an ingress gateway (unlike istioctl's
+#    demo profile). Deploy one via gateway injection: a Deployment + Service in
+#    istio-system labelled `istio: ingressgateway`, pod template with
+#    `sidecar.istio.io/inject: "true"` + annotation inject.istio.io/templates:
+#    gateway, restricted-v2 securityContext. The WasmPlugin selector
+#    (istio: ingressgateway) then matches it.
+# 3. `oc patch gateway <name>` is ambiguous when both the Istio Gateway CRD and
+#    the K8s Gateway API CRD are present; it resolves to gateway.networking.k8s.io.
+#    Use gateway.networking.istio.io / virtualservice.networking.istio.io.

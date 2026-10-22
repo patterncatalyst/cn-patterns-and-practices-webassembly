@@ -606,6 +606,7 @@ jobs:
             | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
           kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
             examples/part6-deviations/istio/gateway-wasmplugin.yaml \
+            examples/part6-deviations/istio/openshift/ingress-gateway.yaml \
             examples/part6-deviations/istio/openshift/wasmplugin.yaml \
             examples/part6-deviations/istio/openshift/gateway.yaml \
             examples/part6-deviations/istio/openshift/virtualservice.yaml \

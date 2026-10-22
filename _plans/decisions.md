@@ -873,3 +873,20 @@ Model under the containerd shim, both in one cargo-http pod) is the chapter's he
 Istio 1.31.2 / WasmPlugin `extensions.istio.io/v1alpha1` (TrafficExtension noted as the
 newer unified forward path); CRC = OpenShift Service Mesh 3 (Sail operator). Istio↔k8s skew
 (1.31 supports k8s 1.32–1.36 vs Part 5's 1.37.1) checked at `istioctl install` precheck.
+
+## DRQ-079 — ch25 CRC/OSSM 3 live findings (verified live 2026-10-22)
+
+The ch25 proxy-wasm WasmPlugin filter is verified live on CRC via OpenShift
+Service Mesh 3 (Sail operator `servicemeshoperator3.v3.1.0`), through an edge-TLS
+Route (403 without `x-cargo-tenant`; 200 + `x-cargo-filtered-by` + exact cargo
+JSON with it). Three OSSM-specific facts, resolved and captured
+(istio/evidence/2026-10-22/20-21): (1) OSSM 3.1.0 bundles Istio **v1.26.2** and
+rejects the upstream **v1.31.2** the minikube path uses — the `Istio`/`IstioCNI`
+CRs pin v1.26.2; the WasmPlugin API is stable across both so the filter is
+unchanged, only the mesh version differs per substrate. (2) Sail provisions no
+ingress gateway; one is deployed via gateway injection
+(`openshift/ingress-gateway.yaml`, restricted-v2, label `istio: ingressgateway`
+to match the WasmPlugin selector). (3) `oc patch gateway <name>` is ambiguous
+when the K8s Gateway API CRD is also present — use
+`gateway.networking.istio.io` / `virtualservice.networking.istio.io`. ch25 now
+verified live on BOTH clusters; r07a complete.

@@ -44,7 +44,13 @@ command -v oc >/dev/null 2>&1 || fail "oc not on PATH"
 OSSM_NAMESPACE="${OSSM_NAMESPACE:-openshift-operators}"
 OSSM_CHANNEL="${OSSM_CHANNEL:-stable}"
 OSSM_STARTING_CSV="${OSSM_STARTING_CSV:-servicemeshoperator3.v3.1.0}"
-ISTIO_VERSION="${ISTIO_VERSION:-v1.31.2}"
+# OSSM 3 (the Sail operator) bundles its own supported Istio versions, which lag
+# upstream — OSSM 3.1.0 supports up to v1.26.2, and rejects the upstream v1.31.2
+# this book's minikube path uses via istioctl. Pin the CRC Istio/IstioCNI CRs to
+# the newest version OSSM 3.1.0 accepts. The WasmPlugin API
+# (extensions.istio.io/v1alpha1) is stable across both, so the filter is
+# unchanged; only the mesh version differs between the two substrates.
+ISTIO_VERSION="${ISTIO_VERSION:-v1.26.2}"
 ISTIO_NS="${ISTIO_NS:-istio-system}"
 ISTIO_CNI_NS="${ISTIO_CNI_NS:-istio-cni}"
 
@@ -113,11 +119,15 @@ spec:
 EOF
 ok "IstioCNI/default + Istio/default applied"
 
-step "5/6 Waiting for istiod + the ingress gateway"
+step "5/6 istiod, then the ingress gateway (Sail does not create one — deploy it via gateway injection)"
 wait_for 300 "istiod Deployment available" \
     oc wait --for=condition=available deploy -l app=istiod -n "$ISTIO_NS" --timeout=10s
+# Sail/OSSM 3 provisions no ingress gateway by default; deploy one via gateway
+# injection (openshift/ingress-gateway.yaml, labelled istio: ingressgateway to
+# match the gateway WasmPlugin's selector).
+oc apply -f "$SCRIPT_DIR/openshift/ingress-gateway.yaml" >/dev/null || fail "apply ingress-gateway"
 wait_for 300 "istio-ingressgateway Deployment available" \
-    oc wait --for=condition=available deploy -l app=istio-ingressgateway -n "$ISTIO_NS" --timeout=10s
+    oc wait --for=condition=available deploy/istio-ingressgateway -n "$ISTIO_NS" --timeout=10s
 ok "istiod + istio-ingressgateway ready in $ISTIO_NS"
 
 step "6/6 ghcr-pull image-pull secret in $ISTIO_NS (the gateway's namespace)"

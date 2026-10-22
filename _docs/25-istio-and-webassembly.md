@@ -35,7 +35,7 @@ The filter runs in the Istio ingress gateway's own Envoy, not in a sidecar on th
 
 {% include excalidraw.html file="25-two-wasm-worlds-in-the-mesh" alt="Two Pod boundaries side by side. Left: Pod istio-ingress-gateway, an ordinary Envoy with no RuntimeClass, running the proxy-wasm filter cargo-wasmfilter, loaded by the gateway's WasmPlugin CR, core-module ABI via the proxy-wasm crate; it checks x-cargo-tenant, returning 403 if missing, and injects x-cargo-filtered-by on the way out. Right: Pod cargo-http, runtimeClassName wasmtime, no sidecar, running the unchanged Part 5 Component Model app with the wasi:http ABI, hosted by containerd-shim-wasmtime. A client request arrow enters the gateway Pod first, then crosses to the cargo-http Pod. A bottom ink band states: a runtimeClassName: wasmtime Pod runs one container runtime, so the mesh filter runs in the gateway's Envoy, not a sidecar; two Wasm ABIs, proxy-wasm core module and Component Model, now split across two Pods instead of sharing one." caption="Figure 25.1 — two Wasm worlds across the mesh: the ingress gateway's proxy-wasm filter and the cargo-http Pod's unmodified Component Model app, in separate Pods with no shared RuntimeClass." %}
 
-Both halves of this chapter verify the same 403/200 behavior through the gateway's filter. The minikube path is **verified live, 2026-10-22**, against a running cluster; evidence is committed under `examples/part6-deviations/istio/evidence/2026-10-22/`. The CRC path is **pending live verification**: its manifests and scripts are transcribed from the example tree, and the verify script is written to run headless against an already-running Part 5 OpenShift deployment, but it has not yet been run against a live cluster.
+Both halves of this chapter verify the same 403/200 behavior through the gateway's filter. The minikube path is **verified live, 2026-10-22**, against a running cluster; evidence is committed under `examples/part6-deviations/istio/evidence/2026-10-22/`. The CRC path, on OpenShift Service Mesh 3 (the Sail operator, Istio v1.26.2 — OSSM bundles an Istio version that lags the upstream v1.31.2 the minikube path uses), is **verified live, 2026-10-22**, through an edge-TLS Route. OSSM does not provision an ingress gateway on its own, so one is deployed via gateway injection (`openshift/ingress-gateway.yaml`).
 
 ## The filter: a minimal proxy-wasm HTTP filter
 
@@ -372,11 +372,23 @@ spec:
 ```
 {% endraw %}
 
-The router terminates TLS at the edge and forwards plain HTTP to the gateway's `http2` port, the same split Part 5's own CRC Route already uses in front of the wasmCloud operator's Service; the `VirtualService` routes that plain-HTTP request on to the existing `cargo-http` Service in the `wasmcloud` namespace, port 8000, no new Service created. `verify-istio-crc.sh` applies the four manifests (idempotent `oc apply`), resolves the Route's assigned host and patches `Gateway`/`VirtualService` to match, waits on the ingress gateway's own rollout, and runs the identical two-request proof minikube's script runs, through a CA-verified `https://` request against the real edge-TLS Route, never `-k`, never a port-forward. **Pending live verification**:
+The router terminates TLS at the edge and forwards plain HTTP to the gateway's `http2` port, the same split Part 5's own CRC Route already uses in front of the wasmCloud operator's Service; the `VirtualService` routes that plain-HTTP request on to the existing `cargo-http` Service in the `wasmcloud` namespace, port 8000, no new Service created. `verify-istio-crc.sh` applies the four manifests (idempotent `oc apply`), resolves the Route's assigned host and patches `Gateway`/`VirtualService` to match, waits on the ingress gateway's own rollout, and runs the identical two-request proof minikube's script runs, through a CA-verified `https://` request against the real edge-TLS Route, never `-k`, never a port-forward. **Verified live, 2026-10-22**, on CRC with OSSM 3 (Istio v1.26.2):
 
-<!-- LIVE-OUTPUT ch25 CRC istio: fill from examples/part6-deviations/istio/evidence/<date>/03-no-tenant-403.txt after the gated run --> *(verified-live output lands here after the cluster run: the WITHOUT-`x-cargo-tenant` request returning HTTP 403 through the edge-TLS Route, CA-verified.)*
+{% raw %}
+```
+$ curl --cacert <ingress-ca-bundle> https://cargo-http-istio-istio-system.apps-crc.testing/cargo/CARGO-USNYC-DEHAM
+HTTP 403
+```
+{% endraw %}
 
-<!-- LIVE-OUTPUT ch25 CRC istio: fill from examples/part6-deviations/istio/evidence/<date>/04-with-tenant-200.txt after the gated run --> *(verified-live output lands here after the cluster run: the WITH-`x-cargo-tenant: acme` request returning HTTP 200, the exact cargo JSON, and a response header `x-cargo-filtered-by: cargo-wasmfilter`.)*
+{% raw %}
+```
+$ curl --cacert <ingress-ca-bundle> -H 'x-cargo-tenant: acme' https://cargo-http-istio-istio-system.apps-crc.testing/cargo/CARGO-USNYC-DEHAM
+HTTP/1.1 200 OK
+x-cargo-filtered-by: cargo-wasmfilter
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+```
+{% endraw %}
 
 The filter's behavior is identical on both clusters: a missing header denies at the gateway before the request ever reaches the app Pod, and a present header lets the request through, stamped with proof the filter ran. What differs between the two runs is the control plane (community Istio vs. OSSM3/Sail) and the app's own host underneath the filter (`containerd-shim-wasmtime` on minikube, the wasmCloud operator on CRC), not where the filter executes, which is the ingress gateway's Envoy on both paths.
 

@@ -71,10 +71,10 @@ ok "Gateway + VirtualService + WasmPlugin (gateway-scoped) + Route applied"
 step "2/5 Resolve the live Route host, patch Gateway + VirtualService to match"
 HOST="$(oc get route cargo-http-istio -n istio-system -o jsonpath='{.spec.host}' 2>/dev/null)"
 [[ -n "$HOST" ]] || fail "Route cargo-http-istio has no host (oc get route -n istio-system)"
-oc patch gateway cargo-http-gateway -n "$NS" --type=json \
+oc patch gateway.networking.istio.io cargo-http-gateway -n "$NS" --type=json \
     -p "[{\"op\":\"replace\",\"path\":\"/spec/servers/0/hosts/0\",\"value\":\"$HOST\"}]" >/dev/null \
     || fail "patch Gateway host"
-oc patch virtualservice cargo-http -n "$NS" --type=json \
+oc patch virtualservice.networking.istio.io cargo-http -n "$NS" --type=json \
     -p "[{\"op\":\"replace\",\"path\":\"/spec/hosts/0\",\"value\":\"$HOST\"}]" >/dev/null \
     || fail "patch VirtualService host"
 ok "edge-TLS Route https://$HOST/ -> Gateway/VirtualService re-pointed"
