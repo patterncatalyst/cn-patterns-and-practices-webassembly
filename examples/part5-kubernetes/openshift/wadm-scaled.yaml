@@ -1,0 +1,92 @@
+# ch22 autoscaler asymmetry (CRC half) — wadm application manifest
+# (core.oam.dev/v1beta1) for the SAME "cargo-http" app wadm.yaml deploys, with
+# ONE change: the cargo-http COMPONENT's trait is a `spreadscaler` with a
+# templated `instances` count, instead of wadm.yaml's fixed `daemonscaler`
+# `replicas: 1`.
+#
+# Why this is the right lever here (and a Kubernetes HPA is NOT):
+#
+#   On minikube (../../k8s/scaling/), the Wasm workload IS a Kubernetes
+#   Deployment — runtimeClassName: wasmtime just points a normal Pod at a
+#   different shim — so a stock autoscaling/v2 HorizontalPodAutoscaler can
+#   read cgroup CPU metrics through metrics-server and scale that Deployment's
+#   replica count like any other workload.
+#
+#   On OpenShift Local here, the wasmCloud OPERATOR is in charge: it
+#   reconciles a WasmCloudHostConfig into ONE host Deployment (verify-crc.sh's
+#   `oc delete pod` resilience proof targets THAT pod), and inside that one
+#   host pod, wadm/the host runtime instantiates the component some number of
+#   times per its OAM scaler trait. There is no per-component Kubernetes
+#   Deployment or Pod for a K8s HPA to target — scaling the host Deployment
+#   would add more wasmCloud HOSTS (lattice nodes), not more cargo-http
+#   component instances, and the operator does not expose instance count as a
+#   Kubernetes-native metric a HPA could read in the first place. A K8s HPA
+#   pointed at the host Deployment would fight the operator (which owns that
+#   Deployment's desired state) for no correct effect. The wadm scaler trait —
+#   spreadscaler `instances` here — IS the correct, operator-aware lever: it is
+#   the SAME mechanism `wash app deploy` / `oc apply` already use to set the
+#   fixed replicas: 1 in wadm.yaml, just re-applied with a different count.
+#
+# The httpserver provider trait is left as `daemonscaler` (replicas: 1,
+# unchanged) deliberately: the operator only auto-creates the Kubernetes
+# Service for an app whose httpserver provider uses a daemonscaler
+# (spreadscaler Service creation is not implemented — see README.md "The
+# daemonscaler edit"). Changing the PROVIDER's scaler would break the Service
+# the edge-TLS Route depends on; only the cargo-http COMPONENT's scaler
+# changes.
+#
+# __INSTANCES__ is replaced by verify-scaling-crc.sh / capture-scaling-
+# evidence.sh (same sed-templating pattern deploy.sh uses for
+# __COMPONENT_REF__). Re-applying this manifest with a different count under
+# the SAME Application name ("cargo-http") is a wadm update-in-place — a
+# "redeploy", not a new app — exactly like bumping replicas in wadm.yaml would
+# be. contracts/wit stays pristine; nothing here touches an interface.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-http
+  annotations:
+    version: v0.0.1
+    description: "ch22 scaling variant: cargo-http component on a spreadscaler (wadm-managed instance count), httpserver provider unchanged (daemonscaler, for operator Service creation)"
+spec:
+  components:
+    - name: cargo-http
+      type: component
+      properties:
+        # deploy.sh / verify-scaling-crc.sh rewrite __COMPONENT_REF__ -> the
+        # pushed ghcr component ref (same image this app already runs).
+        image: __COMPONENT_REF__
+      traits:
+        # spreadscaler, NOT daemonscaler: `instances` is the wadm-managed
+        # component instance count inside the host pod — the autoscaling
+        # LEVER this chapter is about. verify-scaling-crc.sh re-applies this
+        # manifest with __INSTANCES__ set first to a scaled-up count, then
+        # back to 1, and asserts `wash get inventory` / the host logs show the
+        # instance count actually changed both times.
+        - type: spreadscaler
+          properties:
+            instances: __INSTANCES__
+
+    - name: httpserver
+      type: capability
+      properties:
+        # Unchanged from wadm.yaml: same provider, same image.
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        - type: link
+          properties:
+            target: cargo-http
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-http-listen
+                properties:
+                  address: 0.0.0.0:8000
+        # Left as daemonscaler, unchanged: this is what makes the operator
+        # create (and keep) the Service "cargo-http" on port 8000 that the
+        # edge-TLS Route targets. See README.md "The daemonscaler edit".
+        - type: daemonscaler
+          properties:
+            replicas: 1

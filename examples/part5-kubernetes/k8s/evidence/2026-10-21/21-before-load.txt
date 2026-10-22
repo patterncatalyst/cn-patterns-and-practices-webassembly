@@ -1,0 +1,6 @@
+$ kubectl get hpa,deploy cargo-http -n part5-kubernetes
+NAME                                             REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/cargo-http   Deployment/cargo-http   cpu: 2%/50%   1         5         1          50s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/cargo-http   1/1     1            1           52m

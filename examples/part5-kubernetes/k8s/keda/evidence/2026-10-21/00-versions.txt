@@ -1,0 +1,11 @@
+$ minikube version --short
+v1.39.0
+
+$ helm list -n keda --kube-context part5
+NAME             	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                   	APP VERSION
+keda             	keda     	3       	2026-10-21 22:52:15.766915633 -0400 EDT	deployed	keda-2.21.0             	2.21.0     
+keda-add-ons-http	keda     	3       	2026-10-21 22:52:17.093083565 -0400 EDT	deployed	keda-add-ons-http-0.16.0	0.16.0     
+
+# pinned chart versions
+KEDA core: 2.21.0
+KEDA HTTP add-on: 0.16.0

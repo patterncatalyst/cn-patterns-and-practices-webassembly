@@ -1,0 +1,84 @@
+# ch23 serverless scale-to-zero — Kafka half. A single-node KRaft-mode Kafka
+# cluster (NO ZooKeeper — Strimzi 1.x dropped ZooKeeper support entirely; a
+# `Kafka` resource is always backed by one or more `KafkaNodePool`s now).
+#
+# Shape and apiVersion verified against Strimzi's OWN examples for this exact
+# operator tag (examples/kafka/kafka-single-node.yaml + examples/kafka/
+# kafka-with-dual-role-nodes.yaml @ release 1.3.0): `kafka.strimzi.io/v1` for
+# both `KafkaNodePool` and `Kafka` (not v1beta2 — that apiVersion moved to v1
+# at some point before this release line), and a single node-pool with BOTH
+# `controller` and `broker` roles (the "combined" / "dual-role" topology,
+# correct for a one-node demo cluster — a production cluster would split
+# controller and broker into separate pools).
+#
+# `spec.kafka.version: 4.3.1` / `metadataVersion: 4.3-IV0` is the EXACT pair
+# Strimzi 1.3.0 ships in its own example. CORRECTION from the original ch23
+# plan note ("Apache Kafka 4.1.0"): Strimzi 1.3.0 supports 4.2.0/4.2.1/4.2.2/
+# 4.3.0/4.3.1 only — 4.1.x support was dropped in an earlier 1.x release (see
+# install-strimzi.sh's comment for the full survey). 4.3.1 is used here because
+# it is upstream's own tested pairing for this operator version, not a guess.
+#
+# `offsets.topic.replication.factor` / `transaction.state.log.*` /
+# `default.replication.factor` / `min.insync.replicas` are all forced to 1 —
+# required for a single-broker cluster (the Kafka defaults assume >= 3 brokers
+# and the cluster would otherwise never finish bootstrapping __consumer_offsets
+# or the transaction log).
+#
+# `entityOperator` runs the Topic Operator (reconciles KafkaTopic CRs, used by
+# kafkatopic.yaml) and the User Operator (unused here — no SASL/SCRAM users;
+# the single internal plain listener has no authentication, so the KEDA `kafka`
+# trigger in ../keda/base/kafka-scaledobject.yaml needs no TriggerAuthentication
+# — see that file's comment).
+#
+# ephemeral storage (`type: ephemeral`, no PVC): this is a scale-to-zero DEMO
+# cluster torn down with the rest of the minikube profile, not a durable
+# deployment — matches the house convention of keeping these examples fast to
+# bring up and tear down.
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: dual-role
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: cargo-kafka
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: ephemeral
+---
+apiVersion: kafka.strimzi.io/v1
+kind: Kafka
+metadata:
+  name: cargo-kafka
+  namespace: kafka
+  labels:
+    app.kubernetes.io/part-of: part5-kubernetes
+  # No `strimzi.io/node-pools: enabled` annotation: that was an opt-in feature
+  # gate in earlier Strimzi lines (when ZooKeeper-mode clusters were still
+  # possible). By 1.3.0, KafkaNodePool is the ONLY supported topology
+  # (ZooKeeper support is fully removed) and the annotation is a no-op —
+  # confirmed against Strimzi's own current example for this exact tag
+  # (examples/kafka/kafka-with-dual-role-nodes.yaml @ release 1.3.0), which
+  # omits it entirely. No top-level spec.kafka.replicas/storage either — those
+  # live on the KafkaNodePool above.
+spec:
+  kafka:
+    version: 4.3.1
+    metadataVersion: 4.3-IV0
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

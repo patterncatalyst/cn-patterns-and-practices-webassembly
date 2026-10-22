@@ -1,0 +1,12 @@
+# ch23 Kafka half — the Strimzi custom resources (KafkaNodePool + Kafka +
+# KafkaTopic). Applied to the `kafka` namespace install-strimzi.sh creates;
+# not bundled with the Namespace object itself since install-strimzi.sh (not
+# kustomize) owns namespace creation here, matching the Helm-driven
+# ../../openshift/install-operator.sh convention of a script-created namespace
+# with CRD instances layered on after the operator is ready.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - kafka.yaml
+  - kafkatopic.yaml

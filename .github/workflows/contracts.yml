@@ -354,6 +354,22 @@ jobs:
           cd "${PART5_DIR}/adapter"
           cargo component build --release
 
+      # r06d: the Part 5 ch23 kafka-handler component — a wasmCloud
+      # messaging-kafka handler (local wit exporting wasmcloud:messaging/handler
+      # + importing the cargo contract via path-dep, contracts/wit stays
+      # pristine), same cargo-component recipe as every other Rust crate here.
+      # `cargo component build --release` regenerates its committed
+      # src/bindings.rs, which the drift gate below then checks. No wash, no
+      # Kafka broker, no cluster — just the component build. The ch23 KEDA/
+      # Strimzi/wasmCloud LIVE runs (HTTP add-on scale-to-zero, the kafka
+      # consumer-group-lag scaler) are verified by hand with evidence committed
+      # under examples/part5-kubernetes/{k8s,openshift}/evidence/ — never CI.
+      - name: Build the Part 5 kafka-handler component
+        run: |
+          set -euo pipefail
+          cd "${PART5_DIR}/kafka-handler"
+          cargo component build --release
+
       # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
       # building — the two providers (Rust + Go) AND the two consumers
@@ -393,6 +409,7 @@ jobs:
           PART4_WASMTIME_HOST_GUEST_BINDINGS="${PART4_DIR}/wasmtime-host/guest/src/bindings.rs"
           PART5_SIDECAR_FILTER_BINDINGS="${PART5_DIR}/sidecar-filter/src/bindings.rs"
           PART5_ADAPTER_BINDINGS="${PART5_DIR}/adapter/src/bindings.rs"
+          PART5_KAFKA_HANDLER_BINDINGS="${PART5_DIR}/kafka-handler/src/bindings.rs"
           ALL_BINDINGS=(
             "$GO_BINDINGS" "$RUST_BINDINGS" "$CONSUMER_GO_BINDINGS" "$CONSUMER_RUST_BINDINGS"
             "$PART3_HTTP_RUST_BINDINGS" "$PART3_HTTP_GO_BINDINGS"
@@ -400,6 +417,7 @@ jobs:
             "$PART3_SOCKETS_RUST_BINDINGS" "$PART3_SOCKETS_GO_BINDINGS"
             "$PART4_WASMTIME_HOST_GUEST_BINDINGS"
             "$PART5_SIDECAR_FILTER_BINDINGS" "$PART5_ADAPTER_BINDINGS"
+            "$PART5_KAFKA_HANDLER_BINDINGS"
           )
           CHANGED="$(git status --porcelain -- "${ALL_BINDINGS[@]}")"
           if [[ -n "$CHANGED" ]]; then
@@ -486,6 +504,42 @@ jobs:
           kubectl kustomize examples/part5-kubernetes/k8s/interposed/overlays/minikube \
             | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
 
+      # r06d (ch22 HPA / ch23 KEDA scale-to-zero / ch24 observability) — each
+      # new minikube kustomize overlay rendered offline + kubeconform, same
+      # treatment as the base/minikube/interposed overlays above. scaling =
+      # the autoscaling/v2 HPA + load generator on the raw-shim Deployment;
+      # keda = the KEDA HTTP add-on HTTPScaledObject + interceptor Service +
+      # the Ingress rewire; kafka = the Strimzi Kafka/KafkaNodePool/KafkaTopic
+      # CRs (CRD kinds -> skipped by -ignore-missing-schemas); observability =
+      # the grafana/otel-lgtm Deployment+Service. No cluster — the LIVE runs
+      # (HPA climb, scale-to-zero cold start, Kafka-lag scaling, OTel queries)
+      # are evidence-only under examples/part5-kubernetes/k8s/evidence/.
+      - name: Validate Part 5 Kubernetes manifests (kubeconform) — r06d minikube overlays
+        run: |
+          for overlay in \
+            examples/part5-kubernetes/k8s/scaling/overlays/minikube \
+            examples/part5-kubernetes/k8s/keda/overlays/minikube \
+            examples/part5-kubernetes/k8s/observability/overlays/minikube \
+            examples/part5-kubernetes/k8s/kafka/base; do
+            echo "== kustomize render: ${overlay} =="
+            kubectl kustomize "${overlay}" \
+              | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+          done
+
+      # r06d standalone CRD-instance manifests not under a kustomization: the
+      # KEDA kafka ScaledObject (kept out of the keda/base kustomize so the
+      # HTTP overlay renders without it), and the minikube wasmCloud CRD
+      # instances (WasmCloudHostConfig + the wadm-kafka OAM Application for the
+      # ch23 Kafka half that runs on wasmCloud-on-minikube). All CRD kinds with
+      # no bundled schema -> skipped by -ignore-missing-schemas, same as the
+      # OpenShift wadm manifests below; this only checks YAML well-formedness.
+      - name: Validate Part 5 Kubernetes manifests (kubeconform) — r06d standalone CRD instances
+        run: |
+          kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
+            examples/part5-kubernetes/k8s/keda/base/kafka-scaledobject.yaml \
+            examples/part5-kubernetes/k8s/wasmcloud/wasmcloud-host.yaml \
+            examples/part5-kubernetes/k8s/wasmcloud/wadm-kafka.yaml
+
       # OpenShift path (r06b): these two files are hand-authored CRD
       # instances, not kustomize-managed, so they're validated as-committed —
       # no `kubectl kustomize` render step. Both kinds (WasmCloudHostConfig
@@ -499,6 +553,14 @@ jobs:
       # instances (wadm-filtered, wadm-adapted, wadm-ambassador,
       # wadm-ambassador-nogrant) to this same step — same CRD kind as wadm.yaml
       # above, same -ignore-missing-schemas reasoning, still no cluster.
+      # r06d adds four more OpenShift manifests to this step: wadm-scaled (the
+      # ch22 spreadscaler-instances OAM variant), wadm-kafka (the ch23 Kafka
+      # handler + messaging-kafka provider OAM Application), wasmcloud-host-otel
+      # (the ch24 WasmCloudHostConfig variant enabling host OTLP) — all CRD
+      # instances, skipped-schema like the others — plus otel-collector.yaml,
+      # the ch24 minimal rootless OTel Collector (ConfigMap + Deployment +
+      # Service, restricted-v2, NO SCC exception), whose native kinds ARE
+      # schema-validated here. Same offline, no-cluster treatment.
       - name: Validate Part 5 OpenShift manifests (kubeconform) — wasmCloudHostConfig + wadm Applications
         run: |
           kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
@@ -507,4 +569,8 @@ jobs:
             examples/part5-kubernetes/openshift/wadm-filtered.yaml \
             examples/part5-kubernetes/openshift/wadm-adapted.yaml \
             examples/part5-kubernetes/openshift/wadm-ambassador.yaml \
-            examples/part5-kubernetes/openshift/wadm-ambassador-nogrant.yaml
+            examples/part5-kubernetes/openshift/wadm-ambassador-nogrant.yaml \
+            examples/part5-kubernetes/openshift/wadm-scaled.yaml \
+            examples/part5-kubernetes/openshift/wadm-kafka.yaml \
+            examples/part5-kubernetes/openshift/wasmcloud-host-otel.yaml \
+            examples/part5-kubernetes/openshift/otel-collector.yaml

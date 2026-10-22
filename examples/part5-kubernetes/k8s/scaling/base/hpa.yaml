@@ -1,0 +1,62 @@
+# ch22 autoscaler asymmetry (minikube half) — a REAL Kubernetes
+# HorizontalPodAutoscaler targeting the Part 5 cargo-http Deployment
+# (examples/part5-kubernetes/k8s/base/deployment.yaml).
+#
+# Why a plain autoscaling/v2 HPA just works here: a Pod with
+# `runtimeClassName: wasmtime` is still scheduled, cgrouped, and metered by the
+# kubelet exactly like a runc Pod — the containerd-shim-wasmtime shim reports
+# CPU/memory usage into the SAME cgroup hierarchy the kubelet's cAdvisor reads.
+# metrics-server scrapes that through the summary API, the HPA controller reads
+# metrics-server, and Deployment/ReplicaSet scale-out is identical to a normal
+# container workload. No Wasm-specific autoscaler is needed on minikube — see
+# verify-hpa-minikube.sh for the CRC counterpart, where this is NOT true.
+#
+# The Deployment's resources.requests.cpu is 50m (k8s/base/deployment.yaml) —
+# deliberately small so a handful of concurrent requests pushes utilization
+# past the 50% target quickly and makes the demo fast without needing a real
+# load-testing tool.
+#
+# scaleDown.stabilizationWindowSeconds is tightened from the Kubernetes default
+# (300s) to 60s: the default window exists to stop a workload from flapping
+# while a freshly scaled-out replica is still warming up (JVM class loading,
+# connection pool warm-up, etc.). A Wasm component has no such warm-up — the
+# containerd-shim-wasmtime shim instantiates app.wasm and starts serving within
+# milliseconds of the Pod going Ready — so the window that protects slow-start
+# workloads is pure latency here and can be shortened safely. scaleUp keeps the
+# Kubernetes default (0s stabilization, fastest-wins policy) since a fast
+# scale-OUT is exactly what we want.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cargo-http
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: cargo-http
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cargo-http
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 15

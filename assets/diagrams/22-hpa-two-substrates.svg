@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="40" width="540" height="480" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">minikube — HPA drives replica count directly</text>
+<rect x="620" y="40" width="540" height="480" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="632" y="60" font-size="12" font-weight="700" fill="#1d1d1d">CRC — wadm spreadscaler owns replica count</text>
+<rect x="60" y="90" width="460" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">raw-shim Wasm Pod</text>
+<text x="290.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">containerd-shim-wasmtime v0.6.1</text>
+<rect x="60" y="180" width="460" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="290.0" y="208.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cgroup CPU usage</text>
+<text x="290.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">kernel-reported, per-pod</text>
+<rect x="60" y="270" width="460" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="290.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">metrics-server</text>
+<text x="290.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">aggregates cgroup CPU into the Metrics API</text>
+<rect x="60" y="360" width="460" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="290.0" y="388.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">HPA (autoscaling/v2)</text>
+<text x="290.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">targetCPUUtilizationPercentage</text>
+<rect x="60" y="450" width="460" height="50" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="290.0" y="480.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">replicas: 1..N, HPA-written</text>
+<rect x="660" y="90" width="460" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud-operator-managed app</text>
+<text x="890.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">OCIReference, CRD-declared</text>
+<rect x="660" y="180" width="460" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="890.0" y="208.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wadm spreadscaler</text>
+<text x="890.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">declared instance count in wadm.yaml</text>
+<rect x="660" y="270" width="460" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="890.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">replicas: operator-owned</text>
+<text x="890.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">wadm reconciles desired vs. actual</text>
+<rect x="940" y="360" width="180" height="90" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="1030.0" y="395.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">HPA (if added)</text>
+<text x="1030.0" y="412.5" font-size="11.5" fill="#555555" text-anchor="middle">writes a competing</text>
+<text x="1030.0" y="427.5" font-size="11.5" fill="#555555" text-anchor="middle">replica count</text>
+<rect x="660" y="360" width="250" height="140" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="785.0" y="398.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">A Kubernetes HPA targeting</text>
+<text x="785.0" y="415.0" font-size="11.5" fill="#555555" text-anchor="middle">this Deployment would FIGHT</text>
+<text x="785.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">the operator: two controllers</text>
+<text x="785.0" y="445.0" font-size="11.5" fill="#555555" text-anchor="middle">writing replica count means</text>
+<text x="785.0" y="460.0" font-size="11.5" fill="#555555" text-anchor="middle">flapping — scale through the</text>
+<text x="785.0" y="475.0" font-size="11.5" fill="#555555" text-anchor="middle">spreadscaler, not a second HPA</text>
+<path d="M290,150 L290,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,240 L290,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,330 L290,360" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,420 L290,450" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,150 L890,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,240 L890,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M1030,300 L1030,360" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="1036.0" y="324.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">would conflict</text>
+<text x="1036.0" y="324.0" font-size="11" fill="#555" text-anchor="middle">would conflict</text>
+<text x="590" y="540" font-size="12" fill="#555555" text-anchor="middle">Per-substrate autoscaler asymmetry: minikube&#x27;s generic shim takes a stock HPA; CRC&#x27;s operator already owns replica placement through wadm.</text>
+</svg>

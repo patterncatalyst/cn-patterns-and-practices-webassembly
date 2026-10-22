@@ -1,0 +1,34 @@
+[package]
+name = "cargo-kafka-handler-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+# This component targets a LOCAL world (wit/world.wit) that EXPORTS
+# `wasmcloud:messaging/handler@0.2.0` (so the `messaging-kafka` capability
+# provider can deliver Kafka messages to it over wadm's runtime link) and
+# IMPORTS the cargo domain's `handling` interface from the repository
+# contract. `wasmcloud:messaging` is vendored verbatim under wit/deps/messaging
+# (cargo-component does not fetch WIT packages over the network, so every
+# non-contract package the local world references must be declared here as a
+# target dependency and present on disk — the same shape as the wasi:http
+# vendoring in part3-interfaces/http-rust). `patterncatalyst:cargo` points at
+# the repository contract (Cargo.toml) — the contract stays pristine (no copy,
+# no edit).
+[package.metadata.component]
+package = "patterncatalyst:cargo-kafka-handler"
+
+[package.metadata.component.target]
+path = "wit"
+world = "cargo-kafka-handler"
+
+[package.metadata.component.target.dependencies]
+"patterncatalyst:cargo" = { path = "../../../contracts/wit" }
+"wasmcloud:messaging" = { path = "wit/deps/messaging" }
+
+[package.metadata.component.dependencies]

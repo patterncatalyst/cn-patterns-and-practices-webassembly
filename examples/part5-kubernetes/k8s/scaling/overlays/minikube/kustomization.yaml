@@ -1,0 +1,31 @@
+# ch22 autoscaler asymmetry (minikube half) — the deployable overlay.
+#
+# Carries the SAME image-retag + imagePullPolicy:Never patches as
+# ../../../overlays/minikube (k8s/overlays/minikube), because this directory
+# must stand alone for `kubectl kustomize` / kubeconform and for a single
+# `kubectl apply -k` in the verify/capture scripts — kustomize does not let one
+# overlay "import" another overlay's patches, only resources. verify-hpa-
+# minikube.sh and capture-hpa-evidence.sh apply THIS overlay directly (it
+# already contains the base Deployment/Service/Ingress plus the HPA); they do
+# NOT also apply k8s/overlays/minikube first.
+#
+# The Ingress host stays the base placeholder here too; the scripts patch it
+# live to cargo.<minikube-ip>.nip.io, exactly like verify-minikube.sh.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: cargo-http-wasm
+    newTag: minikube
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-http
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

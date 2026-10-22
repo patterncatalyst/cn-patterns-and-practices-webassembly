@@ -1,0 +1,21 @@
+# ch22 autoscaler asymmetry (minikube half) — layers a HorizontalPodAutoscaler
+# on top of the already-deployed Part 5 cargo-http Deployment.
+#
+# This kustomization pulls in the FULL plain base (../../base: namespace,
+# RuntimeClass, Deployment, Service, Ingress — the same objects
+# verify-minikube.sh / capture-evidence.sh deploy) and adds hpa.yaml on top, so
+# `kubectl kustomize` renders a complete, standalone tree: Namespace +
+# RuntimeClass + Deployment + Service + Ingress + HorizontalPodAutoscaler. In
+# practice the scripts apply k8s/overlays/minikube first (which retags the
+# image and sets imagePullPolicy: Never for the minikube node) and then this
+# scaling overlay — kustomize's `resources:` merge treats a second apply of the
+# same objects as a no-op update, so re-applying ../../base here is safe and
+# keeps this directory independently renderable/kubeconform-able.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: part5-kubernetes
+
+resources:
+  - ../../base
+  - hpa.yaml

@@ -1,0 +1,38 @@
+# ch23 serverless scale-to-zero (HTTP half) — layers KEDA's HTTPScaledObject +
+# the interceptor-routing Service on top of the already-deployed Part 5
+# raw-shim cargo-http stack.
+#
+# Pulls in the FULL plain base (../../base: namespace, RuntimeClass,
+# Deployment, Service, Ingress — the same objects verify-minikube.sh deploys),
+# adds the HTTPScaledObject + the ExternalName interceptor-proxy Service, and
+# patches the base Ingress so it proxies through the KEDA interceptor instead
+# of straight to cargo-http — required for scale-to-zero: when replicas is 0
+# there is no Pod for a direct Ingress->Service route to reach, so the
+# interceptor has to sit in the path to hold the request and trigger scale-up.
+#
+# Mirrors the "re-apply ../../base is safe" convention from
+# ../../scaling/base/kustomization.yaml: in practice the scripts apply
+# k8s/overlays/minikube first, then one of the scaling overlays on top;
+# kustomize's resource merge treats the second apply of the same objects as a
+# no-op update. This directory stays independently renderable/kubeconform-able.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: part5-kubernetes
+
+resources:
+  - ../../base
+  - httpscaledobject.yaml
+  - interceptor-service.yaml
+
+patches:
+  - target:
+      kind: Ingress
+      name: cargo-http
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/http/paths/0/backend/service/name
+        value: keda-interceptor-proxy
+      - op: add
+        path: /metadata/annotations/nginx.ingress.kubernetes.io~1service-upstream
+        value: "true"

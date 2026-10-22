@@ -1,0 +1,8 @@
+$ curl -sS -w "%{http_code} %{time_total}" http://cargo.192.168.49.2.nip.io/cargo/CARGO-USNYC-DEHAM
+http_code=200 cold_start_seconds=4.414011
+body={"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+
+$ kubectl get deploy cargo-http -n part5-kubernetes
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+cargo-http   1/1     1            1           33m
+cold-start-latency-seconds: 4.414011

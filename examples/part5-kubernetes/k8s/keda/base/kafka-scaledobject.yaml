@@ -1,0 +1,87 @@
+# ch23 serverless scale-to-zero — Kafka half.
+#
+# TEACHING POINT (this is the whole reason the Kafka half of ch23 exists):
+# KEDA's `kafka` scaler here only OBSERVES consumer-group lag on
+# `cargo-handling-events`; it does NOT and CANNOT own the kafka-handler
+# component's replica count. `kafka-handler` is a wasmCloud component deployed
+# by wadm (../wasmcloud/wadm-kafka.yaml), not a Kubernetes Deployment — a K8s
+# `ScaledObject` can only patch `spec.replicas` on a Deployment/
+# StatefulSet/etc., and no such object exists for a wasmCloud-managed
+# workload (the SAME reason ../../openshift/README.md gives for why a plain
+# HPA has "nothing correct to target" on the CRC wasmCloud path — ch22's
+# asymmetry, now showing up again one layer up the stack). The spreadscaler
+# trait on the `kafka-handler` component in wadm-kafka.yaml is what actually
+# OWNS the instance count; wadm reconciles it continuously regardless of what
+# this ScaledObject does.
+#
+# So why deploy a `ScaledObject` at all? Observability and vocabulary: this
+# object makes consumer-group lag visible through the SAME `keda.sh/v1alpha1`
+# API surface the HTTP half uses, lets `kubectl get scaledobject` / HPA-shaped
+# tooling show the metric, and sets up the chapter's compare-and-contrast
+# between "KEDA scales it" (HTTP half) and "KEDA only watches it" (Kafka
+# half) — Decision A's whole point. Driving `scaleTargetRef` at a Deployment
+# that does not exist would be dishonest; there IS no Deployment to name here,
+# so this ScaledObject is intentionally left WITHOUT an active trigger wired to
+# a real scale target in this repository. A reader who wants KEDA to actually
+# own Kafka-driven K8s scaling (the common case when the workload IS a plain
+# container Deployment, not a wasmCloud component) would point
+# `scaleTargetRef.name` at that Deployment — the `kafka` trigger block below is
+# otherwise a complete, correct example of that shape.
+#
+# No TriggerAuthentication: ../../k8s/kafka/base/kafka.yaml's only listener is
+# an unauthenticated internal `plain` listener (no SASL/mTLS) — exactly matching
+# the "if the broker needs auth" condition in the ch23 plan, which this demo
+# cluster does not meet. A production broker with SASL/SCRAM or mTLS would add
+# a `TriggerAuthentication` here and reference it via
+# `trigger.authenticationRef`; the commented block below shows that shape.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: kafka-handler-lag
+  namespace: kafka
+  labels:
+    app.kubernetes.io/name: kafka-handler
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  # No Deployment exists for kafka-handler (it is a wasmCloud component, owned
+  # by wadm's spreadscaler — see the comment above). This name is kept as
+  # self-documentation of what WOULD be scaled if kafka-handler were ever
+  # ported to a plain in-cluster consumer instead of a wasmCloud component.
+  scaleTargetRef:
+    name: kafka-handler
+    kind: Deployment
+  minReplicaCount: 0
+  maxReplicaCount: 6 # capped at the topic's partition count (kafkatopic.yaml)
+  cooldownPeriod: 30
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: cargo-kafka-kafka-bootstrap.kafka.svc:9092
+        consumerGroup: kafka-handler
+        topic: cargo-handling-events
+        lagThreshold: "5"
+        offsetResetPolicy: earliest
+      # authenticationRef:
+      #   name: cargo-kafka-scram-auth   # a TriggerAuthentication, only needed
+      #                                  # if the broker enables SASL/mTLS
+
+# Example TriggerAuthentication shape for a SASL/SCRAM-authenticated broker —
+# NOT applied against this demo cluster (its listener has no authentication),
+# kept here purely as the reference shape the ch23 prose points to.
+#
+# apiVersion: keda.sh/v1alpha1
+# kind: TriggerAuthentication
+# metadata:
+#   name: cargo-kafka-scram-auth
+#   namespace: kafka
+# spec:
+#   secretTargetRef:
+#     - parameter: sasl
+#       name: cargo-kafka-handler-credentials
+#       key: sasl
+#     - parameter: username
+#       name: cargo-kafka-handler-credentials
+#       key: username
+#     - parameter: password
+#       name: cargo-kafka-handler-credentials
+#       key: password

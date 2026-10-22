@@ -427,10 +427,23 @@ Roadmap sketch:
   minikube compile-time `wac plug`, CRC runtime wadm links; the
   state-across-links finding; ambassador substrate asymmetry). **Ch20/Ch21
   COMPLETE, Part 5 at Ch17–Ch21 done (this iteration).**
-- **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero (HTTP add-on + Kafka scaler)
-  + Ch24 observability (OTel from Wasm + the LGTM stack), both verified live
-  on minikube and CRC per the headless-verification rule. **Next up. Part 5
-  (Ch17–Ch24) COMPLETE** at the end of r06d.
+- **r06d** — Ch22 HPA + Ch23 KEDA scale-to-zero (HTTP add-on + **live** Kafka
+  scaler, user Decision A = wasmCloud-on-minikube) + Ch24 observability (OTel
+  from Wasm + the LGTM stack; CRC rootless collector, restricted-v2, no SCC
+  exception, user Decision B), both to be verified live on minikube and CRC per
+  the headless-verification rule. One new crate (`kafka-handler`), contracts/wit
+  pristine. DRQ-066..076; pins in version-matrix. **BUILD phase complete
+  (chapters + examples + diagrams + CI + plans, offline, static gates green).
+  PARTIAL LIVE VERIFICATION (minikube, 2026-10-21): Ch22 HPA finding verified
+  (HPA wired + reads CPU, but a cheap stateless Wasm handler gives no CPU signal
+  → no scale; reframed honestly, DRQ-074) + Ch23 HTTP add-on scale-to-zero
+  verified (0 → cold-200 @ 4.41s). Live-run script fixes landed (DRQ-075:
+  install-shim idempotent restart, clean-base between chapters, load-gen memory)
+  + messaging-kafka pin → 0.2.0 (DRQ-076). REMAINING (user runs live separately):
+  Ch23 Kafka half, Ch24 observability (both minikube), and the entire CRC pass —
+  those footers stay "pending live verification" until the user runs + flips
+  them. Part 5 (Ch17–Ch24) code+chapters COMPLETE; Ch22-minikube/Ch23-HTTP
+  live-verified, the rest live-pending.**
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey
   (Spin), wasi-nn.
 - **r0N** — Part 7 Final project.

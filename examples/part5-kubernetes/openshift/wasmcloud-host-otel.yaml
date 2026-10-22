@@ -1,0 +1,60 @@
+# ch24 on-cluster observability — the OTel-enabled variant of
+# wasmcloud-host.yaml. The wasmCloud host (1.9.1) has native OTLP export built
+# in (`WASMCLOUD_OBSERVABILITY_ENABLED` / `wash --enable-traces/metrics/logs`
+# at the CLI); the operator's WasmCloudHostConfig CRD exposes the same knobs as
+# a first-class `spec.observability` block (confirmed against the CRD source,
+# wasmCloud/wadm-operator crates/types/src/v1alpha1/wasmcloud_host_config.rs,
+# `ObservabilityConfiguration` / `OtelSignalConfiguration` structs — camelCase
+# over the wire via serde's `rename_all = "camelCase"`):
+#
+#   spec.observability.enable            bool    — master switch
+#   spec.observability.endpoint          string  — default OTLP endpoint
+#   spec.observability.protocol          grpc|http
+#   spec.observability.traces.enable     bool    (+ optional per-signal endpoint)
+#   spec.observability.metrics.enable    bool
+#   spec.observability.logs.enable       bool
+#
+# If the installed operator's CRD (chart 0.1.2 pins operator 0.1.5 — see
+# ../openshift/lib.sh) predates this schema, `oc explain
+# wasmcloudhostconfig.spec.observability` on the live cluster is the
+# authoritative check before applying this.
+#
+# Same CR name/namespace as wasmcloud-host.yaml, so `oc apply -f` on this file
+# REPLACES the running host's spec in place — an in-place patch, not a second
+# host. Apply AFTER wasmcloud-host.yaml (deploy.sh), or apply this instead of
+# it from the start.
+#
+# Endpoint: the otel-collector Service this operator-managed host sends to
+# (../openshift/otel-collector.yaml), in the SAME "wasmcloud" namespace, so a
+# short in-namespace DNS name is enough — no ClusterIP-baking workaround like
+# the minikube shim needs (the wasmCloud host runs as a Pod, with the normal
+# cluster DNS resolver, unlike containerd on the minikube node).
+#
+# Metrics to look for once this is applied and traffic has flowed (see
+# verify-otel-crc.sh): wasmcloud_host.handle_rpc_message.duration (time to
+# handle an invocation, ns), wasmcloud_host.actor.invocations,
+# wasmcloud_host.actor.errors — all HOST-level (RPC/lattice handling), never
+# anything the Wasm guest itself emitted: wasi-otel guest-authored tracing is
+# an RC-only proposal, not in this project's pinned stable toolchain.
+apiVersion: k8s.wasmcloud.dev/v1alpha1
+kind: WasmCloudHostConfig
+metadata:
+  name: wasmcloud-host
+  namespace: wasmcloud
+spec:
+  hostReplicas: 1
+  lattice: default
+  version: "1.9.1"
+  natsAddress: nats://nats.wasmcloud.svc.cluster.local
+  registryCredentialsSecret: ghcr-pull
+  allowLatest: false
+  observability:
+    enable: true
+    endpoint: "http://otel-collector.wasmcloud.svc.cluster.local:4318"
+    protocol: http
+    traces:
+      enable: true
+    metrics:
+      enable: true
+    logs:
+      enable: true

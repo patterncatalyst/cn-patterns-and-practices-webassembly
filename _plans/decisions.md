@@ -679,3 +679,162 @@ component's bindings. The interposed minikube kustomize overlay
 static kubeconform gate (DRQ-053, DRQ-059) rather than getting a parallel
 gate of their own. No cluster runs inside CI for Ch20/Ch21, matching the
 static-only posture already set for the rest of Part 5.
+
+## DRQ-066 — Ch22 autoscaling is a per-substrate asymmetry, not one mechanism
+
+On minikube the component runs as an ordinary Pod under RuntimeClass
+`wasmtime`, so it exposes normal cgroup CPU to the kubelet → metrics-server → a
+standard `autoscaling/v2` HorizontalPodAutoscaler (CPU utilization, the base
+Deployment's `requests.cpu: 50m` makes it sensitive). On CRC the app is a
+wasmCloud-operator-managed OAM Application, **not** a plain Deployment, so a
+K8s HPA has nothing correct to target — an HPA on the host Deployment would
+fight the operator's reconcile loop. The CRC lever is the wadm **spreadscaler**
+`instances` count, which changes the wasmCloud instance count with **zero
+Kubernetes Pod churn** (the asymmetry `verify-scaling-crc.sh` proves). The
+httpserver provider trait stays a `daemonscaler` so the operator keeps creating
+the Service the Route targets. Same honest-asymmetry teaching style as DRQ-062.
+
+## DRQ-067 — Ch23 HTTP scale-to-zero: KEDA drives the plain Wasm Deployment
+
+The KEDA HTTP add-on (0.16.0) is the one genuine "KEDA scales the Wasm
+workload" case: on minikube the raw-shim `cargo-http` Deployment carries an
+`HTTPScaledObject` (field is `spec.replicas.{min,max}` — `minReplicaCount` does
+**not** exist on the 0.16 CRD; HTTPScaledObject is deprecated toward
+`InterceptorRoute` but still functional, used as the documented stable path).
+Idle → 0; a cold request through the real nip.io Ingress → the interceptor
+(reached via an `ExternalName` Service + an Ingress backend rewire, because
+Ingress backends can't cross namespaces) → 0→1 cold start → 200, with the Wasm
+fast-cold-start latency as the payoff. On CRC the HTTP half is CMA/KEDA
+installed + the wadm spreadscaler 0↔N (same operator-owns-replicas reason as
+DRQ-066).
+
+## DRQ-068 — Ch23 Kafka scaler ELEVATED to a live demo (user Decision A)
+
+Original plan covered the Kafka scaler conceptually; the user chose a live
+demo. **Decision A = wasmCloud-on-minikube**: no in-component hand-rolled Kafka
+client and no feasibility spike. The wasmCloud first-party `messaging-kafka`
+provider plus ONE `kafka-handler` component run on **both** clusters; the
+provider speaks the Kafka protocol and pushes deliveries over wRPC (the honest
+Wasm-consumes-Kafka mechanism — the raw shim has no messaging binding, and Spin
+is ruled out because it has no Kafka trigger). A KEDA `kafka` ScaledObject reads
+consumer-group lag, but the wadm **spreadscaler owns** the handler's replica
+count — so the teaching is "KEDA observes, wadm acts," the same
+substrate-owns-the-lifecycle lesson as DRQ-062, consistent across both clusters.
+Kafka source = Strimzi 1.3.0 (single-node KRaft, a multi-partition topic so 0→N
+is real under KEDA's partition ceiling); the burst is produced via exec into a
+Strimzi client Pod, never port-forward.
+
+## DRQ-069 — Ch23 adds ONE new crate; contracts/wit stays pristine; CI moves
+
+`kafka-handler` is one new Rust component crate with a LOCAL wit world
+(exports `wasmcloud:messaging/handler@0.2.0`, imports `patterncatalyst:cargo`
+via a path dependency; the messaging package is vendored under `wit/deps/`) —
+the r06c interposer pattern, so `contracts/wit` is unchanged. Unlike the
+earlier r06d assumption of "no CI change," the `examples` job now gains one
+`cargo component build --release` step and `kafka-handler/src/bindings.rs` joins
+the drift gate's `ALL_BINDINGS`; the `k8s-manifests` job gains the ch22/ch23/ch24
+minikube overlays (scaling, keda, kafka/base, observability) plus the standalone
+KEDA kafka ScaledObject and the minikube wasmCloud CRD instances, and four more
+OpenShift manifests (wadm-scaled, wadm-kafka, wasmcloud-host-otel, otel-collector).
+
+## DRQ-070 — wasmCloud-on-minikube is introduced for the Ch23 Kafka half only
+
+The Kafka half needs a capability runtime, so it brings the wasmCloud platform
+onto minikube too (reusing the r06b pins: chart
+`oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2`, host 1.9.1) via a new
+`k8s/wasmcloud/` setup on plain k8s — no Routes, no SCC, evidence via nip.io
+Ingress / `kubectl exec`, never port-forward. This is a deliberate
+mixed-substrate-within-minikube shape: Ch22 HPA and the Ch23 HTTP add-on stay on
+the raw containerd shim (the HTTP/request-response substrate); the Ch23 Kafka
+half runs on wasmCloud (the messaging substrate). The chapter names the split
+and why. Replaces the dropped in-component-Kafka-client spike/fallback.
+
+## DRQ-071 — Ch24 on-cluster telemetry is substrate-provided, not guest-authored
+
+Guest-emitted spans via `wasi-otel` are RC-only and not in the pinned stable
+toolchain (wasmtime 50 / shim v0.6.1 / wasmCloud host 1.9.1), so on-cluster Wasm
+observability today is substrate-provided. minikube: the
+containerd-shim-wasmtime v0.6.1 emits OTel traces on by default (since v0.5.0),
+configured by env in containerd's environment on the node (a systemd drop-in;
+endpoint = the otel-lgtm Service ClusterIP, routable from the node host netns
+via kube-proxy; restarting containerd bounces Pods) → `grafana/otel-lgtm:0.33.1`
+in-cluster; spans are container/task lifecycle, not guest code. CRC: the
+wasmCloud host 1.9.1 emits OTLP natively (`spec.observability` on the
+WasmCloudHostConfig) → richer traces + the `wasmcloud_host.handle_rpc_message.duration`
+metric + logs. Evidence on both is read via exec (Tempo/Prometheus/Loki queries
+on minikube; the collector's own debug/file exporter on CRC), never a
+port-forward, never the Grafana UI.
+
+## DRQ-072 — Ch24 CRC holds restricted-v2 with NO SCC exception (user Decision B)
+
+`grafana/otel-lgtm` is a dev image that will not run under restricted-v2
+(writable data dirs under a fixed uid/home) and `anyuid` is barred, so it is
+**not** used on CRC. Instead the wasmCloud host emits OTLP to a minimal ROOTLESS
+`otel/opentelemetry-collector-contrib:0.163.1` Deployment under full
+restricted-v2 (runAsNonRoot, no fixed uid, drop ALL, seccomp RuntimeDefault),
+and evidence is read from the collector itself (debug + file exporters via
+`oc logs`/`oc exec`). minikube keeps otel-lgtm (Decision B constrains CRC only).
+Note: the `WasmCloudHostConfig.spec.observability` schema was confirmed against
+the operator's current source, not the exact installed operator (0.1.5), so an
+`oc explain wasmcloudhostconfig.spec.observability` spot-check precedes the live
+CRC run.
+
+## DRQ-073 — r06d version pins (surveyed 2026-10-21, confirmed-live-at-kickoff)
+
+KEDA core **2.21.0** (Helm `kedacore/keda`); KEDA HTTP add-on **0.16.0** (Helm
+`keda-add-ons-http`); metrics-server via the minikube `metrics-server` addon
+(record the bundled tag at kickoff, ~v0.9.0); Strimzi **1.3.0** with Apache
+**Kafka 4.3.1** / `metadataVersion: 4.3-IV0` — **corrected**: Strimzi 1.3.0 does
+NOT support Kafka 4.1.0 (supports 4.2.x–4.3.x; 4.3.1 is its own tested pairing);
+wasmCloud `messaging-kafka` provider pinned to the commit-SHA build
+`ghcr.io/wasmcloud/messaging-kafka:6c67eb2` (**no semver release exists
+upstream** — only commit-SHA builds aliased `canary`; re-check for a newer SHA +
+confirm the `source_config` key names at kickoff — TBD); wasmcloud-platform
+chart **0.1.2** / host **1.9.1** (reused r06b pins, now also on minikube);
+`grafana/otel-lgtm:0.33.1` (minikube); `otel/opentelemetry-collector-contrib:0.163.1`
+(CRC, rootless); CRC KEDA = Custom Metrics Autoscaler operator, pinned CSV
+(TBD-confirm-at-kickoff via `oc get packagemanifest`). Reused firm: shim
+v0.6.1, minikube v1.39.0 / Kubernetes v1.37.1, kubeconform v0.8.0, httpserver
+provider 0.27.0.
+
+## DRQ-074 — ch22 live finding: CPU-based HPA does not scale a cheap stateless Wasm handler
+
+Verified live on minikube (part5, k8s v1.37.1, metrics-server v0.9.0,
+2026-10-21): the `autoscaling/v2` HPA is correctly WIRED to cargo-http
+(`ScalingActive=True`, reads real CPU `2% (1m) / 50%` via metrics-server), but a
+stateless Wasm cargo lookup is so cheap that under heavy in-cluster load (3 load
+Pods each saturating ~248m of CPU client-side) cargo-http's OWN CPU holds at
+**1 millicore (2% of its 50m request)** — far below the 50% target — so the HPA
+correctly holds at 1 replica. There is no honest external load that crosses the
+target; the cost is entirely client-side. **Decision (user-approved): reframe
+ch22's minikube half honestly** around this — HPA wiring + CPU reading verified,
+CPU-based scaling N/A for this workload, which motivates ch23's concurrency-based
+KEDA scaling — rather than staging a contrived CPU scale-out. The verify/capture
+scripts were rewritten to assert this finding (peak CPU < target, ScalingActive
+True), not a scale-out. The CRC wadm-spreadscaler half (a manual `instances`
+lever, not metric-driven) is unaffected and remains to be run.
+
+## DRQ-075 — live-run script fixes found on the first headless minikube pass
+
+Three reproducibility bugs the live run surfaced, all fixed: (1) `k8s/install-shim.sh`
+restarted containerd UNCONDITIONALLY (the `systemctl restart` sat outside the
+grep guard that skips the config edit), so re-running it — e.g. between Part 5
+chapters — SIGKILLed the running Wasm Pod (exit 137) into CrashLoopBackOff; now
+it restarts only when the config actually changed. (2) The Part 5 chapters share
+one `cargo-http` Deployment in one namespace, and a leftover plain HPA makes
+KEDA's admission webhook reject an HTTPScaledObject on the same workload (and
+vice versa); the ch22/ch23 verify + capture scripts now delete any conflicting
+autoscaler at start (clean base). (3) The ch22 load generator OOMKilled at high
+concurrency (64Mi limit), masking the finding; raised to 256Mi.
+
+## DRQ-076 — messaging-kafka provider pin corrected to the stable semver 0.2.0
+
+The r06d build pinned `ghcr.io/wasmcloud/messaging-kafka:6c67eb2` on the belief
+that upstream shipped no semver release. At kickoff the ghcr tag list showed a
+stable **0.2.0** (and a 0.2.0-rc.1 prerelease); `wash inspect
+ghcr.io/wasmcloud/messaging-kafka:0.2.0` confirms vendor=wasmcloud,
+version=0.2.0, x86_64-linux. Repinned both `wadm-kafka.yaml` files (minikube +
+openshift) to the stable **0.2.0**. Its link `source_config` key names
+(`hosts`/`topic`/`consumer_group`) remain unconfirmed and are to be verified from
+the provider logs on the (user-run) Kafka live pass. metrics-server confirmed as
+the minikube addon **v0.9.0** at kickoff.

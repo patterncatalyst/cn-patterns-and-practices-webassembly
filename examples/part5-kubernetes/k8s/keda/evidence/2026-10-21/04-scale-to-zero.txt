@@ -1,0 +1,11 @@
+# waiting up to 120s for KEDA to scale cargo-http to 0 while idle
+t=0s replicas=1
+t=5s replicas=1
+t=10s replicas=1
+t=15s replicas=1
+t=20s replicas=1
+t=25s replicas=1
+t=30s replicas=1
+t=35s replicas=1
+t=40s replicas=
+scaled-to-zero after 40s: 1
