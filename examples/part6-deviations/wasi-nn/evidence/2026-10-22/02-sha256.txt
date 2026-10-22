@@ -1,0 +1,4 @@
+5e3405d8ca6511e2ddcd1c4f8bca45f9ed3f11bf7a0a7dea8e84725e9199a2ee  target/wasm32-wasip1/release/cargo-wasi-nn.wasm
+b28eafd9f8cdf3e265dae4be2eacc4849c0d4693fde584ceca3541bcb4d79e6f  model/mobilenet/model.xml
+8371f708ef167a783ed01fc6635f4f05e76f720db95e954aff3cba3ed4f29924  model/mobilenet/model.bin
+f6f0eea77c48d0bc78996d49011ae1e5519e853c93efa5b1aec441c456837613  fixtures/cargo.jpg
