@@ -1,36 +1,36 @@
 $ kubectl get pods -n part7-final-project -o wide
 NAME                          READY   STATUS    RESTARTS   AGE   IP            NODE    NOMINATED NODE   READINESS GATES
-cargo-go-66ffdcccf9-8w8s2     1/1     Running   0          8s    10.244.0.13   part5   <none>           <none>
-cargo-rust-5564fb6595-xjr2z   1/1     Running   0          9s    10.244.0.12   part5   <none>           <none>
+cargo-go-66ffdcccf9-7jmqc     1/1     Running   0          9s    10.244.0.15   part5   <none>           <none>
+cargo-rust-5564fb6595-rfhlp   1/1     Running   0          11s   10.244.0.14   part5   <none>           <none>
 
 $ kubectl describe pod -l app.kubernetes.io/name=cargo-rust -n part7-final-project
-Name:                cargo-rust-5564fb6595-xjr2z
+Name:                cargo-rust-5564fb6595-rfhlp
 Runtime Class Name:  wasmtime
 Node:                part5/192.168.49.2
 Status:              Running
     Image:         cargo-rust:final
-      Started:      Thu, 22 Oct 2026 18:51:38 -0400
+      Started:      Thu, 22 Oct 2026 18:56:31 -0400
     Ready:          True
   PodReadyToStartContainers   True 
   Ready                       True 
   ContainersReady             True 
     ConfigMapName:           kube-root-ca.crt
 Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
-  Normal  Pulled     9s    kubelet            spec.containers{cargo-rust}: Container image "cargo-rust:final" already present on machine and can be accessed by the pod
-  Normal  Started    9s    kubelet            spec.containers{cargo-rust}: Container started
+  Normal  Pulled     11s   kubelet            spec.containers{cargo-rust}: Container image "cargo-rust:final" already present on machine and can be accessed by the pod
+  Normal  Started    11s   kubelet            spec.containers{cargo-rust}: Container started
 
 $ kubectl describe pod -l app.kubernetes.io/name=cargo-go -n part7-final-project
-Name:                cargo-go-66ffdcccf9-8w8s2
+Name:                cargo-go-66ffdcccf9-7jmqc
 Runtime Class Name:  wasmtime
 Node:                part5/192.168.49.2
 Status:              Running
     Image:         cargo-go:final
-      Started:      Thu, 22 Oct 2026 18:51:40 -0400
+      Started:      Thu, 22 Oct 2026 18:56:33 -0400
     Ready:          True
   PodReadyToStartContainers   True 
   Ready                       True 
   ContainersReady             True 
     ConfigMapName:           kube-root-ca.crt
 Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
-  Normal  Pulled     7s    kubelet            spec.containers{cargo-go}: Container image "cargo-go:final" already present on machine and can be accessed by the pod
-  Normal  Started    7s    kubelet            spec.containers{cargo-go}: Container started
+  Normal  Pulled     9s    kubelet            spec.containers{cargo-go}: Container image "cargo-go:final" already present on machine and can be accessed by the pod
+  Normal  Started    9s    kubelet            spec.containers{cargo-go}: Container started

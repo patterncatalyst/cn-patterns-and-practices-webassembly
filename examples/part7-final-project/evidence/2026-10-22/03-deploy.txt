@@ -1,25 +1,25 @@
 $ kubectl get deploy,svc,ingress -n part7-final-project -o wide
-NAME                         READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES             SELECTOR
-deployment.apps/cargo-go     1/1     1            1           25s   cargo-go     cargo-go:final     app.kubernetes.io/name=cargo-go
-deployment.apps/cargo-rust   1/1     1            1           25s   cargo-rust   cargo-rust:final   app.kubernetes.io/name=cargo-rust
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES             SELECTOR
+deployment.apps/cargo-go     1/1     1            1           5m21s   cargo-go     cargo-go:final     app.kubernetes.io/name=cargo-go
+deployment.apps/cargo-rust   1/1     1            1           5m21s   cargo-rust   cargo-rust:final   app.kubernetes.io/name=cargo-rust
 
-NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-service/cargo-go     ClusterIP   10.111.199.127   <none>        8080/TCP   25s   app.kubernetes.io/name=cargo-go
-service/cargo-rust   ClusterIP   10.105.62.233    <none>        8080/TCP   25s   app.kubernetes.io/name=cargo-rust
+NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE     SELECTOR
+service/cargo-go     ClusterIP   10.111.199.127   <none>        8080/TCP   5m21s   app.kubernetes.io/name=cargo-go
+service/cargo-rust   ClusterIP   10.105.62.233    <none>        8080/TCP   5m21s   app.kubernetes.io/name=cargo-rust
 
 NAME                                    CLASS   HOSTS                                                         ADDRESS        PORTS   AGE
-ingress.networking.k8s.io/cargo-final   nginx   cargo-rust.192.168.49.2.nip.io,cargo-go.192.168.49.2.nip.io   192.168.49.2   80      25s
+ingress.networking.k8s.io/cargo-final   nginx   cargo-rust.192.168.49.2.nip.io,cargo-go.192.168.49.2.nip.io   192.168.49.2   80      5m21s
 
 $ kubectl get gateway,virtualservice -n part7-final-project
 NAME                                              AGE
-gateway.networking.istio.io/cargo-final-gateway   9s
+gateway.networking.istio.io/cargo-final-gateway   5m5s
 
 NAME                                             GATEWAYS                  HOSTS                                                                           AGE
-virtualservice.networking.istio.io/cargo-final   ["cargo-final-gateway"]   ["cargo-rust-istio.192.168.49.2.nip.io","cargo-go-istio.192.168.49.2.nip.io"]   9s
+virtualservice.networking.istio.io/cargo-final   ["cargo-final-gateway"]   ["cargo-rust-istio.192.168.49.2.nip.io","cargo-go-istio.192.168.49.2.nip.io"]   5m5s
 
 $ kubectl get wasmplugin -n istio-system
 NAME               AGE
-cargo-wasmfilter   9s
+cargo-wasmfilter   5m5s
 
 # runtimeClassName on each Deployment:
 $ kubectl get deploy cargo-rust -n part7-final-project -o jsonpath={.spec.template.spec.runtimeClassName}
