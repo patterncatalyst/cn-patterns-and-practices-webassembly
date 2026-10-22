@@ -1,0 +1,8 @@
+# Rust build tree — also covered by the repo-root .gitignore, named here
+# explicitly to match this book's per-crate convention.
+target/
+
+# Fetched by fetch-model.sh, verified by sha256 on every run — never
+# committed. See fetch-model.sh's header comment for the rename convention
+# (mobilenet.xml/.bin -> model.xml/.bin) and why it matters.
+model/
