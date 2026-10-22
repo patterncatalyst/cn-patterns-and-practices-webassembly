@@ -838,3 +838,38 @@ openshift) to the stable **0.2.0**. Its link `source_config` key names
 (`hosts`/`topic`/`consumer_group`) remain unconfirmed and are to be verified from
 the provider logs on the (user-run) Kafka live pass. metrics-server confirmed as
 the minikube addon **v0.9.0** at kickoff.
+
+## DRQ-077 — ch23 Kafka headless run: infra verified live, provider subscription blocked
+
+Ran the ch23 Kafka half headless on minikube 2026-10-22 (user asked to run it headless
+and flip on pass). The ENTIRE infrastructure came up and is verified live — a first
+successful `install-wasmcloud-minikube.sh` (nats + wadm + operator + host via chart
+0.1.2), Strimzi 1.3.0 + Kafka 4.3.1 cluster + 6-partition topic, KEDA 2.21.0 + the kafka
+ScaledObject, both components (`kafka-handler`, part2 `cargo-provider`) built, `wash
+push`ed to private `ghcr.io/patterncatalyst/{cargo-kafka-handler,cargo-provider}:minikube`,
+a `ghcr-pull` secret, and the `cargo-kafka` wadm Application reaching **Deployed** with the
+messaging-kafka 0.2.0 provider + both components started. **BLOCKER (not flipped):** the
+messaging-kafka 0.2.0 provider never subscribes — its log stops at "nats client connected",
+no link/config/broker/subscribe activity, no consumer group, no error emitted. Tried link
+`source_config` keys lowercase `hosts/topic/consumer_group` then uppercase `HOSTS/TOPIC`;
+neither triggered a subscription. The provider is not in the wasmCloud monorepo and its
+0.2.0 link-config contract is undocumented (gh code-search + web search both empty). ch23
+Kafka footer STAYS "pending live verification" (NOT faked). The deploy path (build→push→
+pull-secret→wadm) is now PROVEN, so the user's live resolution is fast; leads: find the
+provider repo+README for exact config keys; try PROVIDER-LEVEL `config:` (broker) vs LINK
+`source_config` (topic) split (messaging-nats analogue uses `subscriptions` in source_config);
+confirm the real consumer-group name (verify script assumes `kafka-handler`).
+
+## DRQ-078 — r07 split into r07a/r07b/r07c; r07a = ch25 Istio proxy-wasm WasmPlugin
+
+Part 6 Deviations is split one chapter per iteration (user-gated): r07a ch25 Istio+Wasm,
+r07b ch26 other-backends/Spin, r07c ch27 wasi-nn. All three verified by me, full
+dual-cluster (minikube + CRC) where they deploy; ch27 wasi-nn is a live run (I install
+OpenVINO 2026.4.1 + build a wasi-nn-enabled wasmtime from source). r07a ch25 builds a REAL
+proxy-wasm `WasmPlugin` (not a Component-Model component) — `proxy-wasm` crate 0.2.5, plain
+`cargo build --target wasm32-wasip1` cdylib, NOT cargo-component, NOT in the bindings-drift
+gate, contracts/wit PRISTINE; the ABI contrast (proxy-wasm core module in Envoy vs Component
+Model under the containerd shim, both in one cargo-http pod) is the chapter's headline.
+Istio 1.31.2 / WasmPlugin `extensions.istio.io/v1alpha1` (TrafficExtension noted as the
+newer unified forward path); CRC = OpenShift Service Mesh 3 (Sail operator). Istio↔k8s skew
+(1.31 supports k8s 1.32–1.36 vs Part 5's 1.37.1) checked at `istioctl install` precheck.
