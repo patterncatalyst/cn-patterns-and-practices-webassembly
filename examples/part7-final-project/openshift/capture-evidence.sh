@@ -61,9 +61,9 @@ ok "pods -> 01-pods.txt"
 
 step "3/7 Service (both ports) + both Routes"
 {
-    echo "--- Service (operator-created) ---"
-    oc get svc "$APP" -n "$NS" -o custom-columns='SVC:.metadata.name,TYPE:.spec.type,PORTS:.spec.ports[*].port,SELECTOR:.spec.selector' 2>/dev/null
-    oc get endpoints "$APP" -n "$NS" -o custom-columns='EP:.metadata.name,ADDRS:.subsets[*].addresses[*].ip' 2>/dev/null
+    echo "--- Services (operator-created, one per Application) ---"
+    oc get svc "$RUST_APP" "$GO_APP" -n "$NS" -o custom-columns='SVC:.metadata.name,TYPE:.spec.type,PORTS:.spec.ports[*].port,SELECTOR:.spec.selector' 2>/dev/null
+    oc get endpoints "$RUST_APP" "$GO_APP" -n "$NS" -o custom-columns='EP:.metadata.name,ADDRS:.subsets[*].addresses[*].ip' 2>/dev/null
     echo "--- Routes (edge TLS) ---"
     oc get route -n "$NS" -l app.kubernetes.io/part-of=part7-final-project \
         -o custom-columns='ROUTE:.metadata.name,HOST:.spec.host,TERMINATION:.spec.tls.termination,PORT:.spec.port.targetPort' 2>/dev/null

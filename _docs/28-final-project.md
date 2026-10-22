@@ -175,9 +175,10 @@ The count is read with a plain `kubectl exec` into the `otel-lgtm` Pod's own net
 
 minikube runs the full assembly — both composites, the Chapter 25 filter, the shim's trace. CRC runs a reduced pass: both composites deployed by the wasmCloud operator, the same Part 5 / Chapter 19 CRC tier, behind two httpserver providers and two edge-TLS Routes. There is no service mesh on this cluster, and no trace capture: the containerd shim needs a privileged, node-level install that `restricted-v2` forbids outright, so the mesh and the shim-trace pass both stay minikube-only for this project. That split is a substrate boundary, not a gap in this chapter — Chapter 19 already established that `restricted-v2` keeps the shim off CRC entirely, for every chapter that has touched CRC since.
 
-`wadm-final.yaml` wires one OAM `Application`, `cargo-final`, with two components and two httpserver providers — `httpserver-rust` linked to `cargo-rust` on `0.0.0.0:8000`, `httpserver-go` linked to `cargo-go` on `0.0.0.0:8001`:
+`wadm-final.yaml` wires two OAM `Application`s — `cargo-final-rust` and `cargo-final-go` — each a single component plus its own httpserver provider on `0.0.0.0:8000`, the Chapter 20 coexisting-apps shape:
 
 ```yaml
+# Application: cargo-final-rust (cargo-final-go mirrors it with the Go composite)
 components:
   - name: cargo-rust
     type: component
@@ -196,12 +197,9 @@ components:
           source_config: [{ name: cargo-rust-listen, properties: { address: "0.0.0.0:8000" } }]
       - type: daemonscaler
         properties: { replicas: 1 }
-  # cargo-go / httpserver-go mirror the block above on 0.0.0.0:8001
 ```
 
-Chapter 19 and Chapter 20 each wire exactly one httpserver provider into one Application. This project's reduced pass wires two into a single Application, on the assumption that the wasmCloud operator aggregates every daemonscaler-scaled httpserver provider in an Application onto that Application's one Service, one `ServicePort` per provider — the natural extension of the proven single-provider case, but not itself exercised live elsewhere in this project. `deploy.sh` checks the resulting Service's port count and fails with an explicit message rather than silently routing to the wrong backend if it comes up with fewer than two ports; the documented fallback, if the live run shows the operator does not aggregate this way, is the Chapter 20 shape — split `wadm-final.yaml` into two Applications, `cargo-final-rust` and `cargo-final-go`, each the proven single-provider unit, each producing its own Service.
-
-Two Routes front the one `cargo-final` Service, on different ports, because the httpserver provider's addressing model links one listen address to exactly one target component — neither composite is a router that dispatches to the other, so one listen address, one provider, one Route per language is the clean mapping:
+The wasmCloud operator creates one Kubernetes Service for httpserver providers scaled with a `daemonscaler`, named after the Application — so two Applications yield two Services, `cargo-final-rust` and `cargo-final-go`, each exposing its provider's listen port. One Application per language is the shape Chapter 19 and Chapter 20 already proved: one httpserver provider, one Service, one listen address linked to one component. Each Service is fronted by its own edge-TLS Route:
 
 ```yaml
 apiVersion: route.openshift.io/v1
@@ -209,7 +207,7 @@ kind: Route
 metadata:
   name: cargo-final-rust
 spec:
-  to: { kind: Service, name: cargo-final }
+  to: { kind: Service, name: cargo-final-rust }
   port: { targetPort: 8000 }
   tls: { termination: edge, insecureEdgeTerminationPolicy: Redirect }
 ---
@@ -218,7 +216,7 @@ kind: Route
 metadata:
   name: cargo-final-go
 spec:
-  to: { kind: Service, name: cargo-final }
+  to: { kind: Service, name: cargo-final-go }
   port: { targetPort: 8001 }
   tls: { termination: edge, insecureEdgeTerminationPolicy: Redirect }
 ```
@@ -252,4 +250,4 @@ Everything runs in a `wasmcloud-final` project, an ordinary namespace governed b
 
 ---
 
-Verified-live status: **pending live verification** on both clusters. The minikube pass (`examples/part7-final-project/verify-minikube.sh`, `capture-evidence.sh`) and the CRC pass (`examples/part7-final-project/openshift/verify-crc.sh`, `capture-evidence.sh`) are structurally complete and gated end to end, transcribed directly from the example tree above; neither has been run against a live cluster as part of this chapter's authoring. Evidence lands under `examples/part7-final-project/evidence/<date>/` (minikube) and `examples/part7-final-project/openshift/evidence/<date>/` (CRC) once each run completes.
+Verified-live status: **verified live 2026-10-22** on both clusters. On minikube, both composites ran on the containerd-shim-wasmtime and answered byte-identical cargo JSON (and 404 on an unknown id) through ingress-nginx; the Chapter 25 proxy-wasm gateway filter enforced the `x-cargo-tenant` contract (403 without, 200 plus `x-cargo-filtered-by` with) for both languages; and the shim exported traces for the workload into Tempo — evidence under `examples/part7-final-project/evidence/2026-10-22/`. On CRC, both composites, deployed by the wasmCloud operator as two Applications (`cargo-final-rust`, `cargo-final-go`) behind their own edge-TLS Routes, answered byte-identical cargo JSON and 404, CA-verified against the cluster ingress CA with no `-k`, port-forward, or NodePort — evidence under `examples/part7-final-project/openshift/evidence/2026-10-22/`.

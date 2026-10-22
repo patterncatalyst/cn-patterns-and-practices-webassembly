@@ -140,36 +140,27 @@ oc rollout status "deploy/$HOSTCFG" -n "$NS" --timeout=300s >/dev/null \
 ok "wasmCloud host $HOSTCFG ready"
 
 # ---------------------------------------------------------------------------
-step "7/8 wadm-final.yaml (one Application, two components) -> Service $APP"
+step "7/8 wadm-final.yaml (two Applications) -> Services $RUST_APP + $GO_APP"
 tmp_wadm="$(mktemp -t part7-crc-wadm.XXXXXX.yaml)"
 trap 'rm -f "$tmp_wadm"' EXIT
 sed -e "s|__RUST_REF__|$RUST_REF|g" -e "s|__GO_REF__|$GO_REF|g" \
     "$OPENSHIFT_DIR/wadm-final.yaml" > "$tmp_wadm"
-# -n "$NS": the Application is served by the operator's aggregated API, which
+# -n "$NS": the Applications are served by the operator's aggregated API, which
 # maps the namespace to a lattice via the WasmCloudHostConfig in that
-# namespace. Applying it anywhere without a HostConfig fails with "unable to
+# namespace. Applying anywhere without a HostConfig fails with "unable to
 # initialize nats client".
-oc apply -n "$NS" -f "$tmp_wadm" >/dev/null || fail "apply wadm Application"
-ok "wadm Application $APP applied"
-wait_for 300 "operator created Service $APP" oc get svc "$APP" -n "$NS"
-# Two httpserver providers (one per language) in ONE Application: the operator
-# is expected to aggregate both daemonscaler-scaled providers' listen ports
-# onto this one Service. This combination has not been exercised elsewhere in
-# this project (Ch19/Ch20 each wire exactly one httpserver provider per
-# Application) — fail with an explicit message here rather than routing to
-# the wrong backend without warning if the Service comes up with fewer than
-# two ports.
-port_count="$(oc get svc "$APP" -n "$NS" -o jsonpath='{.spec.ports}' 2>/dev/null | python3 -I -c 'import json,sys
-try: print(len(json.load(sys.stdin)))
-except Exception: print(0)')"
-if [[ "${port_count:-0}" -lt 2 ]]; then
-    fail "Service $APP has $port_count port(s), expected 2 (one per language) — the operator did not aggregate both httpserver providers onto one Service; see README.md 'Two providers, one Application' for the fallback (split into two Applications, the Ch20 shape) instead of routing to the wrong backend without warning"
-fi
-oc get svc "$APP" -n "$NS" -o custom-columns='SVC:.metadata.name,PORTS:.spec.ports[*].port'
-ok "Service $APP exposes $port_count ports"
+oc apply -n "$NS" -f "$tmp_wadm" >/dev/null || fail "apply wadm Applications"
+ok "wadm Applications $RUST_APP + $GO_APP applied"
+# The operator creates one Service per Application (Ch20 coexisting-apps shape),
+# each exposing its httpserver provider's listen port.
+for app in "$RUST_APP" "$GO_APP"; do
+    wait_for 300 "operator created Service $app" oc get svc "$app" -n "$NS"
+    oc get svc "$app" -n "$NS" -o custom-columns='SVC:.metadata.name,PORTS:.spec.ports[*].port'
+done
+ok "Services $RUST_APP + $GO_APP created"
 
 # ---------------------------------------------------------------------------
-step "8/8 edge-TLS Routes -> Service $APP (one per language)"
+step "8/8 edge-TLS Routes -> $RUST_APP + $GO_APP Services (one per language)"
 oc apply -n "$NS" -f "$OPENSHIFT_DIR/route.yaml" >/dev/null || fail "apply Routes"
 RUST_HOST="$(route_host cargo-final-rust)"
 GO_HOST="$(route_host cargo-final-go)"

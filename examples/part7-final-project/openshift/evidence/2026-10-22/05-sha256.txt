@@ -1,0 +1,4 @@
+eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part7-final-project/openshift/../cargo-rust.wasm
+cargo-rust.wasm MATCHES expected sha256
+17b0fca2f591650d89ee2f854ac9af1dfd6fccee17dacec9417bc2dfbb439839  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part7-final-project/openshift/../cargo-go.wasm
+cargo-go.wasm MATCHES expected sha256

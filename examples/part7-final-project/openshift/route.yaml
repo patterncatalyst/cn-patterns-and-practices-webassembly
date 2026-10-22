@@ -1,15 +1,12 @@
-# Edge-TLS Routes (route.openshift.io/v1) fronting the operator-created
-# "cargo-final" Service, one Route per language so both are independently
-# reachable over real HTTPS at *.apps-crc.testing — never -k/--insecure, never
+# Edge-TLS Routes (route.openshift.io/v1), one per language, fronting each
+# Application's own operator-created Service (cargo-final-rust / cargo-final-go)
+# over real HTTPS at *.apps-crc.testing — never -k/--insecure, never
 # oc port-forward, never NodePort (see openshift/lib.sh combined_ca_bundle).
 #
-# Both Routes target the SAME Service (cargo-final) but a DIFFERENT port —
-# the httpserver provider's addressing model is one listen address per linked
-# component, so there is no in-provider path-based dispatch across two
-# separate composites; two ports on one Service, each fronted by its own
-# Route, is the clean mapping. (See wadm-final.yaml's header note and
-# README.md "Two providers, one Application" for the Service-port-aggregation
-# assumption this depends on.)
+# Two Applications, two Services, two Routes (the Ch20 coexisting-apps shape):
+# the wasmCloud operator creates one Service per Application exposing that
+# Application's httpserver listen port (8000), so each Route targets its own
+# Service.
 #
 # No spec.host: OpenShift assigns <name>-<namespace>.apps-crc.testing, so no
 # domain needs hard-coding here. deploy.sh reads the assigned host back with
@@ -24,7 +21,7 @@ metadata:
 spec:
   to:
     kind: Service
-    name: cargo-final
+    name: cargo-final-rust
   port:
     targetPort: 8000
   tls:
@@ -41,9 +38,9 @@ metadata:
 spec:
   to:
     kind: Service
-    name: cargo-final
+    name: cargo-final-go
   port:
-    targetPort: 8001
+    targetPort: 8000
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect

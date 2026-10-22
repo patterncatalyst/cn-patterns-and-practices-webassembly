@@ -25,13 +25,13 @@ gone() { ! oc get "$@" >/dev/null 2>&1; }
 
 step "1/6 Routes + wadm Application"
 oc delete route cargo-final-rust cargo-final-go -n "$NS" --ignore-not-found >/dev/null 2>&1
-oc delete application.core.oam.dev "$APP" -n "$NS" --ignore-not-found >/dev/null 2>&1 || true
-ok "routes + application removed"
+oc delete application.core.oam.dev "$RUST_APP" "$GO_APP" -n "$NS" --ignore-not-found >/dev/null 2>&1 || true
+ok "routes + applications removed"
 
 step "2/6 WasmCloudHostConfig (host Deployment goes with it, operator still running)"
 oc delete wasmcloudhostconfig "$HOSTCFG" -n "$NS" --ignore-not-found --wait=true --timeout=120s >/dev/null 2>&1 || true
-oc delete svc "$APP" -n "$NS" --ignore-not-found >/dev/null 2>&1 || true
-ok "host config + operator-created Service removed"
+oc delete svc "$RUST_APP" "$GO_APP" -n "$NS" --ignore-not-found >/dev/null 2>&1 || true
+ok "host config + operator-created Services removed"
 
 step "3/6 Helm release (nats + wadm + operator)"
 if helm status "$RELEASE" -n "$NS" >/dev/null 2>&1; then

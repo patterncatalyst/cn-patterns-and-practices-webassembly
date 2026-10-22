@@ -8,16 +8,11 @@ Routes. There is **no service mesh here**; the gateway filter and the Ch23
 KEDA scale-to-zero pass stay minikube-only for this project.
 
 ```
-cargo-rust.wasm (ghcr, private) ──host pulls──▶  wasmCloud host pod
-cargo-go.wasm   (ghcr, private) ──host pulls──┘  (operator-managed, one pod)
-                                                     │ httpserver-rust :8000
-   wadm Application "cargo-final"                   │ httpserver-go   :8001
-   (two components, two httpserver providers)        ▼
-   ─ operator creates ─▶  Service cargo-final:8000,8001
-                              │                          │
-                   edge-TLS Route                 edge-TLS Route
-                   cargo-final-rust                cargo-final-go
-                   ◀── curl --cacert                ◀── curl --cacert
+cargo-rust.wasm (ghcr, private) ──host pulls──▶  wasmCloud host (operator-managed)
+cargo-go.wasm   (ghcr, private) ──host pulls──┘
+
+   wadm Application cargo-final-rust ─operator─▶ Service cargo-final-rust:8000 ─▶ Route cargo-final-rust ◀─ curl --cacert
+   wadm Application cargo-final-go   ─operator─▶ Service cargo-final-go:8000   ─▶ Route cargo-final-go   ◀─ curl --cacert
 ```
 
 Both composites are byte-for-byte what `../build.sh` produces:
@@ -54,37 +49,28 @@ No new pins for this chapter — it reuses the firm Part 5/Ch19 CRC tier as-is:
 | httpserver provider | `ghcr.io/wasmcloud/http-server:0.27.0` | reused verbatim, one instance per language (`httpserver-rust`, `httpserver-go`). |
 | component images | `ghcr.io/patterncatalyst/cargo-rust:crc-final`, `ghcr.io/patterncatalyst/cargo-go:crc-final` (both private) | pushed with `wash push`; the host pulls both with the `ghcr-pull` docker-registry secret. |
 
-## Two providers, one Application
+## Two Applications, one per language
 
-Ch19 and Ch20 each wire **one** httpserver provider per wadm Application. This
-project's reduced pass wires **two** — `httpserver-rust` linked to `cargo-rust`
-on `0.0.0.0:8000`, `httpserver-go` linked to `cargo-go` on `0.0.0.0:8001` — in
-the single `wadm-final.yaml` Application, so one Application carries both
-languages. The design assumes the wasmCloud operator aggregates every
-daemonscaler-scaled httpserver provider in an Application onto that
-Application's one Service (one `ServicePort` per provider), the natural
-extension of the proven single-provider case.
+Ch19 and Ch20 each wire one httpserver provider per wadm Application, and this
+reduced pass follows that shape: `cargo-final-rust` (component `cargo-rust` +
+`httpserver-rust` on `0.0.0.0:8000`) and `cargo-final-go` (component `cargo-go`
++ `httpserver-go` on `0.0.0.0:8000`). The wasmCloud operator creates one
+Service per Application — `cargo-final-rust` and `cargo-final-go` — each
+exposing its httpserver port, and `deploy.sh` waits for both. A single
+Application with two httpserver providers would need the operator to put both
+providers' ports on one Service; it creates one Service per Application
+instead, so `deploy.sh` keeps a port-count check as a guard. This is
+`deploy-interposed.sh`'s coexisting-apps shape, two Applications instead of
+three.
 
-**This has not been exercised live elsewhere in this project.** `deploy.sh`
-checks the Service's port count after applying the manifest and fails with an
-explicit message rather than routing to the wrong backend without warning if it comes
-up with fewer than two ports. If the live run on CRC 2.64.0 shows the operator
-does not aggregate this way, the fallback is the Ch20 shape: split
-`wadm-final.yaml` into two Applications (`cargo-final-rust`,
-`cargo-final-go`), each the proven single-provider unit, each producing its
-own Service — mechanically identical to `deploy-interposed.sh`'s three
-coexisting apps, just two instead of three.
+## Why two Routes
 
-## Why two Routes, not one
-
-Both Routes front the **same** Service (`cargo-final`) on **different**
-ports — `cargo-final-rust` → `8000`, `cargo-final-go` → `8001`. A single
-Route can't split one hostname's traffic between the two languages by path,
-because that split would have to happen inside the httpserver provider, and
-the provider's addressing model links one listen address to exactly one
-target component. Neither composite is a router that dispatches to the
-other — each is a standalone front door — so the clean mapping is one
-listen address, one provider, one Route per language, both reachable over
+Each Application has its own Service, so each language gets its own edge-TLS
+Route — `cargo-final-rust` → Service `cargo-final-rust`, `cargo-final-go` →
+Service `cargo-final-go`, both on port 8000. The httpserver provider's
+addressing model links one listen address to exactly one target component, and
+neither composite is a router that dispatches to the other, so one provider,
+one Service, one Route per language is the clean mapping — both reachable over
 real HTTPS at `*.apps-crc.testing`.
 
 ## restricted-v2 / SCC

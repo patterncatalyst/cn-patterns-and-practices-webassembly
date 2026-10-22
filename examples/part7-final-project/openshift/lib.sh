@@ -20,7 +20,10 @@
 # not an edit.
 
 PROJECT="part7-final-project"
-APP="cargo-final"                # OAM Application name == the Service name the operator creates
+# Two OAM Applications, one per language — each name is the Service name the
+# operator creates for that Application (Ch20 coexisting-apps shape).
+RUST_APP="cargo-final-rust"
+GO_APP="cargo-final-go"
 HOSTCFG="wasmcloud-host"         # WasmCloudHostConfig name
 # A dedicated namespace distinct from Part 5's "wasmcloud" project, so this
 # reduced pass can run standalone (its own restricted-v2 enforcement; no
@@ -50,10 +53,11 @@ RUST_REF="${RUST_REF:-ghcr.io/$GHCR_OWNER/cargo-rust:$IMAGE_TAG}"
 GO_REF="${GO_REF:-ghcr.io/$GHCR_OWNER/cargo-go:$IMAGE_TAG}"
 PULL_SECRET="${PULL_SECRET:-ghcr-pull}"
 
-# The two httpserver listen ports — one per language — so both components can
-# coexist on one in-cluster host pod without fighting over a socket.
+# Each Application's httpserver listens on 8000; because each language has its
+# own Application and its own operator-created Service, the same listen port is
+# fine (no shared socket).
 RUST_PORT="${RUST_PORT:-8000}"
-GO_PORT="${GO_PORT:-8001}"
+GO_PORT="${GO_PORT:-8000}"
 
 # The byte-for-byte composites this script deploys. cargo-rust.wasm is the
 # same composite Part 4/Part 5 already deploy as app.wasm (sha256 eff7f5ee…).

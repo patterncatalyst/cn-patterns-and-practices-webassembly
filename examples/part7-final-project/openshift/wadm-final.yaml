@@ -1,48 +1,38 @@
-# wadm application manifest (OAM core.oam.dev/v1beta1) for the Part 7 final
-# project's REDUCED OpenShift Local (CRC) pass: ONE Application wiring the
-# httpserver provider to BOTH language composites — cargo-rust (Part 3
-# http-rust plugged into the Part 2 Rust cargo provider) and cargo-go (Part 3
-# http-go/TinyGo plugged into the Part 2 Go cargo provider). Both export
-# wasi:http/incoming-handler and serve byte-identical cargo JSON — the
-# two-language-one-contract thesis, proved live on CRC without a mesh.
+# wadm application manifests (OAM core.oam.dev/v1beta1) for the Part 7 final
+# project's REDUCED OpenShift Local (CRC) pass: TWO Applications, one per
+# language composite — cargo-final-rust (Part 3 http-rust plugged into the
+# Part 2 Rust cargo provider) and cargo-final-go (Part 3 http-go/TinyGo plugged
+# into the Part 2 Go cargo provider). Both export wasi:http/incoming-handler
+# and serve byte-identical cargo JSON — the two-language-one-contract thesis,
+# proved live on CRC without a mesh.
 #
 # Shape: the SAME component+httpserver+link+daemonscaler unit
-# examples/part5-kubernetes/openshift/wadm.yaml uses, doubled — one unit per
-# language, each with its OWN httpserver capability component (distinct name,
-# distinct listen port) so neither composite's provider link clobbers the
-# other's. This is new combination relative to Ch19/Ch20: those apps each wire
-# exactly one httpserver provider; here one Application wires two. The
-# operator creates ONE Service named after this Application (cargo-final) and
-# is expected to aggregate BOTH providers' listen ports onto it (one
-# ServicePort per daemonscaler-scaled httpserver component) — see
-# openshift/README.md "Two providers, one Application" for the risk note:
-# this aggregation behavior has not been exercised elsewhere in this project
-# and needs confirming on the live cluster; deploy.sh fails loudly rather than
-# guessing if the Service comes up with fewer than two ports.
+# examples/part5-kubernetes/openshift/wadm.yaml uses (Ch19), one Application
+# per language — the proven shape from Ch20's coexisting apps. The wasmCloud
+# operator creates one Service per Application, named after it (cargo-final-rust
+# / cargo-final-go), each exposing its httpserver provider's listen port; each
+# Service is fronted by its own edge-TLS Route (route.yaml).
 #
 # daemonscaler (not spreadscaler) on every trait, same reason as Ch19: the
-# wasmCloud operator only creates a Kubernetes Service for httpserver
-# providers scaled with a daemonscaler — spreadscaler Service creation is not
-# implemented in the operator.
+# operator creates a Kubernetes Service for httpserver providers scaled with a
+# daemonscaler; spreadscaler Service creation is not implemented in the operator.
 #
 # deploy.sh rewrites __RUST_REF__/__GO_REF__ to the pushed ghcr refs (the
-# in-cluster host pulls them; same private-ghcr + pull-secret pattern as
-# Ch19). Both composites are byte-for-byte the ones ../build.sh produces.
-# contracts/wit stays pristine — nothing here edits an interface.
+# in-cluster host pulls them; same private-ghcr + pull-secret pattern as Ch19).
+# Both composites are byte-for-byte the ones ../build.sh produces. contracts/wit
+# stays pristine — nothing here edits an interface.
 apiVersion: core.oam.dev/v1beta1
 kind: Application
 metadata:
-  name: cargo-final
+  name: cargo-final-rust
   annotations:
     version: v0.0.1
-    description: "Part 7 final project — both cargo composites (Rust, Go) on one wasmCloud lattice, deployed by the operator to OpenShift Local"
+    description: "Part 7 final project — Rust cargo composite on the wasmCloud lattice (CRC)"
 spec:
   components:
-    # --- Rust composite -----------------------------------------------------
     - name: cargo-rust
       type: component
       properties:
-        # deploy.sh rewrites __RUST_REF__ -> the pushed ghcr component ref.
         image: __RUST_REF__
       traits:
         - type: daemonscaler
@@ -52,8 +42,6 @@ spec:
     - name: httpserver-rust
       type: capability
       properties:
-        # Reused verbatim from Ch19/Part 4: the released HTTP server provider,
-        # speaks wasi:http 0.2.x, compatible with wasmCloud host 1.9.1.
         image: ghcr.io/wasmcloud/http-server:0.27.0
       traits:
         - type: link
@@ -67,17 +55,22 @@ spec:
               - name: cargo-rust-listen
                 properties:
                   address: 0.0.0.0:8000
-        # daemonscaler on the httpserver provider is what makes the operator
-        # expose this provider's port on the Application's Service.
         - type: daemonscaler
           properties:
             replicas: 1
-
-    # --- Go composite --------------------------------------------------------
+---
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-final-go
+  annotations:
+    version: v0.0.1
+    description: "Part 7 final project — Go cargo composite on the wasmCloud lattice (CRC)"
+spec:
+  components:
     - name: cargo-go
       type: component
       properties:
-        # deploy.sh rewrites __GO_REF__ -> the pushed ghcr component ref.
         image: __GO_REF__
       traits:
         - type: daemonscaler
@@ -99,7 +92,7 @@ spec:
             source_config:
               - name: cargo-go-listen
                 properties:
-                  address: 0.0.0.0:8001
+                  address: 0.0.0.0:8000
         - type: daemonscaler
           properties:
             replicas: 1
