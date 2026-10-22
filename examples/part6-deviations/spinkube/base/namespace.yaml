@@ -1,0 +1,8 @@
+# ch26 SpinKube example — one namespace for the Spin app, separate from Part
+# 5's part5-kubernetes namespace: this is a different workload (cargo-spin,
+# run by the spin-operator + containerd-shim-spin), not a variant of the Part
+# 5 wasmtime-shim app, even though both run on the same minikube profile.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: part6-spin

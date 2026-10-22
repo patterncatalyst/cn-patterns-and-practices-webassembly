@@ -1,0 +1,15 @@
+# minikube overlay — thin passthrough. Unlike Part 5's Wasm Pod (whose image
+# is `minikube image load`-ed into the node's local containerd store), the
+# SpinApp's image is a real ghcr pull (see base/spinapp.yaml's
+# imagePullSecrets), so there is no image retag / imagePullPolicy patch to
+# make here. The overlay exists so a future second target (e.g. CRC) has a
+# symmetric place to diverge, matching the house base+overlays convention.
+#
+# The Ingress host stays the base placeholder here; verify-spinkube-minikube.sh
+# patches it live to cargo-spin.<minikube-ip>.nip.io (the IP is only known at
+# run time).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base

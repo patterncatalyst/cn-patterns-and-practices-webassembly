@@ -1,0 +1,85 @@
+# examples/part6-deviations/spinkube/openshift/deployment.yaml
+#
+# ch26 Spin app on OpenShift Local (CRC) — the Spin runtime inside a plain
+# restricted-v2 container, NOT the SpinKube shim. `containerd-shim-spin`
+# (../base, minikube path) needs a privileged RHCOS node install (the
+# `runtime-class-manager` Helm chart writes a node-level containerd plugin and
+# a MachineConfig) — the exact constraint ch18/ch19 already hit on CRC, where
+# the wasmCloud *operator* substituted for the raw shim
+# (../../../part5-kubernetes/openshift/wasmcloud-host.yaml). Here the
+# substitute is simpler still: the image IS the whole runtime (`spin up`
+# serving `cargo-spin.wasm` straight off disk), so an ordinary Deployment
+# under restricted-v2 is enough — no operator, no CRD.
+#
+# Image: ghcr.io/patterncatalyst/cargo-spin-runtime:crc, built by
+# ../../spin/Dockerfile — debian:trixie-slim + the pinned `spin` v4.2.4 CLI +
+# `cargo-spin.wasm` + `spin.toml`, `USER 10001`, `ENV HOME=/app`,
+# `ENTRYPOINT ["spin","up","--listen","0.0.0.0:8080","-f","/app/spin.toml"]`.
+#
+# securityContext deliberately does NOT set runAsUser: the image's numeric
+# `USER 10001` already satisfies `runAsNonRoot: true` (the admission check
+# only requires a non-zero numeric UID be configured somewhere — image or
+# pod), and restricted-v2 on CRC assigns its OWN uid from the project's
+# allocated SCC range at admission time, same as the wasmCloud host container
+# in ../../../part5-kubernetes/openshift/wasmcloud-host.yaml (no
+# securityContext there either, same reasoning in that directory's README
+# under "restricted-v2 / SCC"). Pinning runAsUser: 10001 here would fight that
+# range instead of living inside it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-spin
+  labels:
+    app.kubernetes.io/name: cargo-spin
+    app.kubernetes.io/part-of: part6-deviations-spin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cargo-spin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cargo-spin
+        app.kubernetes.io/part-of: part6-deviations-spin
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cargo-spin
+          image: ghcr.io/patterncatalyst/cargo-spin-runtime:crc
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /cargo/CARGO-USNYC-DEHAM
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            failureThreshold: 20
+          livenessProbe:
+            httpGet:
+              path: /cargo/CARGO-USNYC-DEHAM
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"

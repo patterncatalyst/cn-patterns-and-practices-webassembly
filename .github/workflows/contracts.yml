@@ -149,7 +149,7 @@ jobs:
     name: Build + run the examples, check generated bindings for drift
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 85   # r06e: +15 for kafka-host's from-source librdkafka build
+    timeout-minutes: 90   # r06e: +15 for kafka-host's from-source librdkafka build; r07b: +5 for the Spin CLI install + build
     env:
       RUST_VERSION: "1.99.1"
       CARGO_COMPONENT_VERSION: "0.21.1"
@@ -165,6 +165,8 @@ jobs:
       WAC_SHA256: "7cd490edbd452221ef89e6750fc43eacc9b71b1242095eb577cb9a3bf0d3beda"
       PROTOC_VERSION: "36.2"
       PROTOC_SHA256: "121f6c7afe1d4d0e3ea6aab9432038599250134cbf4474cb1167d2c7decd4278"
+      SPIN_VERSION: "4.2.4"
+      SPIN_SHA256: "519ba201e0105dc83a17a4ea9ca6605c80286cbfaf40c1d7505d068bfea83cf1"
       EXAMPLE_DIR: "examples/part2-building-components"
       PART3_DIR: "examples/part3-interfaces"
       PART4_DIR: "examples/part4-runtimes"
@@ -417,6 +419,34 @@ jobs:
           cd "${PART6_DIR}/istio-wasmfilter"
           cargo build --release --target wasm32-wasip1
 
+      # r07b: ch26's Spin app needs the Spin CLI itself — build.sh shells out
+      # to `spin build` for the handler crate before `wac plug`-composing it
+      # with the Part 2 provider. Prebuilt tarball, not `cargo install`, same
+      # treatment as wac/wasmtime above.
+      - name: Install Spin CLI ${{ env.SPIN_VERSION }} (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          archive="spin-v${SPIN_VERSION}-linux-amd64.tar.gz"
+          curl -fsSL -o "/tmp/${archive}" \
+            "https://github.com/fermyon/spin/releases/download/v${SPIN_VERSION}/${archive}"
+          echo "${SPIN_SHA256}  /tmp/${archive}" | sha256sum -c -
+          tar -xzf "/tmp/${archive}" -C /tmp
+          sudo install -m 0755 /tmp/spin /usr/local/bin/spin
+          spin --version
+
+      # r07b: ch26's Spin app — build.sh (no --push, so nothing is published
+      # to ghcr from CI) runs the Part 2 provider + the spin-sdk handler
+      # through `spin build`, then `wac plug`s them into cargo-spin.wasm and
+      # validates the result. This is a plain Spin/spin-sdk crate, NOT a
+      # cargo-component/contracts-wit crate — it has no generated bindings.rs
+      # of its own, so it is deliberately EXCLUDED from the bindings-drift
+      # gate below, same treatment as the ch25 proxy-wasm Istio filter above
+      # and Part 5's kafka-host. The LIVE SpinKube run (minikube + CRC) is
+      # evidence-only, verified by hand under
+      # examples/part6-deviations/spinkube/evidence/ — never a CI step.
+      - name: Build the Part 6 ch26 Spin app (build.sh)
+        run: ${{ env.PART6_DIR }}/spin/build.sh
+
       # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
       # building — the two providers (Rust + Go) AND the two consumers
@@ -654,3 +684,20 @@ jobs:
             examples/part6-deviations/istio/openshift/gateway.yaml \
             examples/part6-deviations/istio/openshift/virtualservice.yaml \
             examples/part6-deviations/istio/openshift/route.yaml
+
+      # r07b (ch26 Spin/SpinKube) — same offline treatment as ch25 above: render
+      # the minikube overlay (Namespace + SpinApp + Ingress) through kustomize +
+      # kubeconform, and validate the standalone CRC manifests as-committed.
+      # SpinApp (core.spinoperator.dev) is a CRD with no bundled schema ->
+      # skipped by -ignore-missing-schemas, same reasoning as WasmPlugin/wadm
+      # above; the Route is likewise an OpenShift CRD. The LIVE SpinKube runs
+      # (minikube + CRC) are evidence-only under
+      # examples/part6-deviations/spinkube/evidence/ — never a CI step.
+      - name: Validate Part 6 ch26 SpinKube manifests (kubeconform) — minikube overlay + CRC manifests
+        run: |
+          kubectl kustomize examples/part6-deviations/spinkube/overlays/minikube \
+            | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+          kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
+            examples/part6-deviations/spinkube/openshift/deployment.yaml \
+            examples/part6-deviations/spinkube/openshift/service.yaml \
+            examples/part6-deviations/spinkube/openshift/route.yaml
