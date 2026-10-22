@@ -10,7 +10,7 @@ gateway on RuntimeClass: wasmtime (containerd-shim-wasmtime) — cargo-rust
 plugged with the Go cargo provider) — both exporting
 wasi:http/incoming-handler and both returning the same cargo JSON. The shim
 hosting each Pod emits an OTel span per invocation into otel-lgtm (Tempo):
-one trace per language, same pipeline as Ch24.
+shim-OTel traces under the workload, same pipeline as Ch24.
 """
 import sys, os
 sys.path.insert(0, "scripts")
@@ -62,7 +62,7 @@ nodes = [
      "lines": ["containerd-shim-wasmtime (cargo-go)", "emits OTel span — shim lifecycle"],
      "style": "box"},
     {"x": 560, "y": 880, "w": 280, "h": 80,
-     "lines": ["otel-lgtm", "Tempo — one trace per language"],
+     "lines": ["otel-lgtm", "Tempo — shim traces under load"],
      "style": "user"},
 
     {"x": 20, "y": 1000, "w": 1360, "h": 60,

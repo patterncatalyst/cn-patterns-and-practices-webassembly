@@ -1,0 +1,15 @@
+# TRACE SCOPE: OTEL_SERVICE_NAME is a node-level containerd.service
+# systemd Environment=, inherited identically by every shim process on the
+# node, so cargo-rust and cargo-go cannot be told apart by service.name in
+# Tempo. This proves a NEW shim-emitted trace following EACH language's
+# traffic (a before/after count), not a per-service label. See
+# ./verify-minikube.sh Step 14 for the full rationale.
+
+otel-lgtm Pod: otel-lgtm-7d66866d7d-mp8lz
+Tempo trace count for "containerd-shim-wasmtime" before this step's traffic = 115
+
+$ curl (cargo-rust only, x3)
+Tempo trace count after cargo-rust traffic = 200
+
+$ curl (cargo-go only, x3)
+Tempo trace count after cargo-go traffic = 200

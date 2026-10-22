@@ -35,7 +35,7 @@
 <text x="1110.0" y="815.0" font-size="11.5" fill="#555555" text-anchor="middle">emits OTel span — shim lifecycle</text>
 <rect x="560" y="880" width="280" height="80" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="700.0" y="918.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">otel-lgtm</text>
-<text x="700.0" y="935.0" font-size="11.5" fill="#555555" text-anchor="middle">Tempo — one trace per language</text>
+<text x="700.0" y="935.0" font-size="11.5" fill="#555555" text-anchor="middle">Tempo — shim traces under load</text>
 <rect x="20" y="1000" width="1360" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="700.0" y="1035.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Same contract, two languages, one substrate — the gateway filter and the trace span each cover both halves.</text>
 <path d="M200,50 L280,50" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
