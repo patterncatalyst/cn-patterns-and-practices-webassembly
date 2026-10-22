@@ -1,0 +1,5 @@
+nats-0                                true,true   0,0        restricted-v2   1000700000
+wadm-8478fb6db8-hzn47                 true        2          restricted-v2   1000700000
+wasmcloud-host-6c5f6c5f88-ln8zj       true,true   0,0        restricted-v2   1000700000
+wasmcloud-operator-7f6d8c99bf-nscgk   true        0          restricted-v2   1000700000
+namespace uid-range: 1000700000/10000

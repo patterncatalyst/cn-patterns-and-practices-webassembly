@@ -1,0 +1,24 @@
+# examples/part7-final-project/k8s/base/runtimeclass.yaml
+#
+# The SAME RuntimeClass object as
+# examples/part5-kubernetes/k8s/base/runtimeclass.yaml (identical name,
+# handler, and intent) — duplicated here, not forked. kustomize's load
+# restriction sandbox refuses a single loose YAML file resource that lives
+# outside the current kustomization root (a sibling kustomization
+# DIRECTORY, like ../../../part5-kubernetes/k8s/observability/base, is a
+# separate root and is fine — see
+# examples/part6-deviations/istio/base/kustomization.yaml, which pulls in
+# all of Part 5's base/ that way), so a bare file one directory tree over
+# cannot be referenced directly without disabling that sandbox
+# (--load-restrictor none), which this unit avoids.
+#
+# `kubectl apply` makes this harmless: it is a cluster-scoped singleton keyed
+# by metadata.name, so applying this file converges to the exact same
+# RuntimeClass object examples/part5-kubernetes/k8s/install-shim.sh already
+# applies — not a second, divergent one. Whichever script runs last simply
+# re-confirms it.
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: wasmtime
+handler: wasmtime

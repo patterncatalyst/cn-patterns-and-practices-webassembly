@@ -1,0 +1,4 @@
+# Build outputs — regenerated deterministically by build.sh from the
+# unedited part2/part3 recipes (wac plug recompose). Never committed.
+*.wasm
+target/

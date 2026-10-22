@@ -1,0 +1,46 @@
+# Edge-TLS Routes (route.openshift.io/v1), one per language, fronting each
+# Application's own operator-created Service (cargo-final-rust / cargo-final-go)
+# over real HTTPS at *.apps-crc.testing — never -k/--insecure, never
+# oc port-forward, never NodePort (see openshift/lib.sh combined_ca_bundle).
+#
+# Two Applications, two Services, two Routes (the Ch20 coexisting-apps shape):
+# the wasmCloud operator creates one Service per Application exposing that
+# Application's httpserver listen port (8000), so each Route targets its own
+# Service.
+#
+# No spec.host: OpenShift assigns <name>-<namespace>.apps-crc.testing, so no
+# domain needs hard-coding here. deploy.sh reads the assigned host back with
+# `oc get route <name> -o jsonpath='{.spec.host}'`.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: cargo-final-rust
+  labels:
+    app.kubernetes.io/part-of: part7-final-project
+    app.kubernetes.io/component: cargo-rust
+spec:
+  to:
+    kind: Service
+    name: cargo-final-rust
+  port:
+    targetPort: 8000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: cargo-final-go
+  labels:
+    app.kubernetes.io/part-of: part7-final-project
+    app.kubernetes.io/component: cargo-go
+spec:
+  to:
+    kind: Service
+    name: cargo-final-go
+  port:
+    targetPort: 8000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

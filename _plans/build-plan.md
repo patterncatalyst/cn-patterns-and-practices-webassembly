@@ -376,6 +376,41 @@ composition, backed by the new
 **Ch20 and Ch21 are COMPLETE. Part 5 is now Ch17–Ch21 done, Ch22–Ch24
 remaining (r06d).**
 
+## r08 — Part 7 final project (ch28)
+
+Ch28 is the Part 7 final project, recorded at DRQ-083: a pure assembly of
+components already built in earlier Parts, with no new component and
+`contracts/wit` untouched.
+
+- Two composites of the same cargo domain, each built with `wac plug` from
+  already-built artifacts: `cargo-rust.wasm` (Part 3 `http-rust` plugged into
+  the Part 2 Rust cargo provider) and `cargo-go.wasm` (Part 3
+  `http-go`/TinyGo plugged into the Part 2 Go cargo provider). Both serve
+  byte-identical cargo JSON over `wasi:http/incoming-handler`.
+- Deployment: both composites run under the `containerd-shim-wasmtime`
+  `RuntimeClass`, fronted by one ingress carrying the ch25 Istio proxy-wasm
+  `WasmPlugin` gateway filter unchanged (`x-cargo-tenant` → 403/200 +
+  `x-cargo-filtered-by`). Each shim emits an OTel lifecycle span (the same
+  honest scope as Ch24) to the in-cluster `otel-lgtm` collector — one trace
+  per language, not a single stitched trace across both.
+- KEDA scale-to-zero (Ch23) stays conceptual/cross-referenced: the Ch23 HTTP
+  add-on and the ch25 gateway filter both want to own ingress, so the two are
+  not stacked live in this chapter.
+- Live-verify plan: minikube is the primary, full-assembly pass — both
+  composites, the Istio gateway filter, and the OTel trace capture, all live.
+  CRC runs a reduced pass — both composites deployed via the wasmCloud
+  operator (Part 5 CRC tier) behind one edge-TLS Route, no mesh. Both
+  languages live on both clusters.
+- CI: a part7 build step running `wac plug` over already-built artifacts (no
+  new bindings generated, so excluded from the bindings-drift gate) plus
+  `kubeconform` over the part7 overlays and CRD instances. No cluster in CI.
+- No new version pins: ch28 reuses the firm Part 5 tier (containerd-shim-wasmtime
+  v0.6.1, minikube v1.39.0/Kubernetes v1.37.1, ingress-nginx v1.15.1,
+  otel-lgtm 0.33.1, CRC 2.64.0/OCP 4.22.14, wasmcloud-platform chart 0.1.2)
+  and the Part 6 tier (Istio 1.31.2 minikube / OSSM3 1.26.2 CRC, proxy-wasm
+  0.2.5) and toolchain (wasmtime 50, wac 0.12.0, wasm-tools 1.262.0,
+  cargo-component 0.21.1, TinyGo 0.43) as-is.
+
 ## Deferred to later iterations (r07+)
 
 - Part 6–Part 7 chapter prose (Ch25–Ch28), to the house depth standard:

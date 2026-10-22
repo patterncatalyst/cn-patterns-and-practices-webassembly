@@ -1,0 +1,57 @@
+# Helm values overlay for the wasmcloud-platform chart (0.1.2) on OpenShift
+# Local (CRC), in the dedicated "wasmcloud-final" namespace under
+# restricted-v2. Byte-identical to examples/part5-kubernetes/openshift/values-crc.yaml
+# except the NATS DNS repoint targets this project's own namespace — the chart
+# hard-codes NATS DNS at *.default.svc.cluster.local, so every address below
+# has to move to *.wasmcloud-final.svc.cluster.local to match.
+#
+# The chart's bundled defaults already enable nats + wadm + operator and
+# disable the manual host subchart/hostConfig (this project applies its own
+# WasmCloudHostConfig — wasmcloud-host.yaml — so the host version, ghcr pull
+# secret and securityContext stay under this project's control).
+#
+# Two reasons this overlay exists (see Part 5's values-crc.yaml for the full
+# rationale):
+#   1. NATS DNS repoint to *.wasmcloud-final.svc.cluster.local.
+#   2. The wadm subchart hard-codes securityContext.runAsUser/runAsGroup: 1000,
+#      outside a restricted-v2 namespace's assigned UID range. Drop those two
+#      keys (null) so OpenShift assigns a namespace-range UID.
+#
+# nats and the operator set no runAsUser, so restricted-v2 assigns their UIDs
+# with no override needed.
+nats:
+  # nats-box is a CLI debug sidecar Deployment whose entrypoint does `cd /root`;
+  # under restricted-v2 it runs as an arbitrary UID with no access to /root and
+  # CrashLoops ("can't cd to /root: Permission denied"), which would hang
+  # `helm --wait`. It is not used by wadm/the operator/the host, so disable it.
+  natsBox:
+    enabled: false
+  config:
+    cluster:
+      # Standalone NATS, not a cluster. CRC is a single node; the chart default
+      # (cluster.enabled: true) makes the server block on "Waiting for routing
+      # to be established" to peers that never exist, so JetStream never elects
+      # a meta leader and the startup probe 503s forever.
+      enabled: false
+    jetstream:
+      fileStore:
+        pvc:
+          # 10Gi default -> 2Gi: plenty for wadm state on a demo box.
+          size: 2Gi
+
+wadm:
+  wadm:
+    config:
+      nats:
+        server: "nats://nats-headless.wasmcloud-final.svc.cluster.local"
+  securityContext:
+    # Drop the chart's fixed UID/GID so restricted-v2 assigns one in range.
+    runAsUser: null
+    runAsGroup: null
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - "ALL"
+    seccompProfile:
+      type: RuntimeDefault

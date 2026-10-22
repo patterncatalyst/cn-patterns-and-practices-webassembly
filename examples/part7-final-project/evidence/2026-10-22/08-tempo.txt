@@ -1,0 +1,13 @@
+# TRACE SCOPE: OTEL_SERVICE_NAME is a node-level containerd.service
+# systemd Environment=, inherited identically by every shim process on the
+# node, so cargo-rust and cargo-go report the same service.name. The signal
+# is shim-OTel liveness under the assembled workload (traces present for the
+# shim service), not per-language attribution. See ./verify-minikube.sh
+# Step 14 for the full rationale.
+
+otel-lgtm Pod: otel-lgtm-7d66866d7d-mp8lz
+
+$ curl (both languages, x3 each)
+Tempo trace count for "containerd-shim-wasmtime" after the workload = 200
+
+result: the shim exported 200 trace(s) for "containerd-shim-wasmtime" into otel-lgtm — shim-OTel pipeline live under the final-project workload

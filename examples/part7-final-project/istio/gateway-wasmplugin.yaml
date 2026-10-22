@@ -1,0 +1,42 @@
+# examples/part7-final-project/istio/gateway-wasmplugin.yaml
+#
+# The ch25 proxy-wasm cargo filter, UNCHANGED: identical spec to
+# examples/part6-deviations/istio/gateway-wasmplugin.yaml (same name,
+# namespace, selector, OCI filter image, imagePullSecret, phase). Copied here
+# rather than referenced so this unit's istio/ directory is self-contained,
+# but byte-identical in every field that matters — this is still the ONE
+# filter.wasm artifact (examples/part6-deviations/istio-wasmfilter) gating the
+# shared istio-ingressgateway Envoy, not a second, forked filter.
+#
+# Applying this from either directory is idempotent: it is the SAME
+# metadata.name in the SAME namespace (istio-system), so whichever unit's
+# verify script runs last simply re-confirms the one live WasmPlugin object.
+# Because the filter loads into the GATEWAY's Envoy (selector
+# istio: ingressgateway), not a sidecar on any app Pod, it gates every request
+# that reaches that gateway — ch25's original cargo-http path AND this unit's
+# cargo-rust/cargo-go paths (../base/gateway.yaml) alike, with the identical
+# x-cargo-tenant contract: 403 without the header, 200 + x-cargo-filtered-by
+# with it.
+#
+# WHY HERE, NOT AS A SIDECAR: a `runtimeClassName: wasmtime` Pod runs one
+# container runtime for every container in it, so the filter runs in the
+# gateway's Envoy instead of a sidecar on either app Pod. Both cargo-rust and
+# cargo-go stay pure Wasm Pods (../k8s/base, no injection label).
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: cargo-wasmfilter
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  url: oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
+  # Private ghcr package — the gateway Envoy's agent needs registry
+  # credentials: a docker-registry secret named `ghcr-pull` in THIS namespace
+  # (istio-system). ../verify-minikube.sh creates/refreshes it, same command
+  # examples/part6-deviations/istio/verify-istio-minikube.sh already uses.
+  imagePullSecret: ghcr-pull
+  pluginName: cargo-wasmfilter
+  phase: AUTHZ
+  pluginConfig: {}

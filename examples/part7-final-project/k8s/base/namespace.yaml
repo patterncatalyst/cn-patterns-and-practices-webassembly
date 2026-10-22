@@ -1,0 +1,15 @@
+# examples/part7-final-project/k8s/base/namespace.yaml
+#
+# A dedicated namespace for the final project's two-language assembly, kept
+# separate from part5-kubernetes (the original single-language cargo-http app
+# + the ch25 Istio Gateway/VirtualService that fronts it) so neither
+# Deployment/Service/Gateway name collides with this unit's cargo-rust /
+# cargo-go objects. Both units still share the SAME minikube profile ("part5",
+# per ../../build.sh --load) and the SAME node-level containerd wasmtime shim
+# and otel-lgtm sink (examples/part5-kubernetes/k8s/observability) — those are
+# cluster/node-scoped, not namespace-scoped, so there is nothing to duplicate
+# for them here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: part7-final-project
