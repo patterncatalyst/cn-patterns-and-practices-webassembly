@@ -16,12 +16,13 @@ package patterncatalyst:cargo-kafka-handler@0.1.0;
 /// world's functional interfaces depend on (see contracts/wit/world.wit:
 /// `export types; export booking; export handling;`).
 ///
-/// It IMPORTS the cargo domain's `handling` interface (+ the pure-type
-/// `types`) from the repository contract and calls `register-handling-event`
-/// on every delivered message — a real write against the SAME cargo domain
-/// Parts 2-5 use, not a stub. In the wasmCloud lattice this import is
-/// satisfied at wadm deploy time by a `link` trait to a deployed cargo
-/// provider component (the runtime-link shape from ch20's
+/// It IMPORTS the cargo domain's `booking` and `handling` interfaces (+ the
+/// pure-type `types`) from the repository contract and, on every delivered
+/// message, ensures the cargo is on record (`book-cargo` if `get-cargo`
+/// reports none) before calling `register-handling-event` — a real write
+/// against the SAME cargo domain Parts 2-5 use, not a stub. In the wasmCloud
+/// lattice these imports are satisfied at wadm deploy time by a `link` trait
+/// to a deployed cargo provider component (the runtime-link shape from ch20's
 /// wadm-filtered.yaml), NOT by a `wac plug` composition — this component is
 /// deployed standalone, never composed into one .wasm with the provider.
 ///
@@ -34,5 +35,6 @@ world cargo-kafka-handler {
     export wasmcloud:messaging/handler@0.2.0;
 
     import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
     import patterncatalyst:cargo/handling@0.1.0;
 }

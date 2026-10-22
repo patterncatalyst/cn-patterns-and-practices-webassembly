@@ -17,10 +17,8 @@
 #     ../keda/base/httpscaledobject.yaml) — KEDA itself scales the Deployment
 #     from the interceptor's queued-request metric.
 #   * the `kafka` scaler + `ScaledObject` (ch23 Kafka half,
-#     ../keda/base/kafka-scaledobject.yaml) — here KEDA only OBSERVES
-#     consumer-group lag; the wadm spreadscaler in wadm-kafka.yaml OWNS the
-#     handler component's actual replica count (see that file's comments for
-#     why a K8s ScaledObject cannot resize a wasmCloud-managed workload).
+#     ../keda/base/kafka-scaledobject.yaml) — KEDA scales the cargo-kafka-host
+#     Deployment on consumer-group lag.
 #
 # Idempotent (helm upgrade --install). Never starts/stops the cluster; targets
 # whatever context $PROFILE resolves to (see ../lib.sh).

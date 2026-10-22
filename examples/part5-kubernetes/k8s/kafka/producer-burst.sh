@@ -6,9 +6,8 @@
 # disposable Strimzi client Pod and run `kafka-console-producer.sh` against the
 # internal bootstrap service's cluster DNS name. This is what creates the
 # consumer-group LAG the KEDA `kafka` ScaledObject reads
-# (../keda/base/kafka-scaledobject.yaml) and the wadm spreadscaler in
-# ../wasmcloud/wadm-kafka.yaml reacts to by growing the kafka-handler
-# component's replica count.
+# (../keda/base/kafka-scaledobject.yaml). KEDA scales the cargo-kafka-host
+# Deployment on consumer-group lag.
 #
 # Each message is in the kafka-handler's wire format (see
 # ../../kafka-handler/src/lib.rs):
@@ -79,4 +78,4 @@ echo "producer-burst.sh: produced $COUNT messages onto $TOPIC"
 step "3/3 cleanup"
 kubectl delete pod "$CLIENT_POD" -n "$KAFKA_NAMESPACE" --wait=false >/dev/null 2>&1 || true
 echo "producer-burst.sh: OK — burst of $COUNT messages sent; check consumer-group lag with:"
-echo "  kubectl exec -it deploy/${KAFKA_CLUSTER}-entity-operator -n $KAFKA_NAMESPACE -- bin/kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group <consumer-group>"
+echo "  kubectl exec -it deploy/${KAFKA_CLUSTER}-entity-operator -n $KAFKA_NAMESPACE -- bin/kafka-consumer-groups.sh --bootstrap-server $BOOTSTRAP --describe --group cargo-handling"

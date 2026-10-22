@@ -1,0 +1,65 @@
+# ch23 serverless scale-to-zero — Kafka half, KEDA-owned design.
+#
+# cargo-kafka-host is a native (non-Wasm) consumer process: it embeds wasmtime,
+# reads cargo-handling-events off the cargo-kafka Strimzi cluster, and invokes
+# the SAME patterncatalyst:cargo contract via a Wasm component loaded from
+# KAFKA_APP_WASM for each message. Unlike cargo-http (../../base/deployment.yaml),
+# this Pod does NOT set runtimeClassName: wasmtime — the host process itself is
+# a plain OCI container; only the per-message handler logic is a Wasm guest,
+# loaded in-process.
+#
+# Plain Deployment, not a wasmCloud/OAM component: a `scaleTargetRef` in
+# ../../keda/base/kafka-scaledobject.yaml can patch `spec.replicas` directly on
+# this object, so KEDA OWNS the replica count end to end (0 at idle, up to the
+# topic's 6-partition ceiling under load) — no separate scaling authority to
+# reconcile against.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-kafka-host
+  namespace: kafka
+  labels:
+    app: cargo-kafka-host
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cargo-kafka-host
+  template:
+    metadata:
+      labels:
+        app: cargo-kafka-host
+        app.kubernetes.io/part-of: part5-kubernetes
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cargo-kafka-host
+          image: cargo-kafka-host
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: KAFKA_BOOTSTRAP
+              value: cargo-kafka-kafka-bootstrap.kafka.svc:9092
+            - name: KAFKA_TOPIC
+              value: cargo-handling-events
+            - name: KAFKA_GROUP
+              value: cargo-handling
+            - name: KAFKA_APP_WASM
+              value: /opt/cargo-kafka/kafka-app.wasm
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
