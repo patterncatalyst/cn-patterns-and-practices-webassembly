@@ -1,0 +1,8 @@
+$ wasmtime run -S nn -S nn-graph=openvino::$PWD/model/mobilenet --dir $PWD/fixtures::/fixtures <component>.wasm /fixtures/cargo.jpg
+# (OpenVINO located via LD_LIBRARY_PATH -> the pip openvino wheel libs)
+
+container ship, containership, container vessel 0.910313
+alp 0.002643
+space shuttle 0.002357
+lifeboat 0.002068
+castle 0.001410

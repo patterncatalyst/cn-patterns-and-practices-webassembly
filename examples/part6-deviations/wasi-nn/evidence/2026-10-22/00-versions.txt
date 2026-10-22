@@ -1,0 +1,6 @@
+# ch27 wasi-nn live inference — minikube not involved (host runtime chapter)
+host: Linux 7.2.9-200.fc44.x86_64 x86_64
+wasmtime 50.0.0 (ebe5e8df1 2026-10-20)
+openvino (pip): 2026.4.1-22982-e213a147257-releases/2026/4
+cargo-component 0.21.1
+wasm-tools 1.262.0 (e22db44da 2026-10-13)
