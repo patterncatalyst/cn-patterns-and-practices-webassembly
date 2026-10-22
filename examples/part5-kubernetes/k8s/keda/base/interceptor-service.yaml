@@ -1,0 +1,28 @@
+# ch23 HTTP half — a Kubernetes Ingress backend MUST be a Service in the
+# SAME namespace as the Ingress object, but the KEDA HTTP add-on's interceptor
+# proxy Service (`keda-add-ons-http-interceptor-proxy`) lives in the `keda`
+# namespace (installed by ../install-keda.sh). The standard KEDA http-add-on
+# recipe for routing external (ingress-nginx) traffic through the interceptor
+# is a same-namespace `ExternalName` Service that forwards to the interceptor's
+# cluster DNS name — this is that Service.
+#
+# `nginx.ingress.kubernetes.io/service-upstream: "true"` (set on the Ingress,
+# see kustomization.yaml's patch) is the documented companion annotation: it
+# tells ingress-nginx to proxy to the Service's ClusterIP/DNS name directly
+# instead of resolving Endpoints, which is what makes routing to an
+# ExternalName Service work reliably.
+apiVersion: v1
+kind: Service
+metadata:
+  name: keda-interceptor-proxy
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: keda-interceptor-proxy
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  type: ExternalName
+  externalName: keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

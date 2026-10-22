@@ -1,0 +1,2 @@
+$ sha256sum /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/app.wasm
+eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/app.wasm

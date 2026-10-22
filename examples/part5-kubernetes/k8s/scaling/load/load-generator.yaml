@@ -1,0 +1,66 @@
+# ch22 load generator — drives real CPU load against the cargo-http Service
+# entirely IN-CLUSTER (NO port-forward): N parallel tight request loops inside
+# one busybox Pod hit the Service's in-cluster DNS name directly. This is the
+# thing the HPA actually reacts to — the 50m CPU request on cargo-http
+# (k8s/base/deployment.yaml) means even a handful of concurrent requests
+# crosses the 50% utilization target in hpa.yaml.
+#
+# Shipped at replicas: 0 (idle) so `kubectl apply` is always safe and
+# kubeconform-friendly; the verify/capture scripts scale it to 1 to start load
+# and back to 0 to let the HPA scale the Deployment back down, and assert the
+# real replica counts in both directions rather than assuming them.
+#
+# CONCURRENCY (env var, default 8) is the number of parallel request loops run
+# inside the single load Pod — tune it up if 8 does not push utilization past
+# 50% on a given machine's CPU accounting.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-http-load
+  namespace: part5-kubernetes
+  labels:
+    app.kubernetes.io/name: cargo-http-load
+    app.kubernetes.io/part-of: part5-kubernetes
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cargo-http-load
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cargo-http-load
+        app.kubernetes.io/part-of: part5-kubernetes
+    spec:
+      containers:
+        - name: load
+          image: busybox:1.36
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "cargo-http-load: starting $CONCURRENCY parallel loops against $TARGET"
+              i=0
+              while [ "$i" -lt "$CONCURRENCY" ]; do
+                ( while true; do
+                    wget -q -O /dev/null --timeout=3 "$TARGET" 2>/dev/null
+                  done ) &
+                i=$((i + 1))
+              done
+              wait
+          env:
+            - name: CONCURRENCY
+              value: "8"
+            - name: TARGET
+              # In-cluster Service DNS name — NO port-forward, NO NodePort.
+              value: "http://cargo-http.part5-kubernetes.svc.cluster.local:8080/cargo/CARGO-USNYC-DEHAM"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              # 256Mi, not 64Mi: a high CONCURRENCY (dozens of parallel busybox
+              # wget loops) needs the headroom — at 64Mi the Pod OOMKills and the
+              # load never sustains, which masks the real finding (even sustained
+              # heavy load barely moves the Wasm handler's CPU).
+              memory: "256Mi"

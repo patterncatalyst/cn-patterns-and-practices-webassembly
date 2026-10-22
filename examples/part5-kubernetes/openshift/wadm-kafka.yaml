@@ -1,0 +1,93 @@
+# wadm application manifest (OAM core.oam.dev/v1beta1) — the ch23 Kafka half,
+# reusing the SAME wasmCloud operator + host setup ch19/ch20 already install on
+# OpenShift Local (install-operator.sh + wasmcloud-host.yaml), the CRC
+# counterpart to ../k8s/wasmcloud/wadm-kafka.yaml.
+#
+# Unlike the HTTP-serving apps in this directory (wadm.yaml, wadm-filtered.yaml,
+# ...), NONE of these three things needs a Kubernetes Service or a Route: the
+# messaging-kafka provider is the thing that INITIATES contact with the broker
+# (a consumer, not a listener), so there is no inbound edge to expose. Every
+# component/provider here therefore uses `spreadscaler`, never `daemonscaler` —
+# `daemonscaler` exists only to make the wasmCloud operator auto-create a
+# Service (see ../openshift/wadm.yaml's header), which is not wanted here.
+#
+# TEACHING POINT (identical to ../k8s/wasmcloud/wadm-kafka.yaml and
+# ../install-cma.sh): the Custom Metrics Autoscaler's `kafka` ScaledObject
+# (an author-only CRC counterpart of ../k8s/keda/base/kafka-scaledobject.yaml,
+# not shipped as a separate file here since it is IDENTICAL — just re-applied
+# with -n openshift-keda against this same broker) OBSERVES consumer-group lag
+# on `cargo-handling-events`; it has no Deployment to patch, because there
+# isn't one — `kafka-handler`'s actual instance count is OWNED by the
+# `spreadscaler` trait below, exactly like the minikube half.
+#
+# deploy-kafka.sh (a future author-only addition, not created in this BUILD
+# pass — the house CRC deploy scripts push components to the SAME private
+# ghcr ref pattern as deploy.sh/deploy-interposed.sh) rewrites the __*_REF__
+# placeholders to the pushed private ghcr component refs. contracts/wit stays
+# pristine — nothing here edits an interface.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-kafka
+  annotations:
+    version: v0.0.1
+    description: "ch23 Kafka message handler (messaging-kafka provider -> kafka-handler component -> cargo provider) on OpenShift Local — wadm OWNS the handler replica count, the Custom Metrics Autoscaler only OBSERVES lag"
+spec:
+  components:
+    # --- the Part 2 cargo provider (exports patterncatalyst:cargo/*), reused verbatim ---
+    - name: cargo-provider-k
+      type: component
+      properties:
+        image: __PROVIDER_REF__
+      traits:
+        - type: spreadscaler
+          properties:
+            instances: 1
+
+    # --- the ch23 Kafka message HANDLER (exports wasmcloud:messaging/handler) ---
+    - name: kafka-handler
+      type: component
+      properties:
+        image: __HANDLER_REF__
+      traits:
+        # wadm OWNS this number — see the file header and
+        # ../k8s/wasmcloud/wadm-kafka.yaml's matching comment.
+        - type: spreadscaler
+          properties:
+            instances: 1
+        # kafka-handler's cargo IMPORT -> cargo-provider-k's EXPORT
+        - type: link
+          properties:
+            target: cargo-provider-k
+            namespace: patterncatalyst
+            package: cargo
+            interfaces:
+              - handling
+
+    # --- the messaging-kafka capability provider (the Kafka CONSUMER) ---
+    - name: messaging-kafka
+      type: capability
+      properties:
+        # Same pin as ../k8s/wasmcloud/wadm-kafka.yaml — upstream ships only
+        # commit-SHA builds for this provider (no semver release); see that
+        # file's comment for the full survey note and the
+        # TBD-confirm-at-kickoff flag.
+        image: ghcr.io/wasmcloud/messaging-kafka:0.2.0
+      traits:
+        - type: link
+          properties:
+            target: kafka-handler
+            namespace: wasmcloud
+            package: messaging
+            interfaces:
+              - handler
+            source_config:
+              - name: cargo-handling-events-consumer
+                properties:
+                  # Same TBD-confirm-at-kickoff note as the minikube manifest:
+                  # these config key names are not documented upstream for
+                  # messaging-kafka at kickoff — confirm against `wash inspect`
+                  # / the provider's README before the live run.
+                  hosts: cargo-kafka-kafka-bootstrap.kafka.svc:9092
+                  topic: cargo-handling-events
+                  consumer_group: kafka-handler

@@ -1,0 +1,115 @@
+# ch24 on-cluster observability — minikube backend.
+#
+# grafana/otel-lgtm bundles an OpenTelemetry Collector (0.161.0) in front of
+# Tempo (traces), Prometheus (metrics) and Loki (logs), plus Grafana wired to
+# all three as pre-provisioned datasources — one Pod, one OTLP sink. This is
+# the SAME role the lgtm-docker-stack / lgtm-minikube-stack skills' LGTM stack
+# plays for the Quarkus/Python/C++ projects; here it is the sink for the
+# node-level telemetry the containerd `wasmtime` shim emits (enable-shim-otel.sh)
+# about the cargo-http Wasm Pod — NOT telemetry authored by the Wasm guest
+# itself. wasi-otel guest-emitted spans are an RC-only proposal, not in the
+# pinned stable toolchain (wasm32-wasip1 + wasmtime 0.6.1 shim), so on-cluster
+# Wasm observability today is substrate-provided: shim-level here, wasmCloud
+# host-level on the CRC path (../../../openshift/otel-collector.yaml).
+#
+# Evidence is read by kubectl exec'ing INTO this Pod and curling each
+# backend's HTTP API on its localhost port (NO port-forward, NO Grafana UI —
+# house rule): Tempo on :3200, Prometheus on :9090, Loki on its standard
+# default :3100 (the upstream project's own kubectl port-forward example in
+# its README lists 3000/3200/4040/4317/4318/9090 but omits Loki's port number
+# explicitly; 3100 is Loki's documented default and is reachable the same way
+# via `oc exec`/`kubectl exec`, which attaches to the Pod's network namespace
+# regardless of which ports the image's Dockerfile EXPOSEs).
+#
+# No persistent storage: this is a disposable dev sink, not a production LGTM
+# deployment (see lgtm-minikube-stack for the real Loki+Grafana+Tempo+Mimir
+# stack with its own PVCs, used elsewhere in the catalog).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-lgtm
+  labels:
+    app.kubernetes.io/name: otel-lgtm
+    app.kubernetes.io/part-of: part5-kubernetes-observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-lgtm
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: otel-lgtm
+        app.kubernetes.io/part-of: part5-kubernetes-observability
+    spec:
+      containers:
+        - name: otel-lgtm
+          image: grafana/otel-lgtm:0.33.1
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+            - name: grafana
+              containerPort: 3000
+            - name: tempo
+              containerPort: 3200
+            - name: prometheus
+              containerPort: 9090
+            - name: loki
+              containerPort: 3100
+          # The all-in-one stack (Collector + Tempo + Prometheus + Loki +
+          # Grafana, run under a supervisor by run-lgtm.sh) takes real wall time
+          # to come up; Grafana serving "/" is the last thing to start, so it is
+          # the honest readiness signal for the whole stack.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 10
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2"
+              memory: "3Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-lgtm
+  labels:
+    app.kubernetes.io/name: otel-lgtm
+    app.kubernetes.io/part-of: part5-kubernetes-observability
+spec:
+  selector:
+    app.kubernetes.io/name: otel-lgtm
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+    - name: grafana
+      port: 3000
+      targetPort: 3000
+    - name: tempo
+      port: 3200
+      targetPort: 3200
+    - name: prometheus
+      port: 9090
+      targetPort: 9090
+    - name: loki
+      port: 3100
+      targetPort: 3100

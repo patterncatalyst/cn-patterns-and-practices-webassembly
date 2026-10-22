@@ -1,0 +1,163 @@
+# ch24 on-cluster observability — CRC backend.
+#
+# otel-lgtm (the minikube backend, ../k8s/observability/base/otel-lgtm.yaml) is
+# a DEV image: Grafana's own Dockerfile runs it unprivileged but its supervisor
+# starts five processes that each want to self-manage ports/files, and it is
+# never validated against restricted-v2's "no fixed UID, assign one from the
+# namespace range" model. It is NOT used here — house rule: CRC stays
+# restricted-v2 with NO SCC exception, anyuid is barred.
+#
+# Instead: a minimal, single-purpose otel/opentelemetry-collector-contrib
+# (0.163.1 — the tag pinned in the upstream otelcol-contrib distribution
+# manifest as of this survey) receiving OTLP from the wasmCloud host
+# (../openshift/wasmcloud-host-otel.yaml) and dumping it two ways so the
+# evidence is readable with no UI and no port-forward:
+#   * `debug` exporter (verbosity: detailed) -> container stdout, read with
+#     `oc logs`.
+#   * `file` exporter -> an emptyDir, read with `oc exec ... cat`.
+#
+# restricted-v2 compliance: the official collector-contrib image has run as a
+# non-root UID (10001) by default since v0.40.0, but this manifest does NOT
+# rely on that fixed UID — like wadm in ../openshift/values-crc.yaml, no
+# runAsUser/runAsGroup is set at all, so OpenShift's restricted-v2 SCC assigns
+# a UID from the namespace's allocated range and a supplemental fsGroup; the
+# collector's config file comes from a ConfigMap volume (readable by any UID)
+# and the only directory it writes to is the emptyDir below, whose ownership
+# the kubelet sets to the Pod's SCC-assigned fsGroup — write access with no
+# fixed UID and no SCC exception.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: wasmcloud
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      batch:
+        timeout: 5s
+    exporters:
+      debug:
+        verbosity: detailed
+      file:
+        path: /data/otel-output.json
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, file]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, file]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, file]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: wasmcloud
+  labels:
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/part-of: part5-kubernetes-observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: otel-collector
+        app.kubernetes.io/part-of: part5-kubernetes-observability
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.163.1
+          args: ["--config=/etc/otelcol-contrib/config.yaml"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+            - name: health
+              containerPort: 13133
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otelcol-contrib
+              readOnly: true
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+            items:
+              - key: config.yaml
+                path: config.yaml
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: wasmcloud
+  labels:
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/part-of: part5-kubernetes-observability
+spec:
+  selector:
+    app.kubernetes.io/name: otel-collector
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
