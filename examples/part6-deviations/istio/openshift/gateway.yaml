@@ -1,0 +1,27 @@
+# examples/part6-deviations/istio/openshift/gateway.yaml
+#
+# CRC counterpart to ../base/gateway.yaml. The istio-ingressgateway workload
+# this selects is installed by ../../install-ossm.sh (Sail operator's Istio CR,
+# profile default/demo-equivalent). hosts[0] is a placeholder;
+# ../../verify-istio-crc.sh patches it live to the edge-TLS Route's assigned
+# host (oc get route cargo-http-istio -n istio-system -o jsonpath=...).
+#
+# protocol: HTTP, not HTTPS — ./route.yaml terminates TLS at the OpenShift
+# router (termination: edge) and forwards PLAIN HTTP to istio-ingressgateway's
+# http2 port, same split Part 5's own edge Route uses in front of the operator
+# Service.
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: cargo-http-gateway
+  namespace: wasmcloud
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "cargo-http-istio.apps-crc.testing"

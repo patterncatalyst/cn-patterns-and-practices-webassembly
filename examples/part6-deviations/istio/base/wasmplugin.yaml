@@ -1,0 +1,40 @@
+# examples/part6-deviations/istio/base/wasmplugin.yaml
+#
+# WasmPlugin — loads the proxy-wasm cargo filter module into the Envoy sidecar
+# that Istio injects into the cargo-http Pod (namespace label
+# istio-injection=enabled, set by ../istio-install.sh / the Namespace patch in
+# ./kustomization.yaml). This is istiod's job, not Kubernetes': istiod watches
+# WasmPlugin objects and pushes an ECDS (Extension Config Discovery Service)
+# update to every matching Envoy, which fetches the OCI wasm image and loads it
+# as an HTTP filter in its request path — BEFORE the request reaches the
+# cargo-http Pod's app container.
+#
+# Contrast with the Component-Model app itself (pulled in by ./kustomization.yaml
+# from examples/part5-kubernetes/k8s/base): app.wasm runs under the containerd
+# `wasmtime` shim as the Pod's MAIN container, built with cargo-component
+# against contracts/wit (wasi:http/incoming-handler). filter.wasm runs INSIDE
+# the Envoy SIDECAR's own proxy-wasm host, built with plain
+# `cargo build --target wasm32-wasip1` against the `proxy-wasm` crate (see
+# examples/part6-deviations/istio-wasmfilter) — a completely different Wasm
+# ABI, toolchain, and host, sharing nothing but the Pod. This single Pod now
+# runs TWO independent Wasm worlds: the chapter's headline teaching point.
+#
+# phase: AUTHZ — the filter's behavior (require x-cargo-tenant, else deny; the
+# istio-wasmfilter crate responds 403) is an authorization-shaped gate, not
+# authentication or pure telemetry. istiod orders AUTHZ-phase extensions after
+# Istio's own authn/authz filters and before the request reaches the
+# application — echoes the ch20 sidecar-embargo idea, now enforced at the mesh
+# layer instead of inside the app's own Pod.
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: cargo-wasmfilter
+  namespace: part5-kubernetes
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cargo-http
+  url: oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
+  pluginName: cargo-wasmfilter
+  phase: AUTHZ
+  pluginConfig: {}

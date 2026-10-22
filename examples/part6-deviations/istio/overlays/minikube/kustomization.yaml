@@ -1,0 +1,33 @@
+# examples/part6-deviations/istio/overlays/minikube/kustomization.yaml
+#
+# Same retag/imagePullPolicy pin as
+# examples/part5-kubernetes/k8s/overlays/minikube/kustomization.yaml — this
+# overlay pulls the SAME Part 5 Deployment (via ../../base, which pulls
+# examples/part5-kubernetes/k8s/base), so the image needs the identical
+# minikube-local-containerd-store treatment: retag to :minikube and force
+# imagePullPolicy: Never (the image only exists in minikube's node containerd
+# store via `minikube image load`, never a registry pull).
+#
+# Prerequisite: ../../../part5-kubernetes/k8s/verify-minikube.sh --keep has
+# already built + loaded the image and deployed the app ONCE; this overlay then
+# layers the ch25 Istio objects on top of that SAME running Deployment/Service
+# (kubectl apply -k here does not recreate the app, it adds WasmPlugin +
+# Gateway + VirtualService and the istio-injection label, see ../../base).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: cargo-http-wasm
+    newTag: minikube
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-http
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

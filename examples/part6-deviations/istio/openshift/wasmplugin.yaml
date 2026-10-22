@@ -1,0 +1,30 @@
+# examples/part6-deviations/istio/openshift/wasmplugin.yaml
+#
+# CRC counterpart to ../base/wasmplugin.yaml — same OCI filter image, same
+# phase, different target namespace (the Part 5 OpenShift wasmCloud namespace,
+# "wasmcloud" — see ../../../part5-kubernetes/openshift/lib.sh's $NS).
+#
+# No `spec.selector`: Part 5's OpenShift app runs as a SINGLE operator-managed
+# Deployment (wasmcloud-host; the wasmCloud operator owns its Pod template
+# labels, not this chapter). Guessing at those labels and getting them wrong
+# would silently attach the filter to nothing. A WasmPlugin with no selector,
+# applied in a non-root namespace, scopes to every sidecar-injected workload IN
+# THAT NAMESPACE (documented Istio behavior) — on CRC that is exactly ONE
+# workload (wasmcloud-host), so the effect is identical to an explicit selector
+# without betting on an unconfirmed label.
+#
+# TBD-confirm-at-kickoff: once live, confirm wasmcloud-host's Pod labels
+# (oc get pods -n wasmcloud --show-labels) and tighten this to an explicit
+# `spec.selector.matchLabels`, matching ../base/wasmplugin.yaml's precision, if
+# desired — not required for correctness, only for defense-in-depth against a
+# second workload later landing in the same namespace.
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: cargo-wasmfilter
+  namespace: wasmcloud
+spec:
+  url: oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
+  pluginName: cargo-wasmfilter
+  phase: AUTHZ
+  pluginConfig: {}

@@ -1,0 +1,32 @@
+# examples/part6-deviations/istio/base/gateway.yaml
+#
+# Istio Gateway — a SECOND, mesh-routed entry point into cargo-http, alongside
+# Part 5's original ingress-nginx Ingress (examples/part5-kubernetes/k8s/base/
+# ingress.yaml, pulled in unmodified by ./kustomization.yaml; both coexist).
+# This chapter's live verification goes through THIS path, so the proxy-wasm
+# filter (base/wasmplugin.yaml) actually sits in front of the request.
+#
+# selector: istio: ingressgateway — the label the `demo`/`default` Istio
+# install profile's istio-ingressgateway Deployment carries; a Gateway object
+# does not need to live in the same namespace as the gateway workload it
+# selects, so this stays in part5-kubernetes alongside the app it fronts.
+#
+# hosts[0] is a placeholder; verify-istio-minikube.sh patches it live to
+# cargo-istio.<minikube-ip>.nip.io (the IP is only known at run time — same
+# convention as examples/part5-kubernetes/k8s/base/ingress.yaml's placeholder
+# host).
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: cargo-http-gateway
+  namespace: part5-kubernetes
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "cargo-istio.part5-kubernetes.example"
