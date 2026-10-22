@@ -1,0 +1,23 @@
+
+[1m==> 0/5 Preflight: the wasmCloud app + OSSM3 control plane are up[0m
+    ✓ wasmCloud app + Istio control plane present
+    expect READY 1/1 below (pure wasmCloud-host container, no istio-proxy sidecar):
+POD   READY
+
+[1m==> 1/5 Apply the ch25 manifests (idempotent): Gateway + VirtualService in wasmcloud, WasmPlugin + Route in istio-system[0m
+    ✓ Gateway + VirtualService + WasmPlugin (gateway-scoped) + Route applied
+
+[1m==> 2/5 Resolve the live Route host, patch Gateway + VirtualService to match[0m
+    ✓ edge-TLS Route https://cargo-http-istio-istio-system.apps-crc.testing/ -> Gateway/VirtualService re-pointed
+
+[1m==> 3/5 Wait for the gateway to pick up the WasmPlugin[0m
+    ✓ istio-ingressgateway ready
+
+[1m==> 4/5 WITHOUT x-cargo-tenant -> expect 403 (the filter denies)[0m
+    ✓ GET /cargo/CARGO-USNYC-DEHAM (no x-cargo-tenant) -> 403 after 0s
+
+[1m==> 5/5 WITH x-cargo-tenant: acme -> expect 200 + exact JSON + x-cargo-filtered-by header[0m
+    ✓ GET /cargo/CARGO-USNYC-DEHAM (x-cargo-tenant: acme) -> 200, exact cargo JSON, x-cargo-filtered-by: cargo-wasmfilter
+
+PASS — ch25 Istio + Wasm on OpenShift Local (CRC, OSSM3/Sail operator): the proxy-wasm filter, running in the istio-ingressgateway's own Envoy (no sidecar), denied the request without x-cargo-tenant (403) and, with it, added x-cargo-filtered-by before proxying on to the same wasmCloud-hosted cargo-http app, which answered with the exact cargo JSON -- through a real edge-TLS Route, CA-verified, never -k, never port-forward.
+exit 0

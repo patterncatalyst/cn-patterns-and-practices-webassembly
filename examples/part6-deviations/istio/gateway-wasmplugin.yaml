@@ -1,0 +1,58 @@
+# examples/part6-deviations/istio/gateway-wasmplugin.yaml
+#
+# WasmPlugin — loads the proxy-wasm cargo filter module into the
+# istio-ingressgateway's OWN Envoy (a normal Pod, selector istio: ingressgateway,
+# namespace istio-system), NOT into a sidecar on the cargo-http Pod.
+#
+# WHY HERE, NOT AS A SIDECAR: a `runtimeClassName: wasmtime` Pod runs one
+# container runtime for every container in it, so the filter runs in the
+# gateway's Envoy instead of a sidecar on the app Pod. cargo-http stays a
+# pure Wasm Pod (see ../../part5-kubernetes/k8s/base, pulled in unmodified by
+# ./base/kustomization.yaml, no injection label) and this filter runs in an
+# ordinary Pod with no RuntimeClass, where proxy-wasm's host environment
+# works exactly as upstream Istio documents it.
+#
+# This single mesh runs two independent Wasm worlds, split across two Pods:
+# app.wasm (wasi:http/incoming-handler, built with cargo-component against
+# contracts/wit, under containerd-shim-wasmtime in the cargo-http Pod) and
+# filter.wasm (the proxy-wasm crate, built with plain `cargo build --target
+# wasm32-wasip1`, see examples/part6-deviations/istio-wasmfilter) in the
+# ingress gateway's Envoy. Different ABI, different toolchain, different
+# host, different Pod — each runs its own Wasm runtime without a
+# RuntimeClass conflict.
+#
+# selector: istio: ingressgateway — the label the `demo`/`default` Istio
+# install profile's istio-ingressgateway Deployment carries (see
+# ../istio-install.sh step 2). This WasmPlugin lives in istio-system
+# alongside that gateway workload, NOT in the app's namespace
+# (part5-kubernetes) — contrast with the earlier sidecar-shaped
+# base/wasmplugin.yaml this file replaces (removed; see base/kustomization.yaml).
+#
+# phase: AUTHZ — the filter's behavior (require x-cargo-tenant, else deny; the
+# istio-wasmfilter crate responds 403) is an authorization-shaped gate, not
+# authentication or pure telemetry. istiod orders AUTHZ-phase extensions after
+# Istio's own authn/authz filters and before the request is proxied onward to
+# cargo-http — same ordering intent as the original sidecar design, now
+# enforced at the mesh edge instead of inside the app's own Pod.
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: cargo-wasmfilter
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  url: oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
+  # The filter image is a PRIVATE ghcr package, so the gateway Envoy's agent
+  # needs registry credentials to fetch it: a docker-registry secret named
+  # `ghcr-pull` in THIS namespace (istio-system, where the gateway Pod and
+  # this WasmPlugin both live — not the app's namespace). ../istio-install.sh
+  # creates it (kubectl create secret docker-registry ghcr-pull
+  # --docker-server=ghcr.io --docker-username=<owner> --docker-password=<token>
+  # -n istio-system). Make the package public instead and this line can be
+  # dropped.
+  imagePullSecret: ghcr-pull
+  pluginName: cargo-wasmfilter
+  phase: AUTHZ
+  pluginConfig: {}

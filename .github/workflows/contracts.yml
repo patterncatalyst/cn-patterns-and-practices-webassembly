@@ -169,6 +169,7 @@ jobs:
       PART3_DIR: "examples/part3-interfaces"
       PART4_DIR: "examples/part4-runtimes"
       PART5_DIR: "examples/part5-kubernetes"
+      PART6_DIR: "examples/part6-deviations"
     steps:
       - uses: actions/checkout@v5
 
@@ -176,7 +177,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: "1.99.1"
-          targets: wasm32-wasip2
+          targets: wasm32-wasip2, wasm32-wasip1
 
       # cargo-component has no prebuilt binary for this version — it must be
       # built from source (`cargo install --locked`), which is the slow part
@@ -369,6 +370,20 @@ jobs:
           set -euo pipefail
           cd "${PART5_DIR}/kafka-handler"
           cargo component build --release
+
+      # r07a: the ch25 Istio filter is a PROXY-WASM core module, NOT a Component
+      # Model component — plain `cargo build --target wasm32-wasip1` of a cdylib
+      # using the `proxy-wasm` crate, no cargo-component, no WIT, no bindings.rs.
+      # It is built here only to prove it still compiles; it is deliberately
+      # EXCLUDED from the bindings-drift gate below (it has no generated bindings
+      # and never touches contracts/wit). The WasmPlugin LIVE run (Istio on
+      # minikube + OSSM3 on CRC) is evidence-only, verified by hand under
+      # examples/part6-deviations/istio/evidence/ — never a CI step.
+      - name: Build the Part 6 ch25 proxy-wasm Istio filter
+        run: |
+          set -euo pipefail
+          cd "${PART6_DIR}/istio-wasmfilter"
+          cargo build --release --target wasm32-wasip1
 
       # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
@@ -574,3 +589,25 @@ jobs:
             examples/part5-kubernetes/openshift/wadm-kafka.yaml \
             examples/part5-kubernetes/openshift/wasmcloud-host-otel.yaml \
             examples/part5-kubernetes/openshift/otel-collector.yaml
+
+      # r07a (ch25 Istio + Wasm) — the proxy-wasm WasmPlugin deployment manifests,
+      # still fully offline: render the minikube overlay (reuses the Part 5
+      # cargo-http base + the Istio Gateway/VirtualService/WasmPlugin) through
+      # kustomize + kubeconform, and validate the standalone CRC/OSSM3 CRD
+      # instances as-committed. WasmPlugin (extensions.istio.io), Gateway/
+      # VirtualService (networking.istio.io), Istio/IstioCNI (sailoperator.io)
+      # and the edge-TLS Route are all CRDs with no bundled schema -> skipped by
+      # -ignore-missing-schemas, same reasoning as the wadm/WasmCloudHostConfig
+      # manifests above. The LIVE mesh runs (Istio on minikube, OSSM3 on CRC)
+      # are evidence-only under examples/part6-deviations/istio/evidence/.
+      - name: Validate Part 6 ch25 Istio manifests (kubeconform) — minikube overlay + CRC CRD instances
+        run: |
+          kubectl kustomize examples/part6-deviations/istio/overlays/minikube \
+            | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+          kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
+            examples/part6-deviations/istio/gateway-wasmplugin.yaml \
+            examples/part6-deviations/istio/openshift/ingress-gateway.yaml \
+            examples/part6-deviations/istio/openshift/wasmplugin.yaml \
+            examples/part6-deviations/istio/openshift/gateway.yaml \
+            examples/part6-deviations/istio/openshift/virtualservice.yaml \
+            examples/part6-deviations/istio/openshift/route.yaml

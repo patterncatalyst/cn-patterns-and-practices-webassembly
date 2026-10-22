@@ -1,0 +1,55 @@
+# OpenShift Service Mesh 3 (Sail operator) ingress gateway, deployed via gateway
+# injection. Sail does not create an ingress gateway on its own (unlike
+# istioctl's demo profile), so this Deployment + Service provides one: the pod
+# template carries sidecar.istio.io/inject and the gateway injection template,
+# and istiod injects the Envoy. The `istio: ingressgateway` label is what the
+# gateway WasmPlugin (openshift/wasmplugin.yaml) selects. restricted-v2: no
+# fixed uid, drop ALL, seccomp RuntimeDefault.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  labels:
+    istio: ingressgateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  template:
+    metadata:
+      labels:
+        istio: ingressgateway
+        sidecar.istio.io/inject: "true"
+      annotations:
+        inject.istio.io/templates: gateway
+    spec:
+      containers:
+        - name: istio-proxy
+          image: auto
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  labels:
+    istio: ingressgateway
+spec:
+  selector:
+    istio: ingressgateway
+  ports:
+    - name: http2
+      port: 80
+      targetPort: 8080
+    - name: https
+      port: 443
+      targetPort: 8443

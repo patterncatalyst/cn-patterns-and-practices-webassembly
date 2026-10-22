@@ -1,0 +1,31 @@
+# examples/part6-deviations/istio/openshift/route.yaml
+#
+# Edge-TLS Route -> the istio-ingressgateway Service (installed by
+# ../../install-ossm.sh into the istio-system namespace). The router terminates
+# TLS here and forwards plain HTTP to the gateway's http2 port — ./gateway.yaml
+# and ./virtualservice.yaml then route that plain-HTTP request on to the
+# EXISTING Part 5 cargo-http Service (wasmcloud namespace, port 8000).
+#
+# No explicit host: the OpenShift router assigns the default
+# `<name>-<namespace>.apps-crc.testing` host; verify-istio-crc.sh reads it back
+# with `oc get route ... -o jsonpath='{.spec.host}'` and patches
+# ../openshift/gateway.yaml + virtualservice.yaml to match — same pattern as
+# ../../../part5-kubernetes/openshift/deploy.sh's own Route.
+#
+# insecureEdgeTerminationPolicy: Redirect — plain HTTP on the Route's host
+# bounces to HTTPS, matching Part 5's openshift Route convention; the CA-verified
+# curl in verify-istio-crc.sh always speaks HTTPS directly.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: cargo-http-istio
+  namespace: istio-system
+spec:
+  to:
+    kind: Service
+    name: istio-ingressgateway
+  port:
+    targetPort: http2
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
