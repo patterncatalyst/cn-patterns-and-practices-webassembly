@@ -1,30 +1,23 @@
 package patterncatalyst:cargo-kafka-handler@0.1.0;
 
 /// The ch23 Kafka message HANDLER for the cargo domain, as a WebAssembly
-/// component — the workload KEDA's `kafka` ScaledObject observes and the wadm
-/// spreadscaler OWNS the replica count for (see ../k8s/wasmcloud/wadm-kafka.yaml
-/// and ../k8s/keda/base/kafka-scaledobject.yaml).
+/// component.
 ///
-/// This world EXPORTS `wasmcloud:messaging/handler@0.2.0` — the interface the
-/// wasmCloud `messaging-kafka` capability provider invokes once per delivered
-/// Kafka message (the provider is the CONSUMER that owns the subscription;
-/// this component is the business-logic HANDLER wadm links it to, the same
-/// provider-calls-component shape as the httpserver/cargo-http link in Part 4).
-/// It also exports `wasmcloud:messaging/types` (the `broker-message` record
-/// handler.wit's `use` pulls in) — exported explicitly alongside handler,
-/// matching the house convention of always listing a types-only interface a
-/// world's functional interfaces depend on (see contracts/wit/world.wit:
-/// `export types; export booking; export handling;`).
+/// EXPORTS `wasmcloud:messaging/handler@0.2.0` — invoked once per delivered
+/// Kafka message — plus `wasmcloud:messaging/types` (the `broker-message`
+/// record handler.wit's `use` pulls in), exported explicitly alongside handler
+/// per the house convention of always listing a types-only interface a world's
+/// functional interfaces depend on.
 ///
-/// It IMPORTS the cargo domain's `booking` and `handling` interfaces (+ the
-/// pure-type `types`) from the repository contract and, on every delivered
-/// message, ensures the cargo is on record (`book-cargo` if `get-cargo`
-/// reports none) before calling `register-handling-event` — a real write
-/// against the SAME cargo domain Parts 2-5 use, not a stub. In the wasmCloud
-/// lattice these imports are satisfied at wadm deploy time by a `link` trait
-/// to a deployed cargo provider component (the runtime-link shape from ch20's
-/// wadm-filtered.yaml), NOT by a `wac plug` composition — this component is
-/// deployed standalone, never composed into one .wasm with the provider.
+/// IMPORTS the cargo domain's `booking` and `handling` interfaces (+ the
+/// pure-type `types`) from the repository contract and, on every message,
+/// ensures the cargo is on record (`book-cargo` when `get-cargo` reports none)
+/// before calling `register-handling-event`, a write against the same cargo
+/// domain Parts 2-5 use. These imports are satisfied two ways: on minikube the
+/// native `cargo-kafka-host` consumer composes this component with the cargo
+/// provider via `wac plug` (../kafka-host); on OpenShift a wadm `link` trait
+/// wires them at deploy time (../openshift/wadm-kafka.yaml), the runtime-link
+/// shape from ch20.
 ///
 /// `wasmcloud:messaging@0.2.0` is vendored under wit/deps/messaging (the
 /// upstream wasmCloud/messaging WIT package, verbatim). `patterncatalyst:cargo`

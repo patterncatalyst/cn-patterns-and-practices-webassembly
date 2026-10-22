@@ -63,7 +63,7 @@ spec:
 
 `scalingMetric.concurrency.targetValue: 1` means a single in-flight request is enough to trigger a scale-out, matching the HPA's low `50m` CPU request from Chapter 22: both are tuned so a single `curl` demonstrates the mechanism without a load-testing tool. `scaledownPeriod: 30` is cut far below the add-on's own default (hundreds of seconds), because a Wasm component has no JVM-style warm-up to protect against: `containerd-shim-wasmtime` starts serving within milliseconds of a Pod going Ready, so there is no reason to wait minutes of idleness before scaling back down.
 
-<div class="callout callout--warn"><p class="callout__title">Gotcha</p><p>The original plan for this chapter assumed a top-level <code>minReplicaCount</code> field on <code>HTTPScaledObject</code>, the same name the Kafka half's plain <code>ScaledObject</code> uses. That field does not exist on the 0.16 <code>HTTPScaledObject</code> CRD. The current spec nests replica bounds under <code>spec.replicas.{min,max}</code>, verified directly against the upstream CRD (<code>kedacore/http-add-on @ v0.16.0</code>, <code>config/crd/bases/http.keda.sh_httpscaledobjects.yaml</code>) and the matching reference doc at <a href="https://keda.sh/docs/http-add-on/0.16/reference/httpscaledobject/">keda.sh/docs/http-add-on/0.16/reference/httpscaledobject</a>. <code>HTTPScaledObject</code> is also marked deprecated as of the 0.16 line, in favor of a newer <code>InterceptorRoute</code> (<code>http.keda.sh/v1beta1</code>) resource that is still shipped and fully functional in 0.16; the deprecation is a forward-migration notice rather than a removal, which is why this chapter uses the resource the house plan asked for and names the newer one here for anyone building past this chapter's pinned versions.</p></div>
+<div class="callout callout--warn"><p class="callout__title">Gotcha</p><p>On the 0.16 <code>HTTPScaledObject</code> CRD, replica bounds nest under <code>spec.replicas.{min,max}</code>, not a top-level <code>minReplicaCount</code> (the field the Kafka half's plain <code>ScaledObject</code> uses) — verified against the upstream CRD (<code>kedacore/http-add-on @ v0.16.0</code>, <code>config/crd/bases/http.keda.sh_httpscaledobjects.yaml</code>) and the reference doc at <a href="https://keda.sh/docs/http-add-on/0.16/reference/httpscaledobject/">keda.sh/docs/http-add-on/0.16/reference/httpscaledobject</a>. <code>HTTPScaledObject</code> is marked deprecated as of the 0.16 line in favor of a newer <code>InterceptorRoute</code> (<code>http.keda.sh/v1beta1</code>), still shipped and functional in 0.16; the deprecation is a forward-migration notice, not a removal, so this chapter uses <code>HTTPScaledObject</code> and names the newer resource for anyone building past these pinned versions.</p></div>
 
 A `ScaledObject`-driven Ingress has one more wrinkle before a cold request can actually reach the interceptor. Kubernetes requires an Ingress backend to be a Service in the same namespace as the Ingress object, but the HTTP add-on's interceptor proxy Service lives in the `keda` namespace, not `part5-kubernetes`. The standard KEDA recipe for bridging that gap is a same-namespace `ExternalName` Service that resolves to the interceptor's cluster DNS name:
 
@@ -153,14 +153,15 @@ world cargo-kafka-handler {
     export wasmcloud:messaging/handler@0.2.0;
 
     import patterncatalyst:cargo/types@0.1.0;
+    import patterncatalyst:cargo/booking@0.1.0;
     import patterncatalyst:cargo/handling@0.1.0;
 }
 ```
 {% endraw %}
 
-`wasmcloud:messaging@0.2.0` is vendored verbatim under `wit/deps/messaging`, the same approach Part 3's `http-rust` already uses for `wasi:http`, because `cargo-component` never fetches WIT packages over the network: every non-contract package a local world references has to be present on disk. `patterncatalyst:cargo` is pulled in the same way Chapters 20 and 21's interposers pull it, a path dependency to the repository contract, never a copy and never an edit. The component exports `handler` (the callback the native host below invokes) and the `types` interface the `broker-message` record it depends on lives in, following the house convention of always listing a types-only interface a world's functional interfaces depend on. It imports only `handling`, not the full cargo package, because recording a handling event is the one write this component makes against the domain.
+`wasmcloud:messaging@0.2.0` is vendored verbatim under `wit/deps/messaging`, the same approach Part 3's `http-rust` already uses for `wasi:http`, because `cargo-component` never fetches WIT packages over the network: every non-contract package a local world references has to be present on disk. `patterncatalyst:cargo` is pulled in the same way Chapters 20 and 21's interposers pull it, a path dependency to the repository contract, never a copy and never an edit. The component exports `handler` (the callback the native host below invokes) and the `types` interface the `broker-message` record it depends on lives in, following the house convention of always listing a types-only interface a world's functional interfaces depend on. It imports `booking` and `handling`: a handling event records against an existing cargo, so each message ensures the cargo is on record (booking it when the domain has none) before registering the event.
 
-`src/lib.rs` keeps the message format small: a pipe-delimited record, `CARGO_ID|EVENT_TYPE|UNLOCODE|VOYAGE_ID|RECORDED_AT`, parsed without a JSON crate, matching the zero-extra-dependency convention Chapter 20's `sidecar-filter` and Chapter 21's `adapter` both already follow. The `Guest` implementation is a straightforward parse-validate-call:
+`src/lib.rs` keeps the message format small: a pipe-delimited record, `CARGO_ID|EVENT_TYPE|UNLOCODE|VOYAGE_ID|RECORDED_AT`, parsed without a JSON crate, matching the zero-extra-dependency convention Chapter 20's `sidecar-filter` and Chapter 21's `adapter` both already follow. The `Guest` implementation parses, validates, ensures the cargo exists, then records the event:
 
 {% raw %}
 ```rust
@@ -184,6 +185,11 @@ impl HandlerGuest for Component {
         let voyage_id = fields[3];
         let recorded_at = fields[4];
 
+        if cargo_id.is_empty() || unlocode.is_empty() {
+            return Err(format!(
+                "malformed message: cargo-id and unlocode must not be empty: {body:?}"
+            ));
+        }
         let event_type = event_type_from(event_type_str).ok_or_else(|| {
             format!(
                 "unknown event type '{event_type_str}' (want one of \
@@ -196,6 +202,8 @@ impl HandlerGuest for Component {
             name: unlocode.to_string(),
             country: unlocode.to_string(),
         };
+
+        ensure_cargo_booked(cargo_id, recorded_at)?;
 
         handling::register_handling_event(cargo_id, event_type, &location, voyage_id, recorded_at)
             .map_err(|e| format!("register-handling-event failed for cargo_id={cargo_id}: {e:?}"))?;
@@ -210,7 +218,36 @@ impl HandlerGuest for Component {
 ```
 {% endraw %}
 
-Every malformed or unrecognized message is a real `Err`, never a silent drop: a bad event type, missing fields, or invalid UTF-8 all surface as a rejected `result<_, string>` the host's own delivery semantics have to deal with, rather than being swallowed inside the handler. The location record defaults its `name` and `country` to the UN/LOCODE itself: the Kafka wire format in this demo carries only the code, not a full location lookup, and the cargo provider stays authoritative for any display-quality data. This handler's job is to record that an event happened, not to enrich it.
+A malformed or unrecognized message surfaces as a rejected `result<_, string>` the host's delivery semantics then act on: a bad event type, missing fields, empty cargo-id, or invalid UTF-8 all return `Err` rather than being swallowed inside the handler. The location record defaults its `name` and `country` to the UN/LOCODE itself: the Kafka wire format in this demo carries only the code, not a full location lookup, and the cargo provider stays authoritative for any display-quality data.
+
+`register-handling-event` records against an existing cargo, so `ensure_cargo_booked` runs first. It looks the cargo up and, when the domain has no record of it, reconstructs the route from the id — the `CARGO-<ORIGIN>-<DEST>` shape the cargo provider's own `book-cargo` generates (Part 2's `tracking_id_for`) — and books it:
+
+{% raw %}
+```rust
+fn ensure_cargo_booked(cargo_id: &str, recorded_at: &str) -> Result<(), String> {
+    match booking::get_cargo(cargo_id) {
+        Ok(_) => Ok(()),
+        Err(CargoError::NotFound(_)) => {
+            let (origin, destination) = locations_from_cargo_id(cargo_id).ok_or_else(|| {
+                format!("cannot derive origin/destination from cargo-id '{cargo_id}': \
+                         expected CARGO-<ORIGIN>-<DEST>")
+            })?;
+            let loc = |c: &str| Location { unlocode: c.into(), name: c.into(), country: c.into() };
+            let spec = RouteSpec {
+                origin: loc(origin),
+                destination: loc(destination),
+                arrival_deadline: recorded_at.to_string(),
+            };
+            booking::book_cargo(&spec, DEFAULT_WEIGHT_KG).map(|_| ())
+                .map_err(|e| format!("book-cargo failed for cargo_id={cargo_id}: {e:?}"))
+        }
+        Err(e) => Err(format!("get-cargo failed for cargo_id={cargo_id}: {e:?}")),
+    }
+}
+```
+{% endraw %}
+
+Booking keyed on a lookup, not a create-once step, is what makes each invocation self-contained — which matters because the host below creates a fresh component instance per message, carrying no state between them.
 
 `examples/part5-kubernetes/kafka-host/Cargo.toml` pins the host's Kafka-specific dependency exactly, because its build compiles a native library rather than linking a prebuilt one:
 
@@ -278,7 +315,7 @@ if let Err(e) = consumer.commit_message(&message, CommitMode::Sync) {
 
 A shared `AtomicBool` set by both `SIGINT` and `SIGTERM` handlers breaks the poll loop cleanly, so the process exits promptly instead of being force-killed the moment KEDA scales `cargo-kafka-host` down.
 
-The broker underneath all of this is Strimzi 1.3.0, in single-node KRaft mode (no ZooKeeper; Strimzi dropped it entirely by this release line). The chapter's original plan assumed Apache Kafka 4.1.0; verified against the 1.3.0 release's own example manifests, that operator version supports only Kafka 4.2.0 through 4.3.1, so `examples/part5-kubernetes/k8s/kafka/base/kafka.yaml` pins the exact pairing Strimzi ships in its own example:
+The broker underneath all of this is Strimzi 1.3.0, in single-node KRaft mode (no ZooKeeper; Strimzi dropped it entirely by this release line). Strimzi 1.3.0 supports Kafka 4.2.0 through 4.3.1 (verified against the 1.3.0 release's own example manifests), so `examples/part5-kubernetes/k8s/kafka/base/kafka.yaml` pins the exact pairing Strimzi ships in its own example:
 
 {% raw %}
 ```yaml
@@ -387,7 +424,7 @@ The full sequence `examples/part5-kubernetes/k8s/keda/verify-keda-kafka-minikube
 
 The Kafka half's CRC port is deferred.
 
-The HTTP half's cold-start number above is a real, measured one, from the 2026-10-21 minikube run. The Kafka half is a different story: every example in it is built and composed correctly, and the build-time proofs (the handler and host compiling, the composite exporting the right interfaces, the manifests applying their resources without error) are solid, but the cluster run that would produce a real lag-drain timeline is pending live verification, which is why the Kafka timeline above is a placeholder rather than a number. No latency or lag figure in this chapter is invented to fill that gap.
+The HTTP half's cold-start figure above is measured, from the 2026-10-21 minikube run. The Kafka half's lag-drain timeline is pending live verification, so the figure above is a placeholder.
 
 <div class="callout callout--safe"><p class="callout__title">Decision</p><p>Let KEDA own the replica count whenever the workload it targets is a resource the Kubernetes API actually lets a <code>ScaledObject</code> or <code>HTTPScaledObject</code> patch: a Deployment, a StatefulSet, anything with a real <code>spec.replicas</code> field. Both halves of this chapter take that shape now: the HTTP add-on's <code>HTTPScaledObject</code> against the raw-shim <code>cargo-http</code> Deployment, and the <code>kafka</code> <code>ScaledObject</code> against the native <code>cargo-kafka-host</code> Deployment. The two differ only in trigger type, request concurrency versus consumer-group lag, and in the shape of workload on the other end of it, a request/response HTTP service versus a long-lived message-consuming process, never in who owns the scale. Reach for a workload that embeds the runtime directly, an <code>rdkafka</code> consumer process driving an in-process <code>wasmtime</code> instance, the moment a job's work is consuming from a broker rather than answering an inbound HTTP request: the raw containerd shim has no binding for a long-lived subscription at all, so the substrate choice is forced by the capability the workload needs, independent of which trigger ends up scaling it.</p></div>
 

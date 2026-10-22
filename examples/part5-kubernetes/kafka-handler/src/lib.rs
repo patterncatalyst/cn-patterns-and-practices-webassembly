@@ -1,13 +1,15 @@
 // ch23 Kafka message HANDLER for the cargo domain (serverless scale-to-zero).
 //
-// EXPORTS `wasmcloud:messaging/handler` — called once per Kafka message
-// delivered by the `messaging-kafka` capability provider, which wadm links to
-// this component (see ../k8s/wasmcloud/wadm-kafka.yaml). IMPORTS the cargo
-// domain's `booking` and `handling` interfaces from the repository contract
-// and performs a real write — `register-handling-event` — against whichever
-// cargo provider wadm links this component to. This is the workload KEDA's `kafka`
-// ScaledObject OBSERVES consumer-group lag for while the wadm spreadscaler
-// OWNS the actual replica count (see ../k8s/keda/base/kafka-scaledobject.yaml).
+// EXPORTS `wasmcloud:messaging/handler` — invoked once per delivered Kafka
+// message. On minikube the native `cargo-kafka-host` consumer composes this
+// component with the cargo provider (`wac plug`) and calls the export per
+// message (see ../kafka-host); the KEDA `kafka` ScaledObject scales that host
+// Deployment on consumer-group lag (see ../k8s/keda/base/kafka-scaledobject.yaml).
+// On OpenShift it is deployed standalone and a wadm `link` trait wires a
+// messaging provider to it (see ../openshift/wadm-kafka.yaml). IMPORTS the cargo
+// domain's `booking` and `handling` interfaces from the repository contract and
+// performs a write — `register-handling-event` — against the cargo provider it
+// is wired to.
 //
 // Wire format (deliberately simple, no JSON crate — matching the
 // zero-extra-dependency convention of the sibling cargo-filter/cargo-adapter
@@ -15,12 +17,12 @@
 //
 //     CARGO_ID|EVENT_TYPE|UNLOCODE|VOYAGE_ID|RECORDED_AT
 //
-// e.g. "CARGO-USNYC-DEHAM|loaded|DEHAM|VOY-001|2026-11-01T00:00:00Z". A real
-// deployment would carry CloudEvents/JSON on the wire; the point of this
-// handler is the KEDA/wadm scaling story (../_docs ch23), not the message
-// envelope, so the parser stays small and dependency-free. Every malformed or
-// unrecognized message is a genuine rejected `result<_, string>`, not a silent
-// drop — the handler surfaces what it can and cannot process.
+// e.g. "CARGO-USNYC-DEHAM|loaded|DEHAM|VOY-001|2026-11-01T00:00:00Z". A
+// production deployment would carry CloudEvents/JSON on the wire; the point of
+// this handler is the KEDA scaling story (../_docs ch23), not the message
+// envelope, so the parser stays small and dependency-free. A malformed or
+// unrecognized message returns a rejected `result<_, string>` rather than a
+// silent drop — the handler surfaces what it can and cannot process.
 //
 // A handling event records against an existing cargo, so each message first
 // ensures the cargo is on record — booking it from the id if `get-cargo`

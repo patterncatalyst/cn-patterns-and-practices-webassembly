@@ -10,11 +10,10 @@
 #   ../kafka-handler      (imports patterncatalyst:cargo/*,                 wasmcloud:messaging/{types,handler}@0.2.0)
 #                          exports wasmcloud:messaging/{types,handler}@0.2.0)
 #
-# This is the SAME provider ../build.sh plugs under the HTTP front door and
-# ../kafka-handler deploys standalone into the wasmCloud lattice (where wadm's
-# `link` trait satisfies the same import at deploy time instead). Here the
-# import is satisfied at BUILD time, because this path has no lattice: the
-# native host below is a plain Kubernetes Deployment, and
+# This is the SAME provider ../build.sh plugs under the HTTP front door. On
+# OpenShift ../kafka-handler is deployed standalone and a wadm `link` trait
+# satisfies the same import at deploy time instead. Here the import is satisfied
+# at BUILD time: the native host below is a plain Kubernetes Deployment, and
 # `wasmtime::component::Component::from_file` only ever loads one self-contained
 # component — it does not resolve cross-component links.
 #
