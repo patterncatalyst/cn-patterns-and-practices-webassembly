@@ -796,3 +796,45 @@ chart **0.1.2** / host **1.9.1** (reused r06b pins, now also on minikube);
 (TBD-confirm-at-kickoff via `oc get packagemanifest`). Reused firm: shim
 v0.6.1, minikube v1.39.0 / Kubernetes v1.37.1, kubeconform v0.8.0, httpserver
 provider 0.27.0.
+
+## DRQ-074 — ch22 live finding: CPU-based HPA does not scale a cheap stateless Wasm handler
+
+Verified live on minikube (part5, k8s v1.37.1, metrics-server v0.9.0,
+2026-10-21): the `autoscaling/v2` HPA is correctly WIRED to cargo-http
+(`ScalingActive=True`, reads real CPU `2% (1m) / 50%` via metrics-server), but a
+stateless Wasm cargo lookup is so cheap that under heavy in-cluster load (3 load
+Pods each saturating ~248m of CPU client-side) cargo-http's OWN CPU holds at
+**1 millicore (2% of its 50m request)** — far below the 50% target — so the HPA
+correctly holds at 1 replica. There is no honest external load that crosses the
+target; the cost is entirely client-side. **Decision (user-approved): reframe
+ch22's minikube half honestly** around this — HPA wiring + CPU reading verified,
+CPU-based scaling N/A for this workload, which motivates ch23's concurrency-based
+KEDA scaling — rather than staging a contrived CPU scale-out. The verify/capture
+scripts were rewritten to assert this finding (peak CPU < target, ScalingActive
+True), not a scale-out. The CRC wadm-spreadscaler half (a manual `instances`
+lever, not metric-driven) is unaffected and remains to be run.
+
+## DRQ-075 — live-run script fixes found on the first headless minikube pass
+
+Three reproducibility bugs the live run surfaced, all fixed: (1) `k8s/install-shim.sh`
+restarted containerd UNCONDITIONALLY (the `systemctl restart` sat outside the
+grep guard that skips the config edit), so re-running it — e.g. between Part 5
+chapters — SIGKILLed the running Wasm Pod (exit 137) into CrashLoopBackOff; now
+it restarts only when the config actually changed. (2) The Part 5 chapters share
+one `cargo-http` Deployment in one namespace, and a leftover plain HPA makes
+KEDA's admission webhook reject an HTTPScaledObject on the same workload (and
+vice versa); the ch22/ch23 verify + capture scripts now delete any conflicting
+autoscaler at start (clean base). (3) The ch22 load generator OOMKilled at high
+concurrency (64Mi limit), masking the finding; raised to 256Mi.
+
+## DRQ-076 — messaging-kafka provider pin corrected to the stable semver 0.2.0
+
+The r06d build pinned `ghcr.io/wasmcloud/messaging-kafka:6c67eb2` on the belief
+that upstream shipped no semver release. At kickoff the ghcr tag list showed a
+stable **0.2.0** (and a 0.2.0-rc.1 prerelease); `wash inspect
+ghcr.io/wasmcloud/messaging-kafka:0.2.0` confirms vendor=wasmcloud,
+version=0.2.0, x86_64-linux. Repinned both `wadm-kafka.yaml` files (minikube +
+openshift) to the stable **0.2.0**. Its link `source_config` key names
+(`hosts`/`topic`/`consumer_group`) remain unconfirmed and are to be verified from
+the provider logs on the (user-run) Kafka live pass. metrics-server confirmed as
+the minikube addon **v0.9.0** at kickoff.

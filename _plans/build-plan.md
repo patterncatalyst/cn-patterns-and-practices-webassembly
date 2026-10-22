@@ -432,10 +432,18 @@ Roadmap sketch:
   from Wasm + the LGTM stack; CRC rootless collector, restricted-v2, no SCC
   exception, user Decision B), both to be verified live on minikube and CRC per
   the headless-verification rule. One new crate (`kafka-handler`), contracts/wit
-  pristine. DRQ-066..073; pins in version-matrix. **BUILD phase complete
-  (chapters + examples + diagrams + CI + plans, offline, static gates green);
-  LIVE minikube + CRC verification pending (footers flip only after both pass).
-  Part 5 (Ch17–Ch24) COMPLETE at the end of r06d.**
+  pristine. DRQ-066..076; pins in version-matrix. **BUILD phase complete
+  (chapters + examples + diagrams + CI + plans, offline, static gates green).
+  PARTIAL LIVE VERIFICATION (minikube, 2026-10-21): Ch22 HPA finding verified
+  (HPA wired + reads CPU, but a cheap stateless Wasm handler gives no CPU signal
+  → no scale; reframed honestly, DRQ-074) + Ch23 HTTP add-on scale-to-zero
+  verified (0 → cold-200 @ 4.41s). Live-run script fixes landed (DRQ-075:
+  install-shim idempotent restart, clean-base between chapters, load-gen memory)
+  + messaging-kafka pin → 0.2.0 (DRQ-076). REMAINING (user runs live separately):
+  Ch23 Kafka half, Ch24 observability (both minikube), and the entire CRC pass —
+  those footers stay "pending live verification" until the user runs + flips
+  them. Part 5 (Ch17–Ch24) code+chapters COMPLETE; Ch22-minikube/Ch23-HTTP
+  live-verified, the rest live-pending.**
 - **r0N** — Part 6 Deviations: Istio+Wasm, the backend-architecture survey
   (Spin), wasi-nn.
 - **r0N** — Part 7 Final project.
