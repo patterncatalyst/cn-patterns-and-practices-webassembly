@@ -1,0 +1,24 @@
+$ kubectl get runtimeclass wasmtime-spin-v2 -o yaml
+apiVersion: node.k8s.io/v1
+handler: spin-v2
+kind: RuntimeClass
+metadata:
+  creationTimestamp: "2026-10-22T18:24:10Z"
+  labels:
+    wasmtime-spin-v2: "true"
+  name: wasmtime-spin-v2
+  ownerReferences:
+  - apiVersion: runtime.spinkube.dev/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Shim
+    name: spin-v2
+    uid: da10f527-41cb-46dc-93e8-bbc26192bab6
+  resourceVersion: "709"
+  uid: e8b38079-78cb-4292-b5d2-5a05bee345e1
+scheduling:
+  nodeSelector:
+    spin: "true"
+
+$ kubectl get shims.runtime-class-manager.spinframework.dev -A
+error: the server doesn't have a resource type "shims" in group "runtime-class-manager.spinframework.dev"

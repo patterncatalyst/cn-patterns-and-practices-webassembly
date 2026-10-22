@@ -1,0 +1,17 @@
+[package]
+name = "cargo-spin"
+version = "0.1.0"
+edition = "2021"
+
+# The HTTP handler for the Fermyon Spin example in this book's Part 6 (ch26).
+# `spin-sdk` gives the `#[http_service]` entrypoint and the
+# `spin_sdk::dependencies!()` macro that bindgens the `patterncatalyst:cargo`
+# import Spin's own component-dependency composer satisfies at `spin build`
+# time (see build.sh and spin.toml). The version is pinned exact, matching
+# this book's one known-good toolchain snapshot.
+[dependencies]
+anyhow = "1"
+spin-sdk = "=7.0.0"
+
+[lib]
+crate-type = ["cdylib"]

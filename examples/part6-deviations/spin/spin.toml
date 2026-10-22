@@ -1,0 +1,29 @@
+#:schema https://schemas.spinframework.dev/spin/manifest-v2/latest.json
+#
+# examples/part6-deviations/spin/spin.toml
+#
+# The SHIPPED manifest: `component.cargo-spin.source` points straight at
+# `cargo-spin.wasm`, the artifact `build.sh` produces by `wac plug`-composing
+# this crate's handler with the unedited Part 2 cargo provider. The import is
+# already satisfied by the time this manifest is read, so there is no
+# `[component.cargo-spin.dependencies]` entry here — see build.sh for the
+# separate, gitignored manifest that drives the pre-composition build and
+# regenerates `spin-dependencies.wit`.
+#
+# `spin up -f spin.toml` runs it locally; the same file is COPYed into the CRC
+# runtime image alongside `cargo-spin.wasm` (see Dockerfile) and read by the
+# same `spin up` command there.
+spin_manifest_version = 2
+
+[application]
+name = "cargo-spin"
+version = "0.1.0"
+description = "Cargo domain HTTP front door as a Fermyon Spin component (ch26)."
+
+[[trigger.http]]
+route = "/..."
+component = "cargo-spin"
+
+[component.cargo-spin]
+source = "cargo-spin.wasm"
+allowed_outbound_hosts = []

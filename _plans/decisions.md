@@ -914,3 +914,19 @@ it is removed from the minikube path effective this iteration. Chapter
 narrative, both Ch23 diagrams, and the version matrix are updated accordingly;
 the Kafka half's footer stays **pending live verification** until a real
 cluster run passes.
+
+## DRQ-081 — r07b ch26 design: a Spin app on the cargo domain, SpinKube on minikube, Spin-in-a-container on CRC
+
+Ch26, "WebAssembly for other backend architectures," ships a runnable **Spin**
+(Fermyon) app serving the cargo domain: a `spin-sdk` HTTP component composed
+with the unchanged Part 2 cargo provider via `wac plug`, so `contracts/wit`
+stays pristine (the same posture as every earlier example tree). Deploy is
+per-substrate. On **minikube** the app runs under full **SpinKube** — the
+`containerd-shim-spin` installed through the `runtime-class-manager` chart, a
+`spin-operator`-managed reconcile loop, and a `SpinApp` custom resource. On
+**CRC** the app runs as the **Spin runtime inside an ordinary restricted-v2
+container** — a `spin up` entrypoint, fronted by an edge-TLS Route — because
+`containerd-shim-spin` needs a privileged RHCOS node install that does not fit
+the `restricted-v2` SCC the CRC chapters hold to, the same constraint ch18's
+minikube/CRC split hit (DRQ-048) and that moved ch19 to the wasmCloud operator
+(DRQ-054).
