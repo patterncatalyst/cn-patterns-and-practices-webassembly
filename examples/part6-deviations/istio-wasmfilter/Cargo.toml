@@ -1,0 +1,24 @@
+[package]
+name = "cargo-wasmfilter"
+version = "0.1.0"
+edition = "2021"
+
+# NOTE: this crate targets the Envoy proxy-wasm ABI, NOT the Component Model.
+# It is built with plain `cargo build --target wasm32-wasip1` (see build.sh) —
+# never `cargo-component build`. There is no WIT world, no `wit/` directory,
+# and no generated `bindings.rs` here; the `proxy-wasm` crate's `main!` macro
+# wires the module's exports directly to the symbols Envoy's proxy-wasm host
+# looks for (proxy_on_context_create, proxy_on_request_headers, ...). Compare
+# with examples/part5-kubernetes/sidecar-filter, which implements the SAME
+# "inspect/allow/deny a request" idea as a Component Model component — the
+# contrast between the two crates IS chapter 25's teaching point.
+[dependencies]
+proxy-wasm = "0.2.5"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+opt-level = "s"
+strip = true

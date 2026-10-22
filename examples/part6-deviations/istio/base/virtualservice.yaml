@@ -1,0 +1,24 @@
+# examples/part6-deviations/istio/base/virtualservice.yaml
+#
+# Routes requests arriving at ./gateway.yaml's istio-ingressgateway listener to
+# the EXISTING Part 5 cargo-http Service (examples/part5-kubernetes/k8s/base,
+# port 8080) — no new Service, no change to the app.
+#
+# hosts[0] is the same placeholder as gateway.yaml's; verify-istio-minikube.sh
+# patches both to the live nip.io host together.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: cargo-http
+  namespace: part5-kubernetes
+spec:
+  hosts:
+    - "cargo-istio.part5-kubernetes.example"
+  gateways:
+    - cargo-http-gateway
+  http:
+    - route:
+        - destination:
+            host: cargo-http.part5-kubernetes.svc.cluster.local
+            port:
+              number: 8080

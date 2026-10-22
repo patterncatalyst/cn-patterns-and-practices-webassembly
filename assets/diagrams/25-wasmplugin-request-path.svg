@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 800" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="40" width="1140" height="200" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">Control plane — the WasmPlugin CR distributes the filter module</text>
+<rect x="20" y="270" width="1140" height="340" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="290" font-size="12" font-weight="700" fill="#1d1d1d">Data plane — request path through the gateway filter and the component</text>
+<rect x="60" y="90" width="280" height="100" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="200.0" y="138.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">oci://ghcr.io/patterncatalyst/</text>
+<text x="200.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-wasmfilter:istio</text>
+<rect x="400" y="90" width="300" height="100" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="550.0" y="138.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">WasmPlugin CR</text>
+<text x="550.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">extensions.istio.io/v1alpha1</text>
+<rect x="760" y="90" width="220" height="100" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="870.0" y="138.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">istiod</text>
+<text x="870.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">pushes config to the gateway Envoy</text>
+<rect x="60" y="360" width="150" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="135.0" y="395.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">client</text>
+<rect x="250" y="290" width="330" height="210" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="415.0" y="400.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Istio ingress gateway (Envoy)</text>
+<rect x="280" y="340" width="270" height="95" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="415.0" y="378.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">proxy-wasm filter</text>
+<text x="415.0" y="395.0" font-size="11.5" fill="#555555" text-anchor="middle">x-cargo-tenant present? else 403</text>
+<text x="415.0" y="410.0" font-size="11.5" fill="#555555" text-anchor="middle">inject x-cargo-filtered-by on egress</text>
+<rect x="340" y="450" width="150" height="38" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="415.0" y="474.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">missing -&gt; 403</text>
+<rect x="700" y="360" width="220" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="810.0" y="388.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-http component</text>
+<text x="810.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">wasi:http</text>
+<rect x="80" y="640" width="1020" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="590.0" y="688.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">TrafficExtension is the newer unified API and supersedes WasmPlugin for new filter config</text>
+<text x="590.0" y="705.0" font-size="11.5" fill="#555555" text-anchor="middle">WasmPlugin remains supported — existing filters keep working</text>
+<path d="M340,140 L400,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="376.0" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">pulls module</text>
+<text x="376.0" y="134.0" font-size="11" fill="#555" text-anchor="middle">pulls module</text>
+<path d="M700,140 L760,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="736.0" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">registers</text>
+<text x="736.0" y="134.0" font-size="11" fill="#555" text-anchor="middle">registers</text>
+<path d="M820,190 L430,290" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="631.0" y="234.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">distributes config to the gateway</text>
+<text x="631.0" y="234.0" font-size="11" fill="#555" text-anchor="middle">distributes config to the gateway</text>
+<path d="M210,390 L250,390" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M415,435 L415,450" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="421.0" y="436.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">missing header</text>
+<text x="421.0" y="436.5" font-size="11" fill="#555" text-anchor="middle">missing header</text>
+<path d="M580,390 L700,390" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="646.0" y="384.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">tenant header present</text>
+<text x="646.0" y="384.0" font-size="11" fill="#555" text-anchor="middle">tenant header present</text>
+<text x="590" y="785" font-size="12" fill="#555555" text-anchor="middle">The filter injects x-cargo-filtered-by on the response path out of the gateway before it reaches the client.</text>
+</svg>

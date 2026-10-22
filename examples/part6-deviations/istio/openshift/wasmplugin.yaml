@@ -1,0 +1,51 @@
+# examples/part6-deviations/istio/openshift/wasmplugin.yaml
+#
+# CRC counterpart to ../gateway-wasmplugin.yaml — same OCI filter image, same
+# phase, same GATEWAY-level design: loads the proxy-wasm cargo filter into the
+# OSSM3 istio-ingressgateway's OWN Envoy (selector istio: ingressgateway, in
+# istio-system — the namespace ../install-ossm.sh's Istio CR manages that
+# workload in), NOT into a sidecar on the wasmcloud-host Deployment.
+#
+# WHY HERE, NOT A SIDECAR: the same gateway-level design as the minikube
+# path (see ../gateway-wasmplugin.yaml and ../README-istio.md) keeps any
+# Wasm-hosting workload free of a co-located sidecar on both cluster paths,
+# so the filter always runs in the gateway's Envoy, never beside the app. On
+# CRC the app Pod itself runs as a normal container (the wasmCloud
+# operator's `wasmcloud-host` process interprets app.wasm in user space, not
+# via a Kubernetes RuntimeClass — see ../README-istio.md's "two Wasm worlds"
+# section); this file still targets the gateway for architectural
+# consistency with the minikube design, so both verify scripts assert the
+# identical 403/200 + x-cargo-filtered-by behavior through the same code
+# path.
+#
+# ASSUMPTION (author-only, no live CRC run yet): the OSSM3 Sail operator's
+# istio-ingressgateway workload lives in `istio-system` and carries the
+# standard `istio: ingressgateway` Pod label, same as upstream/community
+# Istio's `demo` profile — ../install-ossm.sh's Istio CR sets
+# `spec.namespace: istio-system` for exactly this reason. If the live CRC
+# OperatorHub catalog places the gateway workload in a different namespace or
+# under a different label, update `metadata.namespace` and
+# `spec.selector.matchLabels` here to match (confirm with
+# `oc get pods -n istio-system --show-labels` once live — same
+# TBD-confirm-at-kickoff posture as ../README-istio.md's other open items).
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: cargo-wasmfilter
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  url: oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
+  # The filter image is a PRIVATE ghcr package; the gateway Envoy's agent
+  # needs registry credentials to fetch it: a docker-registry secret named
+  # `ghcr-pull` in THIS namespace (istio-system, where the gateway Pod and
+  # this WasmPlugin both live). ../verify-istio-crc.sh creates it
+  # (oc create secret docker-registry ghcr-pull --docker-server=ghcr.io
+  # --docker-username=<owner> --docker-password=<token> -n istio-system). Make
+  # the package public instead and this line can be dropped.
+  imagePullSecret: ghcr-pull
+  pluginName: cargo-wasmfilter
+  phase: AUTHZ
+  pluginConfig: {}

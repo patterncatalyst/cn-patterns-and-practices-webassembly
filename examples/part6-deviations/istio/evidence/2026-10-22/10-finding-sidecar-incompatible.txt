@@ -1,0 +1,6 @@
+# ch25 FINDING: Istio sidecar injection is INCOMPATIBLE with a runtimeClassName: wasmtime pod.
+# RuntimeClass is pod-scoped, so the injected Envoy inherits the wasmtime shim runtime;
+# under runwasi Envoy cannot open /dev/stdout for access logging and rejects ALL listeners
+# (LDS), never becoming ready -> the app container never starts. Captured 2026-10-22, minikube.
+# The working design: run the WasmPlugin at the istio ingress gateway (a normal Envoy pod),
+# NOT as a sidecar; cargo-http stays a pure Wasm pod under the shim.

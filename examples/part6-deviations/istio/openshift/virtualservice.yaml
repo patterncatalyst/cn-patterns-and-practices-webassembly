@@ -1,0 +1,26 @@
+# examples/part6-deviations/istio/openshift/virtualservice.yaml
+#
+# Routes requests arriving at ./gateway.yaml's istio-ingressgateway listener to
+# the EXISTING Part 5 operator-created cargo-http Service in the wasmcloud
+# namespace (port 8000 — see ../../../part5-kubernetes/openshift/wadm.yaml's
+# daemonscaler, which is what makes the operator create this Service). No new
+# Service, no change to the app.
+#
+# hosts[0] is the same placeholder as gateway.yaml's; verify-istio-crc.sh
+# patches both to the live edge-TLS Route host together.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: cargo-http
+  namespace: wasmcloud
+spec:
+  hosts:
+    - "cargo-http-istio.apps-crc.testing"
+  gateways:
+    - cargo-http-gateway
+  http:
+    - route:
+        - destination:
+            host: cargo-http.wasmcloud.svc.cluster.local
+            port:
+              number: 8000

@@ -1,0 +1,44 @@
+
+=== 0/6 Preflight: Part 5 app + Istio control plane are up ===
+verify-istio-minikube.sh: Part 5 app + Istio control plane present
+
+=== 1/6 Apply the ch25 app-side overlay (Gateway + VirtualService; NO WasmPlugin, NO injection label) ===
+namespace/part5-kubernetes unchanged
+service/cargo-http unchanged
+deployment.apps/cargo-http unchanged
+gateway.networking.istio.io/cargo-http-gateway configured
+virtualservice.networking.istio.io/cargo-http configured
+ingress.networking.k8s.io/cargo-http unchanged
+runtimeclass.node.k8s.io/wasmtime unchanged
+verify-istio-minikube.sh: expect READY 1/1 below (pure Wasm app Pod, NO istio-proxy sidecar)
+POD                           READY
+cargo-http-7b84c7974c-2cwk9   true
+
+=== 2/6 ghcr-pull secret in istio-system + apply the gateway-side WasmPlugin ===
+secret/ghcr-pull unchanged
+wasmplugin.extensions.istio.io/cargo-wasmfilter unchanged
+deployment "istio-ingressgateway" successfully rolled out
+
+=== 3/6 Resolve the istio-ingressgateway NodePort + minikube ip; patch Gateway/VirtualService host ===
+verify-istio-minikube.sh: minikube ip = 192.168.49.2; istio-ingressgateway NodePort (http2) = 30920
+verify-istio-minikube.sh: cargo gateway host = http://cargo-istio.192.168.49.2.nip.io:30920/
+gateway.networking.istio.io/cargo-http-gateway patched
+virtualservice.networking.istio.io/cargo-http patched
+
+=== 4/6 Wait for the route AND filter to be ready (gate on a with-header 200, not the filter's 403) ===
+verify-istio-minikube.sh: gateway route + filter ready after 3s
+
+=== 5/6 WITHOUT x-cargo-tenant -> expect 403 (the filter denies) ===
+lib.sh: ok — minikube GET /cargo/CARGO-USNYC-DEHAM (no x-cargo-tenant) through the istio gateway: '403'
+
+=== 6/6 WITH x-cargo-tenant: acme -> expect 200 + exact JSON + x-cargo-filtered-by header ===
+lib.sh: ok — minikube GET /cargo/CARGO-USNYC-DEHAM (x-cargo-tenant: acme) through the istio gateway: '{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}'
+
+PASS — ch25 Istio + Wasm on minikube (docker+containerd, Istio layered on the Part 5 profile):
+  the proxy-wasm filter, running in the istio-ingressgateway's OWN Envoy (no
+  sidecar), denied the request without x-cargo-tenant (403) and, with it,
+  added x-cargo-filtered-by before proxying on to the SAME pure
+  Component-Model cargo-http app (under containerd-shim-wasmtime, no
+  injected sidecar) which answered with the exact cargo JSON -- through
+  the istio-ingressgateway NodePort + a nip.io-style host, no port-forward.
+exit 0
