@@ -384,6 +384,1384 @@ pub mod patterncatalyst {
             }
             impl std::error::Error for CargoError {}
         }
+        /// Booking lifecycle: book a cargo against a route spec, request candidate
+        /// itineraries, assign one, and read a cargo back by tracking ID.
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod booking {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            pub type Cargo = super::super::super::patterncatalyst::cargo::types::Cargo;
+            pub type Booking = super::super::super::patterncatalyst::cargo::types::Booking;
+            pub type RouteSpec = super::super::super::patterncatalyst::cargo::types::RouteSpec;
+            pub type Itinerary = super::super::super::patterncatalyst::cargo::types::Itinerary;
+            pub type CargoError = super::super::super::patterncatalyst::cargo::types::CargoError;
+            #[allow(unused_unsafe, clippy::all)]
+            /// Book a new cargo shipment against a route specification.
+            pub fn book_cargo(
+                spec: &RouteSpec,
+                weight_kg: f64,
+            ) -> Result<Booking, CargoError> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 24 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 24
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let super::super::super::patterncatalyst::cargo::types::RouteSpec {
+                        origin: origin0,
+                        destination: destination0,
+                        arrival_deadline: arrival_deadline0,
+                    } = spec;
+                    let super::super::super::patterncatalyst::cargo::types::Location {
+                        unlocode: unlocode1,
+                        name: name1,
+                        country: country1,
+                    } = origin0;
+                    let vec2 = unlocode1;
+                    let ptr2 = vec2.as_ptr().cast::<u8>();
+                    let len2 = vec2.len();
+                    let vec3 = name1;
+                    let ptr3 = vec3.as_ptr().cast::<u8>();
+                    let len3 = vec3.len();
+                    let vec4 = country1;
+                    let ptr4 = vec4.as_ptr().cast::<u8>();
+                    let len4 = vec4.len();
+                    let super::super::super::patterncatalyst::cargo::types::Location {
+                        unlocode: unlocode5,
+                        name: name5,
+                        country: country5,
+                    } = destination0;
+                    let vec6 = unlocode5;
+                    let ptr6 = vec6.as_ptr().cast::<u8>();
+                    let len6 = vec6.len();
+                    let vec7 = name5;
+                    let ptr7 = vec7.as_ptr().cast::<u8>();
+                    let len7 = vec7.len();
+                    let vec8 = country5;
+                    let ptr8 = vec8.as_ptr().cast::<u8>();
+                    let len8 = vec8.len();
+                    let vec9 = arrival_deadline0;
+                    let ptr9 = vec9.as_ptr().cast::<u8>();
+                    let len9 = vec9.len();
+                    let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "patterncatalyst:cargo/booking@0.1.0")]
+                    unsafe extern "C" {
+                        #[link_name = "book-cargo"]
+                        fn wit_import11(
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: f64,
+                            _: *mut u8,
+                        );
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import11(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: f64,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    unsafe {
+                        wit_import11(
+                            ptr2.cast_mut(),
+                            len2,
+                            ptr3.cast_mut(),
+                            len3,
+                            ptr4.cast_mut(),
+                            len4,
+                            ptr6.cast_mut(),
+                            len6,
+                            ptr7.cast_mut(),
+                            len7,
+                            ptr8.cast_mut(),
+                            len8,
+                            ptr9.cast_mut(),
+                            len9,
+                            _rt::as_f64(&weight_kg),
+                            ptr10,
+                        )
+                    };
+                    let l12 = i32::from(*ptr10.add(0).cast::<u8>());
+                    let result61 = match l12 {
+                        0 => {
+                            let e = {
+                                let l13 = *ptr10
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l14 = *ptr10
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len15 = l14;
+                                let bytes15 = _rt::Vec::from_raw_parts(
+                                    l13.cast(),
+                                    len15,
+                                    len15,
+                                );
+                                let l16 = *ptr10
+                                    .add(3 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l17 = *ptr10
+                                    .add(4 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len18 = l17;
+                                let bytes18 = _rt::Vec::from_raw_parts(
+                                    l16.cast(),
+                                    len18,
+                                    len18,
+                                );
+                                let l19 = *ptr10
+                                    .add(5 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l20 = *ptr10
+                                    .add(6 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len21 = l20;
+                                let bytes21 = _rt::Vec::from_raw_parts(
+                                    l19.cast(),
+                                    len21,
+                                    len21,
+                                );
+                                let l22 = *ptr10
+                                    .add(7 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l23 = *ptr10
+                                    .add(8 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len24 = l23;
+                                let bytes24 = _rt::Vec::from_raw_parts(
+                                    l22.cast(),
+                                    len24,
+                                    len24,
+                                );
+                                let l25 = *ptr10
+                                    .add(9 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l26 = *ptr10
+                                    .add(10 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len27 = l26;
+                                let bytes27 = _rt::Vec::from_raw_parts(
+                                    l25.cast(),
+                                    len27,
+                                    len27,
+                                );
+                                let l28 = *ptr10
+                                    .add(11 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l29 = *ptr10
+                                    .add(12 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len30 = l29;
+                                let bytes30 = _rt::Vec::from_raw_parts(
+                                    l28.cast(),
+                                    len30,
+                                    len30,
+                                );
+                                let l31 = *ptr10
+                                    .add(13 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l32 = *ptr10
+                                    .add(14 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len33 = l32;
+                                let bytes33 = _rt::Vec::from_raw_parts(
+                                    l31.cast(),
+                                    len33,
+                                    len33,
+                                );
+                                let l34 = *ptr10
+                                    .add(15 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l35 = *ptr10
+                                    .add(16 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len36 = l35;
+                                let bytes36 = _rt::Vec::from_raw_parts(
+                                    l34.cast(),
+                                    len36,
+                                    len36,
+                                );
+                                let l37 = *ptr10
+                                    .add(17 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l38 = *ptr10
+                                    .add(18 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len39 = l38;
+                                let bytes39 = _rt::Vec::from_raw_parts(
+                                    l37.cast(),
+                                    len39,
+                                    len39,
+                                );
+                                let l40 = *ptr10
+                                    .add(19 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l41 = *ptr10
+                                    .add(20 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len42 = l41;
+                                let bytes42 = _rt::Vec::from_raw_parts(
+                                    l40.cast(),
+                                    len42,
+                                    len42,
+                                );
+                                let l43 = *ptr10
+                                    .add(21 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l44 = *ptr10
+                                    .add(22 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len45 = l44;
+                                let bytes45 = _rt::Vec::from_raw_parts(
+                                    l43.cast(),
+                                    len45,
+                                    len45,
+                                );
+                                let l46 = i32::from(
+                                    *ptr10
+                                        .add(23 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<u8>(),
+                                );
+                                super::super::super::patterncatalyst::cargo::types::Booking {
+                                    booking_id: _rt::string_lift(bytes15),
+                                    cargo_id: _rt::string_lift(bytes18),
+                                    route_spec: super::super::super::patterncatalyst::cargo::types::RouteSpec {
+                                        origin: super::super::super::patterncatalyst::cargo::types::Location {
+                                            unlocode: _rt::string_lift(bytes21),
+                                            name: _rt::string_lift(bytes24),
+                                            country: _rt::string_lift(bytes27),
+                                        },
+                                        destination: super::super::super::patterncatalyst::cargo::types::Location {
+                                            unlocode: _rt::string_lift(bytes30),
+                                            name: _rt::string_lift(bytes33),
+                                            country: _rt::string_lift(bytes36),
+                                        },
+                                        arrival_deadline: _rt::string_lift(bytes39),
+                                    },
+                                    price: super::super::super::patterncatalyst::cargo::types::Money {
+                                        amount: _rt::string_lift(bytes42),
+                                        currency: _rt::string_lift(bytes45),
+                                    },
+                                    status: super::super::super::patterncatalyst::cargo::types::RoutingStatus::_lift(
+                                        l46 as u8,
+                                    ),
+                                }
+                            };
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l47 = i32::from(
+                                    *ptr10.add(::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                                );
+                                use super::super::super::patterncatalyst::cargo::types::CargoError as V60;
+                                let v60 = match l47 {
+                                    0 => {
+                                        let e60 = {
+                                            let l48 = *ptr10
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l49 = *ptr10
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len50 = l49;
+                                            let bytes50 = _rt::Vec::from_raw_parts(
+                                                l48.cast(),
+                                                len50,
+                                                len50,
+                                            );
+                                            _rt::string_lift(bytes50)
+                                        };
+                                        V60::NotFound(e60)
+                                    }
+                                    1 => {
+                                        let e60 = {
+                                            let l51 = *ptr10
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l52 = *ptr10
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len53 = l52;
+                                            let bytes53 = _rt::Vec::from_raw_parts(
+                                                l51.cast(),
+                                                len53,
+                                                len53,
+                                            );
+                                            _rt::string_lift(bytes53)
+                                        };
+                                        V60::InvalidBooking(e60)
+                                    }
+                                    2 => {
+                                        let e60 = {
+                                            let l54 = *ptr10
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l55 = *ptr10
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len56 = l55;
+                                            let bytes56 = _rt::Vec::from_raw_parts(
+                                                l54.cast(),
+                                                len56,
+                                                len56,
+                                            );
+                                            _rt::string_lift(bytes56)
+                                        };
+                                        V60::InvalidLocation(e60)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 3, "invalid enum discriminant");
+                                        let e60 = {
+                                            let l57 = *ptr10
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l58 = *ptr10
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len59 = l58;
+                                            let bytes59 = _rt::Vec::from_raw_parts(
+                                                l57.cast(),
+                                                len59,
+                                                len59,
+                                            );
+                                            _rt::string_lift(bytes59)
+                                        };
+                                        V60::Conflict(e60)
+                                    }
+                                };
+                                v60
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result61
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Request the candidate itineraries that satisfy a booking's route
+            /// spec.
+            pub fn request_possible_routes(
+                booking_id: &str,
+            ) -> Result<_rt::Vec<Itinerary>, CargoError> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 4 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 4
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = booking_id;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "patterncatalyst:cargo/booking@0.1.0")]
+                    unsafe extern "C" {
+                        #[link_name = "request-possible-routes"]
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import2(ptr0.cast_mut(), len0, ptr1) };
+                    let l3 = i32::from(*ptr1.add(0).cast::<u8>());
+                    let result55 = match l3 {
+                        0 => {
+                            let e = {
+                                let l4 = *ptr1
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l5 = *ptr1
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let base40 = l4;
+                                let len40 = l5;
+                                let mut result40 = _rt::Vec::with_capacity(len40);
+                                for i in 0..len40 {
+                                    let base = base40
+                                        .add(i * (4 * ::core::mem::size_of::<*const u8>()));
+                                    let e40 = {
+                                        let l6 = *base.add(0).cast::<*mut u8>();
+                                        let l7 = *base
+                                            .add(::core::mem::size_of::<*const u8>())
+                                            .cast::<usize>();
+                                        let len8 = l7;
+                                        let bytes8 = _rt::Vec::from_raw_parts(
+                                            l6.cast(),
+                                            len8,
+                                            len8,
+                                        );
+                                        let l9 = *base
+                                            .add(2 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<*mut u8>();
+                                        let l10 = *base
+                                            .add(3 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<usize>();
+                                        let base39 = l9;
+                                        let len39 = l10;
+                                        let mut result39 = _rt::Vec::with_capacity(len39);
+                                        for i in 0..len39 {
+                                            let base = base39
+                                                .add(i * (19 * ::core::mem::size_of::<*const u8>()));
+                                            let e39 = {
+                                                let l11 = *base.add(0).cast::<*mut u8>();
+                                                let l12 = *base
+                                                    .add(::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len13 = l12;
+                                                let bytes13 = _rt::Vec::from_raw_parts(
+                                                    l11.cast(),
+                                                    len13,
+                                                    len13,
+                                                );
+                                                let l14 = *base
+                                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l15 = *base
+                                                    .add(3 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len16 = l15;
+                                                let bytes16 = _rt::Vec::from_raw_parts(
+                                                    l14.cast(),
+                                                    len16,
+                                                    len16,
+                                                );
+                                                let l17 = *base
+                                                    .add(4 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l18 = *base
+                                                    .add(5 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len19 = l18;
+                                                let bytes19 = _rt::Vec::from_raw_parts(
+                                                    l17.cast(),
+                                                    len19,
+                                                    len19,
+                                                );
+                                                let l20 = *base
+                                                    .add(6 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l21 = *base
+                                                    .add(7 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len22 = l21;
+                                                let bytes22 = _rt::Vec::from_raw_parts(
+                                                    l20.cast(),
+                                                    len22,
+                                                    len22,
+                                                );
+                                                let l23 = *base
+                                                    .add(8 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l24 = *base
+                                                    .add(9 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len25 = l24;
+                                                let bytes25 = _rt::Vec::from_raw_parts(
+                                                    l23.cast(),
+                                                    len25,
+                                                    len25,
+                                                );
+                                                let l26 = *base
+                                                    .add(10 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l27 = *base
+                                                    .add(11 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len28 = l27;
+                                                let bytes28 = _rt::Vec::from_raw_parts(
+                                                    l26.cast(),
+                                                    len28,
+                                                    len28,
+                                                );
+                                                let l29 = *base
+                                                    .add(12 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l30 = *base
+                                                    .add(13 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len31 = l30;
+                                                let bytes31 = _rt::Vec::from_raw_parts(
+                                                    l29.cast(),
+                                                    len31,
+                                                    len31,
+                                                );
+                                                let l32 = *base
+                                                    .add(14 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l33 = *base
+                                                    .add(15 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len34 = l33;
+                                                let bytes34 = _rt::Vec::from_raw_parts(
+                                                    l32.cast(),
+                                                    len34,
+                                                    len34,
+                                                );
+                                                let l35 = *base
+                                                    .add(16 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<*mut u8>();
+                                                let l36 = *base
+                                                    .add(17 * ::core::mem::size_of::<*const u8>())
+                                                    .cast::<usize>();
+                                                let len37 = l36;
+                                                let bytes37 = _rt::Vec::from_raw_parts(
+                                                    l35.cast(),
+                                                    len37,
+                                                    len37,
+                                                );
+                                                let l38 = i32::from(
+                                                    *base
+                                                        .add(18 * ::core::mem::size_of::<*const u8>())
+                                                        .cast::<u8>(),
+                                                );
+                                                super::super::super::patterncatalyst::cargo::types::Leg {
+                                                    voyage_id: _rt::string_lift(bytes13),
+                                                    load_location: super::super::super::patterncatalyst::cargo::types::Location {
+                                                        unlocode: _rt::string_lift(bytes16),
+                                                        name: _rt::string_lift(bytes19),
+                                                        country: _rt::string_lift(bytes22),
+                                                    },
+                                                    unload_location: super::super::super::patterncatalyst::cargo::types::Location {
+                                                        unlocode: _rt::string_lift(bytes25),
+                                                        name: _rt::string_lift(bytes28),
+                                                        country: _rt::string_lift(bytes31),
+                                                    },
+                                                    load_time: _rt::string_lift(bytes34),
+                                                    unload_time: _rt::string_lift(bytes37),
+                                                    status: super::super::super::patterncatalyst::cargo::types::TransportStatus::_lift(
+                                                        l38 as u8,
+                                                    ),
+                                                }
+                                            };
+                                            result39.push(e39);
+                                        }
+                                        _rt::cabi_dealloc(
+                                            base39,
+                                            len39 * (19 * ::core::mem::size_of::<*const u8>()),
+                                            ::core::mem::size_of::<*const u8>(),
+                                        );
+                                        super::super::super::patterncatalyst::cargo::types::Itinerary {
+                                            booking_id: _rt::string_lift(bytes8),
+                                            legs: result39,
+                                        }
+                                    };
+                                    result40.push(e40);
+                                }
+                                _rt::cabi_dealloc(
+                                    base40,
+                                    len40 * (4 * ::core::mem::size_of::<*const u8>()),
+                                    ::core::mem::size_of::<*const u8>(),
+                                );
+                                result40
+                            };
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l41 = i32::from(
+                                    *ptr1.add(::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                                );
+                                use super::super::super::patterncatalyst::cargo::types::CargoError as V54;
+                                let v54 = match l41 {
+                                    0 => {
+                                        let e54 = {
+                                            let l42 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l43 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len44 = l43;
+                                            let bytes44 = _rt::Vec::from_raw_parts(
+                                                l42.cast(),
+                                                len44,
+                                                len44,
+                                            );
+                                            _rt::string_lift(bytes44)
+                                        };
+                                        V54::NotFound(e54)
+                                    }
+                                    1 => {
+                                        let e54 = {
+                                            let l45 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l46 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len47 = l46;
+                                            let bytes47 = _rt::Vec::from_raw_parts(
+                                                l45.cast(),
+                                                len47,
+                                                len47,
+                                            );
+                                            _rt::string_lift(bytes47)
+                                        };
+                                        V54::InvalidBooking(e54)
+                                    }
+                                    2 => {
+                                        let e54 = {
+                                            let l48 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l49 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len50 = l49;
+                                            let bytes50 = _rt::Vec::from_raw_parts(
+                                                l48.cast(),
+                                                len50,
+                                                len50,
+                                            );
+                                            _rt::string_lift(bytes50)
+                                        };
+                                        V54::InvalidLocation(e54)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 3, "invalid enum discriminant");
+                                        let e54 = {
+                                            let l51 = *ptr1
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l52 = *ptr1
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len53 = l52;
+                                            let bytes53 = _rt::Vec::from_raw_parts(
+                                                l51.cast(),
+                                                len53,
+                                                len53,
+                                            );
+                                            _rt::string_lift(bytes53)
+                                        };
+                                        V54::Conflict(e54)
+                                    }
+                                };
+                                v54
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result55
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Assign one of the candidate itineraries to a booking.
+            pub fn assign_route(
+                booking_id: &str,
+                itinerary: &Itinerary,
+            ) -> Result<Booking, CargoError> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 24 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 24
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = booking_id;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let super::super::super::patterncatalyst::cargo::types::Itinerary {
+                        booking_id: booking_id1,
+                        legs: legs1,
+                    } = itinerary;
+                    let vec2 = booking_id1;
+                    let ptr2 = vec2.as_ptr().cast::<u8>();
+                    let len2 = vec2.len();
+                    let vec15 = legs1;
+                    let len15 = vec15.len();
+                    let layout15 = _rt::alloc::Layout::from_size_align_unchecked(
+                        vec15.len() * (19 * ::core::mem::size_of::<*const u8>()),
+                        ::core::mem::size_of::<*const u8>(),
+                    );
+                    let result15 = if layout15.size() != 0 {
+                        let ptr = _rt::alloc::alloc(layout15).cast::<u8>();
+                        if ptr.is_null() {
+                            _rt::alloc::handle_alloc_error(layout15);
+                        }
+                        ptr
+                    } else {
+                        ::core::ptr::null_mut()
+                    };
+                    for (i, e) in vec15.into_iter().enumerate() {
+                        let base = result15
+                            .add(i * (19 * ::core::mem::size_of::<*const u8>()));
+                        {
+                            let super::super::super::patterncatalyst::cargo::types::Leg {
+                                voyage_id: voyage_id3,
+                                load_location: load_location3,
+                                unload_location: unload_location3,
+                                load_time: load_time3,
+                                unload_time: unload_time3,
+                                status: status3,
+                            } = e;
+                            let vec4 = voyage_id3;
+                            let ptr4 = vec4.as_ptr().cast::<u8>();
+                            let len4 = vec4.len();
+                            *base
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len4;
+                            *base.add(0).cast::<*mut u8>() = ptr4.cast_mut();
+                            let super::super::super::patterncatalyst::cargo::types::Location {
+                                unlocode: unlocode5,
+                                name: name5,
+                                country: country5,
+                            } = load_location3;
+                            let vec6 = unlocode5;
+                            let ptr6 = vec6.as_ptr().cast::<u8>();
+                            let len6 = vec6.len();
+                            *base
+                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len6;
+                            *base
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr6.cast_mut();
+                            let vec7 = name5;
+                            let ptr7 = vec7.as_ptr().cast::<u8>();
+                            let len7 = vec7.len();
+                            *base
+                                .add(5 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len7;
+                            *base
+                                .add(4 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr7.cast_mut();
+                            let vec8 = country5;
+                            let ptr8 = vec8.as_ptr().cast::<u8>();
+                            let len8 = vec8.len();
+                            *base
+                                .add(7 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len8;
+                            *base
+                                .add(6 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr8.cast_mut();
+                            let super::super::super::patterncatalyst::cargo::types::Location {
+                                unlocode: unlocode9,
+                                name: name9,
+                                country: country9,
+                            } = unload_location3;
+                            let vec10 = unlocode9;
+                            let ptr10 = vec10.as_ptr().cast::<u8>();
+                            let len10 = vec10.len();
+                            *base
+                                .add(9 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len10;
+                            *base
+                                .add(8 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr10.cast_mut();
+                            let vec11 = name9;
+                            let ptr11 = vec11.as_ptr().cast::<u8>();
+                            let len11 = vec11.len();
+                            *base
+                                .add(11 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len11;
+                            *base
+                                .add(10 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr11.cast_mut();
+                            let vec12 = country9;
+                            let ptr12 = vec12.as_ptr().cast::<u8>();
+                            let len12 = vec12.len();
+                            *base
+                                .add(13 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len12;
+                            *base
+                                .add(12 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr12.cast_mut();
+                            let vec13 = load_time3;
+                            let ptr13 = vec13.as_ptr().cast::<u8>();
+                            let len13 = vec13.len();
+                            *base
+                                .add(15 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len13;
+                            *base
+                                .add(14 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr13.cast_mut();
+                            let vec14 = unload_time3;
+                            let ptr14 = vec14.as_ptr().cast::<u8>();
+                            let len14 = vec14.len();
+                            *base
+                                .add(17 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len14;
+                            *base
+                                .add(16 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr14.cast_mut();
+                            *base
+                                .add(18 * ::core::mem::size_of::<*const u8>())
+                                .cast::<u8>() = (status3.clone() as i32) as u8;
+                        }
+                    }
+                    let ptr16 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "patterncatalyst:cargo/booking@0.1.0")]
+                    unsafe extern "C" {
+                        #[link_name = "assign-route"]
+                        fn wit_import17(
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        );
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import17(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    unsafe {
+                        wit_import17(
+                            ptr0.cast_mut(),
+                            len0,
+                            ptr2.cast_mut(),
+                            len2,
+                            result15,
+                            len15,
+                            ptr16,
+                        )
+                    };
+                    let l18 = i32::from(*ptr16.add(0).cast::<u8>());
+                    let result67 = match l18 {
+                        0 => {
+                            let e = {
+                                let l19 = *ptr16
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l20 = *ptr16
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len21 = l20;
+                                let bytes21 = _rt::Vec::from_raw_parts(
+                                    l19.cast(),
+                                    len21,
+                                    len21,
+                                );
+                                let l22 = *ptr16
+                                    .add(3 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l23 = *ptr16
+                                    .add(4 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len24 = l23;
+                                let bytes24 = _rt::Vec::from_raw_parts(
+                                    l22.cast(),
+                                    len24,
+                                    len24,
+                                );
+                                let l25 = *ptr16
+                                    .add(5 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l26 = *ptr16
+                                    .add(6 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len27 = l26;
+                                let bytes27 = _rt::Vec::from_raw_parts(
+                                    l25.cast(),
+                                    len27,
+                                    len27,
+                                );
+                                let l28 = *ptr16
+                                    .add(7 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l29 = *ptr16
+                                    .add(8 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len30 = l29;
+                                let bytes30 = _rt::Vec::from_raw_parts(
+                                    l28.cast(),
+                                    len30,
+                                    len30,
+                                );
+                                let l31 = *ptr16
+                                    .add(9 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l32 = *ptr16
+                                    .add(10 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len33 = l32;
+                                let bytes33 = _rt::Vec::from_raw_parts(
+                                    l31.cast(),
+                                    len33,
+                                    len33,
+                                );
+                                let l34 = *ptr16
+                                    .add(11 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l35 = *ptr16
+                                    .add(12 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len36 = l35;
+                                let bytes36 = _rt::Vec::from_raw_parts(
+                                    l34.cast(),
+                                    len36,
+                                    len36,
+                                );
+                                let l37 = *ptr16
+                                    .add(13 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l38 = *ptr16
+                                    .add(14 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len39 = l38;
+                                let bytes39 = _rt::Vec::from_raw_parts(
+                                    l37.cast(),
+                                    len39,
+                                    len39,
+                                );
+                                let l40 = *ptr16
+                                    .add(15 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l41 = *ptr16
+                                    .add(16 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len42 = l41;
+                                let bytes42 = _rt::Vec::from_raw_parts(
+                                    l40.cast(),
+                                    len42,
+                                    len42,
+                                );
+                                let l43 = *ptr16
+                                    .add(17 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l44 = *ptr16
+                                    .add(18 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len45 = l44;
+                                let bytes45 = _rt::Vec::from_raw_parts(
+                                    l43.cast(),
+                                    len45,
+                                    len45,
+                                );
+                                let l46 = *ptr16
+                                    .add(19 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l47 = *ptr16
+                                    .add(20 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len48 = l47;
+                                let bytes48 = _rt::Vec::from_raw_parts(
+                                    l46.cast(),
+                                    len48,
+                                    len48,
+                                );
+                                let l49 = *ptr16
+                                    .add(21 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l50 = *ptr16
+                                    .add(22 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len51 = l50;
+                                let bytes51 = _rt::Vec::from_raw_parts(
+                                    l49.cast(),
+                                    len51,
+                                    len51,
+                                );
+                                let l52 = i32::from(
+                                    *ptr16
+                                        .add(23 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<u8>(),
+                                );
+                                super::super::super::patterncatalyst::cargo::types::Booking {
+                                    booking_id: _rt::string_lift(bytes21),
+                                    cargo_id: _rt::string_lift(bytes24),
+                                    route_spec: super::super::super::patterncatalyst::cargo::types::RouteSpec {
+                                        origin: super::super::super::patterncatalyst::cargo::types::Location {
+                                            unlocode: _rt::string_lift(bytes27),
+                                            name: _rt::string_lift(bytes30),
+                                            country: _rt::string_lift(bytes33),
+                                        },
+                                        destination: super::super::super::patterncatalyst::cargo::types::Location {
+                                            unlocode: _rt::string_lift(bytes36),
+                                            name: _rt::string_lift(bytes39),
+                                            country: _rt::string_lift(bytes42),
+                                        },
+                                        arrival_deadline: _rt::string_lift(bytes45),
+                                    },
+                                    price: super::super::super::patterncatalyst::cargo::types::Money {
+                                        amount: _rt::string_lift(bytes48),
+                                        currency: _rt::string_lift(bytes51),
+                                    },
+                                    status: super::super::super::patterncatalyst::cargo::types::RoutingStatus::_lift(
+                                        l52 as u8,
+                                    ),
+                                }
+                            };
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l53 = i32::from(
+                                    *ptr16.add(::core::mem::size_of::<*const u8>()).cast::<u8>(),
+                                );
+                                use super::super::super::patterncatalyst::cargo::types::CargoError as V66;
+                                let v66 = match l53 {
+                                    0 => {
+                                        let e66 = {
+                                            let l54 = *ptr16
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l55 = *ptr16
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len56 = l55;
+                                            let bytes56 = _rt::Vec::from_raw_parts(
+                                                l54.cast(),
+                                                len56,
+                                                len56,
+                                            );
+                                            _rt::string_lift(bytes56)
+                                        };
+                                        V66::NotFound(e66)
+                                    }
+                                    1 => {
+                                        let e66 = {
+                                            let l57 = *ptr16
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l58 = *ptr16
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len59 = l58;
+                                            let bytes59 = _rt::Vec::from_raw_parts(
+                                                l57.cast(),
+                                                len59,
+                                                len59,
+                                            );
+                                            _rt::string_lift(bytes59)
+                                        };
+                                        V66::InvalidBooking(e66)
+                                    }
+                                    2 => {
+                                        let e66 = {
+                                            let l60 = *ptr16
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l61 = *ptr16
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len62 = l61;
+                                            let bytes62 = _rt::Vec::from_raw_parts(
+                                                l60.cast(),
+                                                len62,
+                                                len62,
+                                            );
+                                            _rt::string_lift(bytes62)
+                                        };
+                                        V66::InvalidLocation(e66)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 3, "invalid enum discriminant");
+                                        let e66 = {
+                                            let l63 = *ptr16
+                                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l64 = *ptr16
+                                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len65 = l64;
+                                            let bytes65 = _rt::Vec::from_raw_parts(
+                                                l63.cast(),
+                                                len65,
+                                                len65,
+                                            );
+                                            _rt::string_lift(bytes65)
+                                        };
+                                        V66::Conflict(e66)
+                                    }
+                                };
+                                v66
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    if layout15.size() != 0 {
+                        _rt::alloc::dealloc(result15.cast(), layout15);
+                    }
+                    result67
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Look up a cargo by its tracking ID.
+            pub fn get_cargo(tracking_id: &str) -> Result<Cargo, CargoError> {
+                unsafe {
+                    #[repr(align(8))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 16 + 14 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 16
+                            + 14 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = tracking_id;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "patterncatalyst:cargo/booking@0.1.0")]
+                    unsafe extern "C" {
+                        #[link_name = "get-cargo"]
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import2(ptr0.cast_mut(), len0, ptr1) };
+                    let l3 = i32::from(*ptr1.add(0).cast::<u8>());
+                    let result40 = match l3 {
+                        0 => {
+                            let e = {
+                                let l4 = *ptr1.add(8).cast::<*mut u8>();
+                                let l5 = *ptr1
+                                    .add(8 + 1 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len6 = l5;
+                                let bytes6 = _rt::Vec::from_raw_parts(
+                                    l4.cast(),
+                                    len6,
+                                    len6,
+                                );
+                                let l7 = *ptr1
+                                    .add(8 + 2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l8 = *ptr1
+                                    .add(8 + 3 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len9 = l8;
+                                let bytes9 = _rt::Vec::from_raw_parts(
+                                    l7.cast(),
+                                    len9,
+                                    len9,
+                                );
+                                let l10 = *ptr1
+                                    .add(8 + 4 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l11 = *ptr1
+                                    .add(8 + 5 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len12 = l11;
+                                let bytes12 = _rt::Vec::from_raw_parts(
+                                    l10.cast(),
+                                    len12,
+                                    len12,
+                                );
+                                let l13 = *ptr1
+                                    .add(8 + 6 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l14 = *ptr1
+                                    .add(8 + 7 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len15 = l14;
+                                let bytes15 = _rt::Vec::from_raw_parts(
+                                    l13.cast(),
+                                    len15,
+                                    len15,
+                                );
+                                let l16 = *ptr1
+                                    .add(8 + 8 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l17 = *ptr1
+                                    .add(8 + 9 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len18 = l17;
+                                let bytes18 = _rt::Vec::from_raw_parts(
+                                    l16.cast(),
+                                    len18,
+                                    len18,
+                                );
+                                let l19 = *ptr1
+                                    .add(8 + 10 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l20 = *ptr1
+                                    .add(8 + 11 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len21 = l20;
+                                let bytes21 = _rt::Vec::from_raw_parts(
+                                    l19.cast(),
+                                    len21,
+                                    len21,
+                                );
+                                let l22 = *ptr1
+                                    .add(8 + 12 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l23 = *ptr1
+                                    .add(8 + 13 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len24 = l23;
+                                let bytes24 = _rt::Vec::from_raw_parts(
+                                    l22.cast(),
+                                    len24,
+                                    len24,
+                                );
+                                let l25 = *ptr1
+                                    .add(8 + 14 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<f64>();
+                                super::super::super::patterncatalyst::cargo::types::Cargo {
+                                    tracking_id: _rt::string_lift(bytes6),
+                                    origin: super::super::super::patterncatalyst::cargo::types::Location {
+                                        unlocode: _rt::string_lift(bytes9),
+                                        name: _rt::string_lift(bytes12),
+                                        country: _rt::string_lift(bytes15),
+                                    },
+                                    destination: super::super::super::patterncatalyst::cargo::types::Location {
+                                        unlocode: _rt::string_lift(bytes18),
+                                        name: _rt::string_lift(bytes21),
+                                        country: _rt::string_lift(bytes24),
+                                    },
+                                    weight_kg: l25,
+                                }
+                            };
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l26 = i32::from(*ptr1.add(8).cast::<u8>());
+                                use super::super::super::patterncatalyst::cargo::types::CargoError as V39;
+                                let v39 = match l26 {
+                                    0 => {
+                                        let e39 = {
+                                            let l27 = *ptr1
+                                                .add(8 + 1 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l28 = *ptr1
+                                                .add(8 + 2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len29 = l28;
+                                            let bytes29 = _rt::Vec::from_raw_parts(
+                                                l27.cast(),
+                                                len29,
+                                                len29,
+                                            );
+                                            _rt::string_lift(bytes29)
+                                        };
+                                        V39::NotFound(e39)
+                                    }
+                                    1 => {
+                                        let e39 = {
+                                            let l30 = *ptr1
+                                                .add(8 + 1 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l31 = *ptr1
+                                                .add(8 + 2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len32 = l31;
+                                            let bytes32 = _rt::Vec::from_raw_parts(
+                                                l30.cast(),
+                                                len32,
+                                                len32,
+                                            );
+                                            _rt::string_lift(bytes32)
+                                        };
+                                        V39::InvalidBooking(e39)
+                                    }
+                                    2 => {
+                                        let e39 = {
+                                            let l33 = *ptr1
+                                                .add(8 + 1 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l34 = *ptr1
+                                                .add(8 + 2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len35 = l34;
+                                            let bytes35 = _rt::Vec::from_raw_parts(
+                                                l33.cast(),
+                                                len35,
+                                                len35,
+                                            );
+                                            _rt::string_lift(bytes35)
+                                        };
+                                        V39::InvalidLocation(e39)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 3, "invalid enum discriminant");
+                                        let e39 = {
+                                            let l36 = *ptr1
+                                                .add(8 + 1 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<*mut u8>();
+                                            let l37 = *ptr1
+                                                .add(8 + 2 * ::core::mem::size_of::<*const u8>())
+                                                .cast::<usize>();
+                                            let len38 = l37;
+                                            let bytes38 = _rt::Vec::from_raw_parts(
+                                                l36.cast(),
+                                                len38,
+                                                len38,
+                                            );
+                                            _rt::string_lift(bytes38)
+                                        };
+                                        V39::Conflict(e39)
+                                    }
+                                };
+                                v39
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result40
+                }
+            }
+        }
         /// Handling event recording, event history, and the `cargo-tracker`
         /// resource that follows a single cargo's status and history over time.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
@@ -1273,6 +2651,45 @@ mod _rt {
     #![allow(dead_code, clippy::all)]
     pub use alloc_crate::string::String;
     pub use alloc_crate::vec::Vec;
+    pub fn as_f64<T: AsF64>(t: T) -> f64 {
+        t.as_f64()
+    }
+    pub trait AsF64 {
+        fn as_f64(self) -> f64;
+    }
+    impl<'a, T: Copy + AsF64> AsF64 for &'a T {
+        fn as_f64(self) -> f64 {
+            (*self).as_f64()
+        }
+    }
+    impl AsF64 for f64 {
+        #[inline]
+        fn as_f64(self) -> f64 {
+            self as f64
+        }
+    }
+    pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
+        if cfg!(debug_assertions) {
+            String::from_utf8(bytes).unwrap()
+        } else {
+            String::from_utf8_unchecked(bytes)
+        }
+    }
+    pub unsafe fn invalid_enum_discriminant<T>() -> T {
+        if cfg!(debug_assertions) {
+            panic!("invalid enum discriminant")
+        } else {
+            unsafe { core::hint::unreachable_unchecked() }
+        }
+    }
+    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
+        if size == 0 {
+            return;
+        }
+        let layout = alloc::Layout::from_size_align_unchecked(size, align);
+        alloc::dealloc(ptr, layout);
+    }
+    pub use alloc_crate::alloc;
     use core::fmt;
     use core::marker;
     use core::sync::atomic::{AtomicU32, Ordering::Relaxed};
@@ -1347,33 +2764,11 @@ mod _rt {
             }
         }
     }
-    pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
-        if cfg!(debug_assertions) {
-            String::from_utf8(bytes).unwrap()
-        } else {
-            String::from_utf8_unchecked(bytes)
-        }
-    }
-    pub unsafe fn invalid_enum_discriminant<T>() -> T {
-        if cfg!(debug_assertions) {
-            panic!("invalid enum discriminant")
-        } else {
-            unsafe { core::hint::unreachable_unchecked() }
-        }
-    }
-    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
-        if size == 0 {
-            return;
-        }
-        let layout = alloc::Layout::from_size_align_unchecked(size, align);
-        alloc::dealloc(ptr, layout);
-    }
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
     }
     extern crate alloc as alloc_crate;
-    pub use alloc_crate::alloc;
 }
 /// Generates `#[unsafe(no_mangle)]` functions to export the specified type as
 /// the root implementation of all generated traits.
@@ -1414,9 +2809,9 @@ pub(crate) use __export_cargo_kafka_handler_impl as export;
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1848] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xae\x0d\x01A\x02\x01\
-A\x0e\x01B\x19\x01r\x03\x08unlocodes\x04names\x07countrys\x04\0\x08location\x03\0\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 2219] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa1\x10\x01A\x02\x01\
+A\x14\x01B\x19\x01r\x03\x08unlocodes\x04names\x07countrys\x04\0\x08location\x03\0\
 \0\x01r\x02\x06amounts\x08currencys\x04\0\x05money\x03\0\x02\x01r\x04\x0btrackin\
 g-ids\x06origin\x01\x0bdestination\x01\x09weight-kgu\x04\0\x05cargo\x03\0\x04\x01\
 r\x03\x06origin\x01\x0bdestination\x01\x10arrival-deadlines\x04\0\x0aroute-spec\x03\
@@ -1431,28 +2826,37 @@ r\x06\x09voyage-ids\x0dload-location\x01\x0funload-location\x01\x09load-times\x0
 unload-times\x06status\x11\x04\0\x03leg\x03\0\x12\x01p\x13\x01r\x02\x0abooking-i\
 ds\x04legs\x14\x04\0\x09itinerary\x03\0\x15\x01q\x04\x09not-found\x01s\0\x0finva\
 lid-booking\x01s\0\x10invalid-location\x01s\0\x08conflict\x01s\0\x04\0\x0bcargo-\
-error\x03\0\x17\x03\0!patterncatalyst:cargo/types@0.1.0\x05\0\x02\x03\0\0\x0ehan\
-dling-event\x02\x03\0\0\x13handling-event-type\x02\x03\0\0\x08location\x02\x03\0\
-\0\x10transport-status\x02\x03\0\0\x0bcargo-error\x01B\x1c\x02\x03\x02\x01\x01\x04\
-\0\x0ehandling-event\x03\0\0\x02\x03\x02\x01\x02\x04\0\x13handling-event-type\x03\
-\0\x02\x02\x03\x02\x01\x03\x04\0\x08location\x03\0\x04\x02\x03\x02\x01\x04\x04\0\
-\x10transport-status\x03\0\x06\x02\x03\x02\x01\x05\x04\0\x0bcargo-error\x03\0\x08\
-\x04\0\x0dcargo-tracker\x03\x01\x01i\x0a\x01@\x01\x0btracking-ids\0\x0b\x04\0\x1a\
-[constructor]cargo-tracker\x01\x0c\x01h\x0a\x01@\x01\x04self\x0d\0s\x04\0![metho\
-d]cargo-tracker.tracking-id\x01\x0e\x01@\x01\x04self\x0d\0\x07\x04\0$[method]car\
-go-tracker.current-status\x01\x0f\x01p\x01\x01@\x01\x04self\x0d\0\x10\x04\0\x1d[\
-method]cargo-tracker.history\x01\x11\x01j\0\x01\x09\x01@\x05\x08cargo-ids\x0aeve\
-nt-type\x03\x08location\x05\x09voyage-ids\x0brecorded-ats\0\x12\x04\0\x17registe\
-r-handling-event\x01\x13\x01j\x01\x10\x01\x09\x01@\x01\x08cargo-ids\0\x14\x04\0\x14\
-list-handling-events\x01\x15\x03\0$patterncatalyst:cargo/handling@0.1.0\x05\x06\x01\
-B\x04\x01p}\x01ks\x01r\x03\x07subjects\x04body\0\x08reply-to\x01\x04\0\x0ebroker\
--message\x03\0\x02\x04\0\x1fwasmcloud:messaging/types@0.2.0\x05\x07\x02\x03\0\x02\
-\x0ebroker-message\x01B\x05\x02\x03\x02\x01\x08\x04\0\x0ebroker-message\x03\0\0\x01\
-j\0\x01s\x01@\x01\x03msg\x01\0\x02\x04\0\x0ehandle-message\x01\x03\x04\0!wasmclo\
-ud:messaging/handler@0.2.0\x05\x09\x04\0=patterncatalyst:cargo-kafka-handler/car\
-go-kafka-handler@0.1.0\x04\0\x0b\x19\x01\0\x13cargo-kafka-handler\x03\0\0\0G\x09\
-producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rus\
-t\x060.41.0";
+error\x03\0\x17\x03\0!patterncatalyst:cargo/types@0.1.0\x05\0\x02\x03\0\0\x05car\
+go\x02\x03\0\0\x07booking\x02\x03\0\0\x0aroute-spec\x02\x03\0\0\x09itinerary\x02\
+\x03\0\0\x0bcargo-error\x01B\x16\x02\x03\x02\x01\x01\x04\0\x05cargo\x03\0\0\x02\x03\
+\x02\x01\x02\x04\0\x07booking\x03\0\x02\x02\x03\x02\x01\x03\x04\0\x0aroute-spec\x03\
+\0\x04\x02\x03\x02\x01\x04\x04\0\x09itinerary\x03\0\x06\x02\x03\x02\x01\x05\x04\0\
+\x0bcargo-error\x03\0\x08\x01j\x01\x03\x01\x09\x01@\x02\x04spec\x05\x09weight-kg\
+u\0\x0a\x04\0\x0abook-cargo\x01\x0b\x01p\x07\x01j\x01\x0c\x01\x09\x01@\x01\x0abo\
+oking-ids\0\x0d\x04\0\x17request-possible-routes\x01\x0e\x01@\x02\x0abooking-ids\
+\x09itinerary\x07\0\x0a\x04\0\x0cassign-route\x01\x0f\x01j\x01\x01\x01\x09\x01@\x01\
+\x0btracking-ids\0\x10\x04\0\x09get-cargo\x01\x11\x03\0#patterncatalyst:cargo/bo\
+oking@0.1.0\x05\x06\x02\x03\0\0\x0ehandling-event\x02\x03\0\0\x13handling-event-\
+type\x02\x03\0\0\x08location\x02\x03\0\0\x10transport-status\x01B\x1c\x02\x03\x02\
+\x01\x07\x04\0\x0ehandling-event\x03\0\0\x02\x03\x02\x01\x08\x04\0\x13handling-e\
+vent-type\x03\0\x02\x02\x03\x02\x01\x09\x04\0\x08location\x03\0\x04\x02\x03\x02\x01\
+\x0a\x04\0\x10transport-status\x03\0\x06\x02\x03\x02\x01\x05\x04\0\x0bcargo-erro\
+r\x03\0\x08\x04\0\x0dcargo-tracker\x03\x01\x01i\x0a\x01@\x01\x0btracking-ids\0\x0b\
+\x04\0\x1a[constructor]cargo-tracker\x01\x0c\x01h\x0a\x01@\x01\x04self\x0d\0s\x04\
+\0![method]cargo-tracker.tracking-id\x01\x0e\x01@\x01\x04self\x0d\0\x07\x04\0$[m\
+ethod]cargo-tracker.current-status\x01\x0f\x01p\x01\x01@\x01\x04self\x0d\0\x10\x04\
+\0\x1d[method]cargo-tracker.history\x01\x11\x01j\0\x01\x09\x01@\x05\x08cargo-ids\
+\x0aevent-type\x03\x08location\x05\x09voyage-ids\x0brecorded-ats\0\x12\x04\0\x17\
+register-handling-event\x01\x13\x01j\x01\x10\x01\x09\x01@\x01\x08cargo-ids\0\x14\
+\x04\0\x14list-handling-events\x01\x15\x03\0$patterncatalyst:cargo/handling@0.1.\
+0\x05\x0b\x01B\x04\x01p}\x01ks\x01r\x03\x07subjects\x04body\0\x08reply-to\x01\x04\
+\0\x0ebroker-message\x03\0\x02\x04\0\x1fwasmcloud:messaging/types@0.2.0\x05\x0c\x02\
+\x03\0\x03\x0ebroker-message\x01B\x05\x02\x03\x02\x01\x0d\x04\0\x0ebroker-messag\
+e\x03\0\0\x01j\0\x01s\x01@\x01\x03msg\x01\0\x02\x04\0\x0ehandle-message\x01\x03\x04\
+\0!wasmcloud:messaging/handler@0.2.0\x05\x0e\x04\0=patterncatalyst:cargo-kafka-h\
+andler/cargo-kafka-handler@0.1.0\x04\0\x0b\x19\x01\0\x13cargo-kafka-handler\x03\0\
+\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bi\
+ndgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

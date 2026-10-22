@@ -1,0 +1,6 @@
+# The composite build.sh plug-composes — provider -> kafka-handler — same
+# never-commit convention as ../adapter/app-adapted.wasm and
+# ../sidecar-filter/app-filtered.wasm. Cargo.lock IS committed (reproducible
+# builds); only this *.wasm output is ignored. `**/target/` in the parent
+# directory's .gitignore already covers this crate's Rust build tree.
+kafka-app.wasm

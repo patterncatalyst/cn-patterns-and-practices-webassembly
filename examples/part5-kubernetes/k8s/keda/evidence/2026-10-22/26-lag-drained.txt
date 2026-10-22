@@ -1,0 +1,2 @@
+# polling for lag to drain back to 0 (timeout 240s)
+t=0s current-offset=240 log-end-offset=240 lag=0

@@ -10,10 +10,10 @@ wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
 crate-type = ["cdylib"]
 
 # This component targets a LOCAL world (wit/world.wit) that EXPORTS
-# `wasmcloud:messaging/handler@0.2.0` (so the `messaging-kafka` capability
-# provider can deliver Kafka messages to it over wadm's runtime link) and
-# IMPORTS the cargo domain's `handling` interface from the repository
-# contract. `wasmcloud:messaging` is vendored verbatim under wit/deps/messaging
+# `wasmcloud:messaging/handler@0.2.0` (the interface a Kafka consumer calls once
+# per delivered message) and
+# IMPORTS the cargo domain's `booking` and `handling` interfaces from the
+# repository contract. `wasmcloud:messaging` is vendored verbatim under wit/deps/messaging
 # (cargo-component does not fetch WIT packages over the network, so every
 # non-contract package the local world references must be declared here as a
 # target dependency and present on disk — the same shape as the wasi:http

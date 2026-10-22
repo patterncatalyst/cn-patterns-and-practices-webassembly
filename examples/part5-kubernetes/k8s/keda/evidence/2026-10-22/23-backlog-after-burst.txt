@@ -1,0 +1,22 @@
+# topic cargo-handling-events end offset BEFORE the burst = 120
+
+$ COUNT=120 /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/k8s/kafka/producer-burst.sh
+
+=== 0/3 disposable Strimzi client Pod (cargo-producer-burst, image quay.io/strimzi/kafka:1.3.0-kafka-4.3.1) ===
+pod/cargo-producer-burst created
+pod/cargo-producer-burst condition met
+
+=== 1/3 generating 120 burst messages (6 keys, round-robin across the topic's 6 partitions) ===
+producer-burst.sh: wrote 120 messages to a temp batch file
+
+=== 2/3 producing the burst onto cargo-handling-events via cargo-kafka-kafka-bootstrap.kafka.svc:9092 (in-cluster, no port-forward) ===
+Warning: --property is deprecated and will be removed in a future version. Use --reader-property instead.
+producer-burst.sh: produced 120 messages onto cargo-handling-events
+
+=== 3/3 cleanup ===
+producer-burst.sh: OK — burst of 120 messages sent; check consumer-group lag with:
+  kubectl exec -it deploy/cargo-kafka-entity-operator -n kafka -- bin/kafka-consumer-groups.sh --bootstrap-server cargo-kafka-kafka-bootstrap.kafka.svc:9092 --describe --group cargo-handling
+
+# polling for the topic backlog to grow (timeout 120s) — the lag KEDA
+# reads with offsetResetPolicy: earliest before the group commits
+t=0s topic-end-offset=240 (was 120)

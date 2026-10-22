@@ -1,0 +1,11 @@
+$ minikube version --short
+v1.39.0
+
+$ helm list -n keda --kube-context part5
+NAME             	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                   	APP VERSION
+keda             	keda     	2       	2026-10-22 12:56:04.217653274 -0400 EDT	deployed	keda-2.21.0             	2.21.0     
+keda-add-ons-http	keda     	2       	2026-10-22 12:56:05.575378931 -0400 EDT	deployed	keda-add-ons-http-0.16.0	0.16.0     
+
+# pinned versions
+Strimzi: 1.3.0 (Kafka 4.3.1)
+KEDA core: 2.21.0

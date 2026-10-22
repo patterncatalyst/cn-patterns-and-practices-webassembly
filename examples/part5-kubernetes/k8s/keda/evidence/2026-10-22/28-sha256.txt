@@ -1,0 +1,2 @@
+$ sha256sum /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/kafka-host/kafka-app.wasm
+5a569130f42f44f700269a4dcf25b525a7f7c1dff40be6076cfca88f2f613555  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/kafka-host/kafka-app.wasm

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Figure 23.2 — Ch23: the Kafka lag flow, end to end, on CRC.
+"""Figure 23.2 — Ch23: the Kafka lag flow, end to end, on minikube.
 
-A producer burst lands on a multi-partition topic. Two things read that
-topic independently: the consumer-group lag metric (which KEDA's kafka
-ScaledObject watches, advisory only — see Figure 23.1) and the wasmCloud
-messaging-kafka provider, which actually delivers messages to the
-kafka-handler component over wRPC. As wadm's spreadscaler raises
-kafka-handler's instance count, throughput rises, lag drains, and wadm scales
-back down. KEDA's reading and wadm's scaling decision are two separate loops
-over the same lag signal.
+One loop, one owner. A producer burst lands on a six-partition topic and
+raises real consumer-group lag. KEDA's kafka ScaledObject reads that lag and
+scales the cargo-kafka-host Deployment directly, 0 to N. The host is a native
+process: it embeds an rdkafka consumer group and a wasmtime runtime, and
+calls the Wasm handler's handle-message export once per delivered message on
+kafka-app.wasm (kafka-handler plugged into the Part 2 cargo-provider). The
+host commits the offset after a successful call. As the extra instances
+drain the backlog, lag falls, and KEDA scales cargo-kafka-host back to zero.
 """
 import sys, os
 sys.path.insert(0, "scripts")
@@ -21,55 +21,54 @@ W, H = 1220, 480
 
 bands = [
     {"x": 20, "y": 40, "w": 1180, "h": 400,
-     "label": "CRC — producer burst to drained lag, two independent readers of the same topic",
+     "label": "minikube — consumer-group lag drives KEDA, KEDA drives the Deployment directly",
      "fill": "#f1f5f9"},
 ]
 
 nodes = [
-    {"x": 50, "y": 190, "w": 160, "h": 70,
+    # top row, left to right: burst -> topic -> lag -> KEDA decides
+    {"x": 50, "y": 90, "w": 230, "h": 70,
      "lines": ["producer burst"],
      "style": "box"},
-    {"x": 250, "y": 190, "w": 190, "h": 70,
-     "lines": ["topic", "(multi-partition)"],
+    {"x": 330, "y": 90, "w": 230, "h": 70,
+     "lines": ["topic cargo-handling-events", "(6 partitions)"],
      "style": "box"},
-
-    # observability branch (top)
-    {"x": 490, "y": 90, "w": 220, "h": 60,
-     "lines": ["consumer-group lag rises"],
+    {"x": 610, "y": 90, "w": 230, "h": 70,
+     "lines": ["consumer-group lag rises", "group: cargo-handling"],
      "style": "ink"},
-    {"x": 760, "y": 90, "w": 220, "h": 60,
-     "lines": ["KEDA kafka ScaledObject", "reads lag"],
+    {"x": 890, "y": 90, "w": 230, "h": 70,
+     "lines": ["KEDA kafka ScaledObject", "lagThreshold: 5, max: 6"],
      "style": "accent"},
-    {"x": 1030, "y": 90, "w": 150, "h": 60,
-     "lines": ["advisory only", "(no HPA created)"],
-     "style": "ghost"},
 
-    # delivery branch (bottom)
-    {"x": 490, "y": 320, "w": 220, "h": 70,
-     "lines": ["messaging-kafka provider", "consumes from the topic"],
+    # bottom row, right to left: Deployment scales -> rdkafka group -> wasmtime handler -> commit/drain
+    {"x": 890, "y": 320, "w": 230, "h": 80,
+     "lines": ["cargo-kafka-host Deployment", "KEDA scales 0 -> N"],
      "style": "user"},
-    {"x": 760, "y": 320, "w": 220, "h": 70,
-     "lines": ["kafka-handler component", "wadm scales instances up"],
+    {"x": 610, "y": 320, "w": 230, "h": 80,
+     "lines": ["host: rdkafka consumer group", "manual offset commit"],
      "style": "user"},
-    {"x": 1030, "y": 320, "w": 150, "h": 70,
-     "lines": ["lag drains,", "wadm scales down"],
+    {"x": 330, "y": 320, "w": 230, "h": 80,
+     "lines": ["embedded wasmtime", "handle-message on kafka-app.wasm"],
+     "style": "user"},
+    {"x": 50, "y": 320, "w": 230, "h": 80,
+     "lines": ["offset committed,", "lag drains -> KEDA scales to 0"],
      "style": "box"},
 ]
 
 edges = [
-    {"x1": 210, "y1": 225, "x2": 250, "y2": 225},
-    {"x1": 345, "y1": 190, "x2": 490, "y2": 120, "label": "lag metric exported"},
-    {"x1": 710, "y1": 120, "x2": 760, "y2": 120},
-    {"x1": 980, "y1": 120, "x2": 1030, "y2": 120, "dashed": True},
+    {"x1": 280, "y1": 125, "x2": 330, "y2": 125},
+    {"x1": 560, "y1": 125, "x2": 610, "y2": 125, "label": "lag metric exported"},
+    {"x1": 840, "y1": 125, "x2": 890, "y2": 125},
+    {"x1": 1005, "y1": 160, "x2": 1005, "y2": 320, "label": "scales 0 -> N"},
 
-    {"x1": 345, "y1": 260, "x2": 490, "y2": 355, "label": "consume"},
-    {"x1": 710, "y1": 355, "x2": 760, "y2": 355, "amber": True, "bidir": True, "label": "wRPC invoke"},
-    {"x1": 980, "y1": 355, "x2": 1030, "y2": 355, "label": "throughput rises"},
+    {"x1": 890, "y1": 360, "x2": 840, "y2": 360},
+    {"x1": 610, "y1": 360, "x2": 560, "y2": 360, "amber": True, "bidir": True, "label": "handle-message per record"},
+    {"x1": 330, "y1": 360, "x2": 280, "y2": 360, "label": "commit"},
 ]
 
 notes = [
     {"x": 610, "y": 460, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Two readers, one topic: KEDA's lag reading is advisory; wadm's spreadscaler is the loop that actually changes kafka-handler's instance count."},
+     "text": "One Deployment, one owner: KEDA reads real consumer-group lag and scales cargo-kafka-host 0 -> N -> 0; the host embeds wasmtime itself."},
 ]
 
 gd.emit("23-kafka-lag-flow", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)
