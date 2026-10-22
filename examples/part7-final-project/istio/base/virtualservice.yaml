@@ -1,0 +1,41 @@
+# examples/part7-final-project/istio/base/virtualservice.yaml
+#
+# Routes requests arriving at ./gateway.yaml's istio-ingressgateway listener to
+# EITHER cargo-rust or cargo-go (../../k8s/base, port 8080 on each) by the
+# Host/authority header — no new Service, no change to either app.
+#
+# ONE VirtualService, TWO http entries matched by `authority`, one per host —
+# the host carries the routing decision, mirroring ./gateway.yaml's one
+# listener / two hosts shape.
+#
+# hosts[] / the two authority matches are the same placeholders as
+# gateway.yaml's; ../../verify-minikube.sh patches all three together to the
+# live nip.io hosts.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: cargo-final
+  namespace: part7-final-project
+spec:
+  hosts:
+    - "cargo-rust-istio.part7-final-project.example"
+    - "cargo-go-istio.part7-final-project.example"
+  gateways:
+    - cargo-final-gateway
+  http:
+    - match:
+        - authority:
+            exact: "cargo-rust-istio.part7-final-project.example"
+      route:
+        - destination:
+            host: cargo-rust.part7-final-project.svc.cluster.local
+            port:
+              number: 8080
+    - match:
+        - authority:
+            exact: "cargo-go-istio.part7-final-project.example"
+      route:
+        - destination:
+            host: cargo-go.part7-final-project.svc.cluster.local
+            port:
+              number: 8080

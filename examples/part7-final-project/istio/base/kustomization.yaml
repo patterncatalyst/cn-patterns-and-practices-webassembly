@@ -1,0 +1,28 @@
+# examples/part7-final-project/istio/base/kustomization.yaml
+#
+# Pulls in the UNMODIFIED final-project app (Namespace, shared RuntimeClass,
+# both Deployments/Services, ingress-nginx Ingress — ../../k8s/base) and
+# layers the ch25 Istio mesh entry point on top: Gateway + VirtualService
+# routing to BOTH Services. Same shape as
+# examples/part6-deviations/istio/base/kustomization.yaml, which does the
+# identical fold for Part 5's single-language app.
+#
+# No WasmPlugin here and no sidecar-injection namespace label, for the same
+# reason ch25 omits both: a `runtimeClassName: wasmtime` Pod runs one
+# container runtime for every container in it, so both cargo-rust and
+# cargo-go stay pure Wasm Pods with no sidecar. The proxy-wasm filter instead
+# loads into the istio-ingressgateway's own Envoy via
+# ../gateway-wasmplugin.yaml (applied directly, not through this
+# kustomization — it targets istio-system, not part7-final-project; see
+# ../../verify-minikube.sh).
+#
+# contracts/wit is untouched: this directory contains no component source,
+# only deployment manifests for the EXISTING composites
+# (cargo-rust.wasm / cargo-go.wasm).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../k8s/base
+  - gateway.yaml
+  - virtualservice.yaml
