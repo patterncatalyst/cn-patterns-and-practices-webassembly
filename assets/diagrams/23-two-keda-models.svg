@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="40" width="540" height="480" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">KEDA DRIVES — minikube, plain raw-shim Deployment</text>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">KEDA DRIVES — HTTP request-rate (minikube, cargo-http)</text>
 <rect x="620" y="40" width="540" height="480" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="632" y="60" font-size="12" font-weight="700" fill="#1d1d1d">KEDA OBSERVES / wadm OWNS — CRC, kafka-handler component</text>
+<text x="632" y="60" font-size="12" font-weight="700" fill="#1d1d1d">KEDA DRIVES — Kafka consumer-group lag (minikube, cargo-kafka-host)</text>
 <rect x="60" y="90" width="460" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
 <text x="290.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cold HTTP request arrives</text>
 <text x="290.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">no ready replica (scaled to 0)</text>
@@ -11,34 +11,34 @@
 <text x="290.0" y="208.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">KEDA HTTP add-on interceptor</text>
 <text x="290.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">queues the request, requests a scale</text>
 <rect x="60" y="270" width="460" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="290.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ScaledObject (http)</text>
-<text x="290.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">minReplicaCount: 0, maxReplicaCount: N</text>
+<text x="290.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">HTTPScaledObject</text>
+<text x="290.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">replicas.min: 0, replicas.max: N</text>
 <rect x="60" y="360" width="460" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
-<text x="290.0" y="388.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">raw-shim Wasm Deployment</text>
+<text x="290.0" y="388.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">raw-shim cargo-http Deployment</text>
 <text x="290.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">scales 0 -&gt; 1, then back to 0 on idle</text>
 <rect x="60" y="450" width="460" height="50" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
 <text x="290.0" y="480.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">interceptor replays the queued request</text>
 <rect x="660" y="90" width="460" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="890.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Kafka consumer-group lag</text>
-<text x="890.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">exported by the broker/exporter</text>
+<text x="890.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Kafka consumer-group lag rises</text>
+<text x="890.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">topic: cargo-handling-events, 6 partitions</text>
 <rect x="660" y="180" width="460" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
 <text x="890.0" y="208.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">KEDA kafka ScaledObject</text>
-<text x="890.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">trigger: lag threshold</text>
-<rect x="660" y="270" width="460" height="120" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
-<text x="890.0" y="320.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">no HPA is created for this component —</text>
-<text x="890.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">the wasmCloud wadm spreadscaler owns</text>
-<text x="890.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">kafka-handler&#x27;s instance count</text>
-<rect x="660" y="410" width="460" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
-<text x="890.0" y="438.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">kafka-handler component replicas</text>
-<text x="890.0" y="455.0" font-size="11.5" fill="#555555" text-anchor="middle">wadm reconciles desired vs. actual</text>
+<text x="890.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">trigger: lagThreshold 5, max 6</text>
+<rect x="660" y="270" width="460" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="890.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-kafka-host Deployment</text>
+<text x="890.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">scales 0 -&gt; N directly</text>
+<rect x="660" y="360" width="460" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="890.0" y="388.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">host: rdkafka group + embedded wasmtime</text>
+<text x="890.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">handle-message per record, then commit</text>
+<rect x="660" y="450" width="460" height="50" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="890.0" y="480.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">lag drains -&gt; KEDA scales back to 0</text>
 <path d="M290,150 L290,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M290,240 L290,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M290,330 L290,360" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M290,420 L290,450" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M890,150 L890,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<path d="M890,240 L890,270" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<text x="896.0" y="249.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">informs, no HPA</text>
-<text x="896.0" y="249.0" font-size="11" fill="#555" text-anchor="middle">informs, no HPA</text>
-<path d="M890,390 L890,410" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="590" y="540" font-size="12" fill="#555555" text-anchor="middle">Same project, two KEDA roles: HTTP add-on drives replica count directly; kafka ScaledObject only observes while wadm owns the count.</text>
+<path d="M890,240 L890,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,330 L890,360" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M890,420 L890,450" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="590" y="540" font-size="12" fill="#555555" text-anchor="middle">Two trigger types, one owner: KEDA patches replicas directly in both halves, request concurrency on the left, consumer-group lag on the right.</text>
 </svg>

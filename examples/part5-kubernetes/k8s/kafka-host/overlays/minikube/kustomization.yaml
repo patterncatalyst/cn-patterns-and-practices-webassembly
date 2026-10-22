@@ -1,0 +1,22 @@
+# minikube overlay — retags the native host image to the tag build.sh builds
+# and `minikube image load`s, and forces imagePullPolicy: Never, same
+# convention as ../../../overlays/minikube and the other Part 5 minikube
+# overlays (docker driver + containerd, no registry).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: cargo-kafka-host
+    newTag: minikube
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-kafka-host
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

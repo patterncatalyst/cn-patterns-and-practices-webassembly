@@ -1,0 +1,33 @@
+package patterncatalyst:cargo-kafka-host@0.1.0;
+
+/// The HOST side of the ch23 native Kafka consumer host. `cargo-kafka-host`
+/// (../src/main.rs) is a plain Rust binary that joins a real Kafka consumer
+/// group with `rdkafka` and, per delivered message, drives an embedded
+/// wasmtime runtime against `kafka-app.wasm` — the SAME `kafka-handler`
+/// business logic the wasmCloud `messaging-kafka` path runs (../kafka-handler),
+/// composed ahead of time with the Part 2 cargo provider via `wac plug` (see
+/// ../build.sh) so the host never has to satisfy a `patterncatalyst:cargo`
+/// import at runtime.
+///
+/// This world is EXPORT-ONLY and deliberately narrow: it only declares the two
+/// interfaces the host actually calls across the component boundary
+/// (`handler.handle-message`, plus the `types.broker-message` record it
+/// depends on). It does NOT bindgen against `kafka-handler`'s own
+/// `cargo-kafka-handler` world — that world additionally imports
+/// `patterncatalyst:cargo/{types,handling}`, and a host-side `bindgen!` against
+/// it would generate Rust `Host` traits for those imports that this crate would
+/// then have to stub. `kafka-app.wasm` (the composite `wac plug` produces)
+/// satisfies those imports internally with the real Part 2 provider; from the
+/// host's perspective the composite's only import is wasi, and the only
+/// exports it calls are the two declared here.
+///
+/// `wasmcloud:messaging@0.2.0` is vendored under wit/deps/messaging — a
+/// byte-for-byte copy of ../kafka-handler/wit/deps/messaging/messaging.wit
+/// (see that file's header for provenance; `wasmtime::component::bindgen!`
+/// resolves WIT from a single path per crate, so each side that needs the
+/// package carries its own copy, same as the wasi:http vendoring convention
+/// used elsewhere in this repository).
+world kafka-host {
+    export wasmcloud:messaging/types@0.2.0;
+    export wasmcloud:messaging/handler@0.2.0;
+}

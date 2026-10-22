@@ -1,43 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 480" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="40" width="1180" height="400" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">CRC — producer burst to drained lag, two independent readers of the same topic</text>
-<rect x="50" y="190" width="160" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="130.0" y="230.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">producer burst</text>
-<rect x="250" y="190" width="190" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="345.0" y="223.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">topic</text>
-<text x="345.0" y="240.0" font-size="11.5" fill="#555555" text-anchor="middle">(multi-partition)</text>
-<rect x="490" y="90" width="220" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
-<text x="600.0" y="125.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">consumer-group lag rises</text>
-<rect x="760" y="90" width="220" height="60" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
-<text x="870.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">KEDA kafka ScaledObject</text>
-<text x="870.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">reads lag</text>
-<rect x="1030" y="90" width="150" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="1105.0" y="118.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">advisory only</text>
-<text x="1105.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">(no HPA created)</text>
-<rect x="490" y="320" width="220" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
-<text x="600.0" y="353.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">messaging-kafka provider</text>
-<text x="600.0" y="370.0" font-size="11.5" fill="#555555" text-anchor="middle">consumes from the topic</text>
-<rect x="760" y="320" width="220" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
-<text x="870.0" y="353.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">kafka-handler component</text>
-<text x="870.0" y="370.0" font-size="11.5" fill="#555555" text-anchor="middle">wadm scales instances up</text>
-<rect x="1030" y="320" width="150" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="1105.0" y="353.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">lag drains,</text>
-<text x="1105.0" y="370.0" font-size="11.5" fill="#555555" text-anchor="middle">wadm scales down</text>
-<path d="M210,225 L250,225" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<path d="M345,190 L490,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="423.5" y="149.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">lag metric exported</text>
-<text x="423.5" y="149.0" font-size="11" fill="#555" text-anchor="middle">lag metric exported</text>
-<path d="M710,120 L760,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<path d="M980,120 L1030,120" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<path d="M345,260 L490,355" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="423.5" y="301.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">consume</text>
-<text x="423.5" y="301.5" font-size="11" fill="#555" text-anchor="middle">consume</text>
-<path d="M710,355 L760,355" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
-<text x="741.0" y="349.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wRPC invoke</text>
-<text x="741.0" y="349.0" font-size="11" fill="#b8650a" text-anchor="middle">wRPC invoke</text>
-<path d="M980,355 L1030,355" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="1011.0" y="349.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">throughput rises</text>
-<text x="1011.0" y="349.0" font-size="11" fill="#555" text-anchor="middle">throughput rises</text>
-<text x="610" y="460" font-size="12" fill="#555555" text-anchor="middle">Two readers, one topic: KEDA&#x27;s lag reading is advisory; wadm&#x27;s spreadscaler is the loop that actually changes kafka-handler&#x27;s instance count.</text>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">minikube — consumer-group lag drives KEDA, KEDA drives the Deployment directly</text>
+<rect x="50" y="90" width="230" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="165.0" y="130.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">producer burst</text>
+<rect x="330" y="90" width="230" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="445.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">topic cargo-handling-events</text>
+<text x="445.0" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">(6 partitions)</text>
+<rect x="610" y="90" width="230" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="725.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">consumer-group lag rises</text>
+<text x="725.0" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">group: cargo-handling</text>
+<rect x="890" y="90" width="230" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="1005.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">KEDA kafka ScaledObject</text>
+<text x="1005.0" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">lagThreshold: 5, max: 6</text>
+<rect x="890" y="320" width="230" height="80" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="1005.0" y="358.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-kafka-host Deployment</text>
+<text x="1005.0" y="375.0" font-size="11.5" fill="#555555" text-anchor="middle">KEDA scales 0 -&gt; N</text>
+<rect x="610" y="320" width="230" height="80" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="725.0" y="358.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">host: rdkafka consumer group</text>
+<text x="725.0" y="375.0" font-size="11.5" fill="#555555" text-anchor="middle">manual offset commit</text>
+<rect x="330" y="320" width="230" height="80" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="445.0" y="358.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">embedded wasmtime</text>
+<text x="445.0" y="375.0" font-size="11.5" fill="#555555" text-anchor="middle">handle-message on kafka-app.wasm</text>
+<rect x="50" y="320" width="230" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="165.0" y="358.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">offset committed,</text>
+<text x="165.0" y="375.0" font-size="11.5" fill="#555555" text-anchor="middle">lag drains -&gt; KEDA scales to 0</text>
+<path d="M280,125 L330,125" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M560,125 L610,125" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="591.0" y="119.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">lag metric exported</text>
+<text x="591.0" y="119.0" font-size="11" fill="#555" text-anchor="middle">lag metric exported</text>
+<path d="M840,125 L890,125" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M1005,160 L1005,320" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="1011.0" y="234.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">scales 0 -&gt; N</text>
+<text x="1011.0" y="234.0" font-size="11" fill="#555" text-anchor="middle">scales 0 -&gt; N</text>
+<path d="M890,360 L840,360" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M610,360 L560,360" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="591.0" y="354.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">handle-message per record</text>
+<text x="591.0" y="354.0" font-size="11" fill="#b8650a" text-anchor="middle">handle-message per record</text>
+<path d="M330,360 L280,360" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="311.0" y="354.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">commit</text>
+<text x="311.0" y="354.0" font-size="11" fill="#555" text-anchor="middle">commit</text>
+<text x="610" y="460" font-size="12" fill="#555555" text-anchor="middle">One Deployment, one owner: KEDA reads real consumer-group lag and scales cargo-kafka-host 0 -&gt; N -&gt; 0; the host embeds wasmtime itself.</text>
 </svg>

@@ -1,0 +1,56 @@
+# examples/part5-kubernetes/kafka-host/Containerfile
+#
+# Packages the native `cargo-kafka-host` binary — NOT a Wasm component image
+# like the rest of Part 5's `/app.wasm` shapes. This is a plain OCI image for a
+# plain Kubernetes Deployment (the thing KEDA's `kafka` ScaledObject can
+# legitimately scale 0->N->0, unlike ../kafka-handler, which has no Deployment
+# to scale — see ../k8s/keda/base/kafka-scaledobject.yaml).
+#
+# Builder: `rust:1.99.1-trixie` (the repository's pinned toolchain, Debian
+# trixie base — same glibc ABI as the `debian:trixie-slim` runtime stage below,
+# so the dynamically-linked parts of the binary (libc, libgcc, libm) resolve
+# without an additional compat layer). `cmake` + a C/C++ toolchain build
+# librdkafka from source via rdkafka's `cmake-build` feature; `libcurl4-
+# openssl-dev` supplies `curl/curl.h`, which librdkafka's rdkafka_conf.c
+# `#include`s unconditionally even with `WITH_CURL=0` (a long-standing
+# librdkafka quirk, not a TLS/SASL dependency — the broker is PLAINTEXT and
+# `ssl`/`sasl`/`gssapi` stay off in Cargo.toml; the header is parsed, never
+# linked). The composite `kafka-app.wasm` is built by `./build.sh` ON THE HOST
+# BEFORE this image build and COPYed in below — no wasm toolchain
+# (cargo-component/wac/wasm-tools) runs inside the image.
+#
+# Runtime: `debian:trixie-slim` carries only glibc + the two files this
+# workload needs. The binary runs as a dedicated non-root user; librdkafka is
+# statically linked in (RDKAFKA_BUILD_STATIC=1), so no libcurl/libz runtime
+# package is required.
+FROM rust:1.99.1-trixie AS builder
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        cmake \
+        build-essential \
+        libcurl4-openssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY wit ./wit
+RUN cargo build --release --locked \
+    && strip target/release/cargo-kafka-host
+
+FROM debian:trixie-slim
+
+# Fixed numeric uid/gid: a Kubernetes `runAsNonRoot: true` securityContext can
+# only verify a non-root user when the image's USER is numeric, so declare the
+# uid directly rather than by name.
+RUN groupadd --system --gid 10001 cargo-kafka \
+    && useradd --system --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cargo-kafka
+
+COPY --from=builder /build/target/release/cargo-kafka-host /usr/local/bin/cargo-kafka-host
+# kafka-app.wasm is built by ./build.sh on the HOST (wac plug recompose) and
+# COPYed in here, never rebuilt inside the image — see the file header.
+COPY kafka-app.wasm /opt/cargo-kafka/kafka-app.wasm
+
+USER 10001
+ENTRYPOINT ["/usr/local/bin/cargo-kafka-host"]

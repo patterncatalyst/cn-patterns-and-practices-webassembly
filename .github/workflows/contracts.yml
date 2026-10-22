@@ -149,7 +149,7 @@ jobs:
     name: Build + run the examples, check generated bindings for drift
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 85   # r06e: +15 for kafka-host's from-source librdkafka build
     env:
       RUST_VERSION: "1.99.1"
       CARGO_COMPONENT_VERSION: "0.21.1"
@@ -371,6 +371,38 @@ jobs:
           cd "${PART5_DIR}/kafka-handler"
           cargo component build --release
 
+      # r06e: kafka-host's rdkafka dependency builds librdkafka FROM SOURCE
+      # (the `cmake-build` feature) rather than linking a system package, so
+      # the runner needs a C toolchain + cmake for that build, plus
+      # pkg-config for the usual autoconf-style discovery and
+      # libcurl4-openssl-dev because librdkafka's rdkafka_conf.c
+      # unconditionally #includes <curl/curl.h> even with curl support
+      # disabled at the Cargo feature level. No openssl-dev or
+      # libsasl2-dev — the broker this host talks to is plaintext-only, so
+      # the `ssl`/`sasl`/`gssapi` rdkafka features stay off and never need
+      # them.
+      - name: Install kafka-host build dependencies (cmake, build-essential, libcurl, pkg-config)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake build-essential libcurl4-openssl-dev pkg-config
+
+      # kafka-host is the ch23 plain-Kubernetes-Deployment path: build.sh
+      # composes kafka-app.wasm (Part 2 provider + ../kafka-handler via `wac
+      # plug`, reusing both build recipes unmodified) and then `cargo build
+      # --release`s the native cargo-kafka-host binary that embeds wasmtime
+      # and joins a real Kafka consumer group with rdkafka. It is a plain
+      # cargo crate, NOT a cargo-component crate — no WIT, no generated
+      # bindings.rs — so it is deliberately EXCLUDED from the bindings-drift
+      # gate below, same treatment as the ch25 proxy-wasm Istio filter above
+      # and the Part 3 grpc-bridge. The LIVE KEDA consumer-group-lag
+      # scale-to-zero run is evidence-only, verified by hand under
+      # examples/part5-kubernetes/{k8s,openshift}/evidence/ — never a CI
+      # step.
+      - name: Build the Part 5 kafka-host (build.sh)
+        run: ${{ env.PART5_DIR }}/kafka-host/build.sh
+
       # r07a: the ch25 Istio filter is a PROXY-WASM core module, NOT a Component
       # Model component — plain `cargo build --target wasm32-wasip1` of a cdylib
       # using the `proxy-wasm` crate, no cargo-component, no WIT, no bindings.rs.
@@ -526,7 +558,11 @@ jobs:
       # keda = the KEDA HTTP add-on HTTPScaledObject + interceptor Service +
       # the Ingress rewire; kafka = the Strimzi Kafka/KafkaNodePool/KafkaTopic
       # CRs (CRD kinds -> skipped by -ignore-missing-schemas); observability =
-      # the grafana/otel-lgtm Deployment+Service. No cluster — the LIVE runs
+      # the grafana/otel-lgtm Deployment+Service. r06e adds kafka-host's own
+      # minikube overlay — the plain-Kubernetes-Deployment path for the ch23
+      # Kafka consumer (the native cargo-kafka-host binary, embedding
+      # wasmtime against kafka-app.wasm), the counterpart to the
+      # wasmCloud-on-minikube Kafka path above. No cluster — the LIVE runs
       # (HPA climb, scale-to-zero cold start, Kafka-lag scaling, OTel queries)
       # are evidence-only under examples/part5-kubernetes/k8s/evidence/.
       - name: Validate Part 5 Kubernetes manifests (kubeconform) — r06d minikube overlays
@@ -535,25 +571,32 @@ jobs:
             examples/part5-kubernetes/k8s/scaling/overlays/minikube \
             examples/part5-kubernetes/k8s/keda/overlays/minikube \
             examples/part5-kubernetes/k8s/observability/overlays/minikube \
-            examples/part5-kubernetes/k8s/kafka/base; do
+            examples/part5-kubernetes/k8s/kafka/base \
+            examples/part5-kubernetes/k8s/kafka-host/overlays/minikube; do
             echo "== kustomize render: ${overlay} =="
             kubectl kustomize "${overlay}" \
               | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
           done
 
-      # r06d standalone CRD-instance manifests not under a kustomization: the
+      # r06d standalone CRD-instance manifest not under a kustomization: the
       # KEDA kafka ScaledObject (kept out of the keda/base kustomize so the
-      # HTTP overlay renders without it), and the minikube wasmCloud CRD
-      # instances (WasmCloudHostConfig + the wadm-kafka OAM Application for the
-      # ch23 Kafka half that runs on wasmCloud-on-minikube). All CRD kinds with
-      # no bundled schema -> skipped by -ignore-missing-schemas, same as the
-      # OpenShift wadm manifests below; this only checks YAML well-formedness.
+      # HTTP overlay renders without it). A CRD kind with no bundled schema
+      # -> skipped by -ignore-missing-schemas, same as the OpenShift wadm
+      # manifests below; this only checks YAML well-formedness.
+      #
+      # r06e: the ch23 Kafka half on minikube is now the plain
+      # kafka-host Deployment rendered by the kustomize loop above, not a
+      # wasmCloud lattice — the minikube wasmCloud CRD instances
+      # (wasmcloud-host.yaml, wadm-kafka.yaml) that used to be validated
+      # here are DELETED along with the rest of
+      # examples/part5-kubernetes/k8s/wasmcloud/. wasmCloud remains the live
+      # OpenShift/CRC path only; those CRD instances still live under
+      # examples/part5-kubernetes/openshift/ and stay in the OpenShift step
+      # below.
       - name: Validate Part 5 Kubernetes manifests (kubeconform) — r06d standalone CRD instances
         run: |
           kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
-            examples/part5-kubernetes/k8s/keda/base/kafka-scaledobject.yaml \
-            examples/part5-kubernetes/k8s/wasmcloud/wasmcloud-host.yaml \
-            examples/part5-kubernetes/k8s/wasmcloud/wadm-kafka.yaml
+            examples/part5-kubernetes/k8s/keda/base/kafka-scaledobject.yaml
 
       # OpenShift path (r06b): these two files are hand-authored CRD
       # instances, not kustomize-managed, so they're validated as-committed —

@@ -1,12 +1,12 @@
 # ch23 serverless scale-to-zero — the topic the kafka-handler component
 # consumes. MULTI-partition (6, not Strimzi's single-partition example
-# default) is deliberate: KEDA's `kafka` scaler and the wadm spreadscaler can
-# only ever drive the handler's replica count up to the topic's PARTITION
-# COUNT — one consumer-group member can own at most one partition at a time,
-# so a single-partition topic would cap the demo at 0/1 and never show a REAL
-# 0 -> N scale-out under a multi-message burst (see ../producer-burst.sh and
-# ../keda/base/kafka-scaledobject.yaml for the scale target this ceiling
-# feeds).
+# default) is deliberate: KEDA scales the cargo-kafka-host Deployment on
+# consumer-group lag, and can only ever drive its replica count up to the
+# topic's PARTITION COUNT — one consumer-group member can own at most one
+# partition at a time, so a single-partition topic would cap the demo at 0/1
+# and never show a REAL 0 -> N scale-out under a multi-message burst (see
+# ../producer-burst.sh and ../keda/base/kafka-scaledobject.yaml for the scale
+# target this ceiling feeds).
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic
 metadata:

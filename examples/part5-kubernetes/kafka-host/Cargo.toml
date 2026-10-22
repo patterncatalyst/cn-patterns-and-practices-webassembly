@@ -1,0 +1,28 @@
+[package]
+name = "cargo-kafka-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# A native Rust Kafka->Wasm consumer host (ch23's plain-K8s-Deployment path,
+# KEDA scale 0->N->0 on consumer-group lag). It joins a REAL Kafka consumer
+# group with rdkafka (manual offset commit) and, per message, drives an
+# embedded wasmtime 50 runtime against `kafka-app.wasm` — the host-embedding
+# idiom in ../../part3-interfaces/grpc-bridge, pointed at a messaging handler
+# instead of a gRPC service. wasmtime/wasmtime-wasi/anyhow are pinned the same
+# way as that crate; rdkafka is pinned EXACT (Cargo.lock committed) because its
+# `cmake-build` feature compiles librdkafka from source at build time, and the
+# broker here is PLAINTEXT only (no TLS/SASL) — `ssl`/`sasl`/`gssapi` stay off
+# so the build never needs openssl. The sync `BaseConsumer` (no tokio) keeps
+# the dependency surface small; signal-hook gives a clean SIGINT/SIGTERM
+# shutdown without pulling in an async runtime for it.
+[dependencies]
+wasmtime = "50"
+wasmtime-wasi = "50"
+anyhow = "1"
+rdkafka = { version = "=0.39.0", default-features = false, features = ["cmake-build", "libz-static"] }
+signal-hook = "0.4.5"
+
+[[bin]]
+name = "cargo-kafka-host"
+path = "src/main.rs"

@@ -890,3 +890,27 @@ to match the WasmPlugin selector). (3) `oc patch gateway <name>` is ambiguous
 when the K8s Gateway API CRD is also present — use
 `gateway.networking.istio.io` / `virtualservice.networking.istio.io`. ch25 now
 verified live on BOTH clusters; r07a complete.
+
+## DRQ-080 — Ch23 Kafka half redesigned: native rdkafka-to-wasmtime host, plain Deployment, KEDA-owned (supersedes the wasmCloud/wadm shape in DRQ-068/069/070)
+
+The Kafka half of Ch23 drops the wasmCloud lattice on minikube and replaces it
+with `cargo-kafka-host`, a native Rust binary that joins the
+`cargo-handling-events` consumer group (`cargo-handling`) directly with
+`rdkafka`, embeds a `wasmtime` runtime, and calls the unchanged `kafka-handler`
+Wasm component's `handle-message` export once per delivered message — the
+component is plugged ahead of time into the Part 2 cargo provider with `wac
+plug` into `kafka-app.wasm`, so the host's only runtime import is WASI.
+Deployed as a plain Kubernetes `Deployment`, `cargo-kafka-host` is a resource a
+`ScaledObject` can patch directly: KEDA's `kafka` trigger reads real
+consumer-group lag on `cargo-handling-events` and scales `spec.replicas` 0 to
+6 (the topic's partition ceiling) and back to 0, with no second control plane
+reconciling against it. This closes the consumer-group-lag requirement DRQ-068
+set (a live Kafka scaling demo, not a conceptual one) without requiring a
+lattice: both Ch23 halves are now the same shape, a `keda.sh` object scaling a
+plain Deployment, differing only in trigger type (HTTP concurrency vs. Kafka
+consumer-group lag). The wasmCloud/`messaging-kafka`/`wadm` path recorded at
+DRQ-068–070 stays the CRC-only shape should a future CRC Kafka port need it;
+it is removed from the minikube path effective this iteration. Chapter
+narrative, both Ch23 diagrams, and the version matrix are updated accordingly;
+the Kafka half's footer stays **pending live verification** until a real
+cluster run passes.

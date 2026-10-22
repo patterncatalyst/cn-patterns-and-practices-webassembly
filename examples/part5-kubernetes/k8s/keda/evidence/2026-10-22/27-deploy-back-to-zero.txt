@@ -1,0 +1,11 @@
+# polling for KEDA to scale cargo-kafka-host back to 0/0 after the cooldown (timeout 120s)
+t=0s replicas=4
+t=5s replicas=4
+t=10s replicas=6
+t=15s replicas=6
+t=20s replicas=6
+t=25s replicas=
+
+$ kubectl get deploy cargo-kafka-host -n kafka
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+cargo-kafka-host   0/0     0            0           5m4s

@@ -6,14 +6,13 @@
 # ../../../contracts/wit path dependency and `wasmcloud:messaging` via the
 # vendored wit/deps/messaging package — no network fetch.
 #
-# Unlike sidecar-filter/adapter (which `wac plug` three crates into one
-# composite .wasm for a single Pod), this component is deployed STANDALONE
-# into the wasmCloud lattice: wadm links it to the `messaging-kafka` capability
-# provider (source -> this component, on wasmcloud:messaging/handler) and to a
-# deployed cargo provider component (this component -> provider, on
-# patterncatalyst:cargo/handling) at deploy time — see
-# ../k8s/wasmcloud/wadm-kafka.yaml and ../openshift/wadm-kafka.yaml. No `wac
-# plug` step is needed or run here.
+# This component is used two ways. On minikube ../kafka-host `wac plug`s it with
+# the cargo provider into one composite the native consumer embeds. On OpenShift
+# it is deployed standalone and a wadm `link` trait wires a messaging provider
+# (source -> this component, on wasmcloud:messaging/handler) and a cargo provider
+# (this component -> provider, on patterncatalyst:cargo/handling) at deploy time
+# — see ../openshift/wadm-kafka.yaml. This script only builds the component; the
+# composition step runs in ../kafka-host/build.sh.
 #
 # Output: target/wasm32-wasip1/release/cargo_kafka_handler_rust.wasm
 # (gitignored, like the sibling sidecar-filter/adapter build outputs).

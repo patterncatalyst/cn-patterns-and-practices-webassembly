@@ -1,0 +1,22 @@
+# polling for the peak replica count (timeout 150s, 2s interval so a fast drain cannot hide the peak)
+t=0s replicas=0 peak=0
+t=2s replicas=0 peak=0
+t=4s replicas=0 peak=0
+t=6s replicas=0 peak=0
+t=8s replicas=0 peak=0
+t=10s replicas=0 peak=0
+t=12s replicas=0 peak=0
+t=14s replicas=0 peak=0
+t=16s replicas=0 peak=0
+t=18s replicas=0 peak=0
+t=20s replicas=0 peak=0
+t=22s replicas=4 peak=4
+
+$ kubectl get deploy cargo-kafka-host -n kafka
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+cargo-kafka-host   1/4     4            1           4m31s
+
+$ kubectl get scaledobject cargo-kafka-host -n kafka -o wide
+NAME               SCALETARGETKIND      SCALETARGETNAME    MIN   MAX   READY   ACTIVE   FALLBACK   PAUSED   TRIGGERS   AUTHENTICATIONS   AGE
+cargo-kafka-host   apps/v1.Deployment   cargo-kafka-host   0     6     True    True     False      False    kafka                        4m31s
+peak-replicas: 4

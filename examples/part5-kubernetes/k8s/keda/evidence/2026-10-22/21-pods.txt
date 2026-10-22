@@ -1,0 +1,7 @@
+$ kubectl get pods -n kafka -o wide
+NAME                                           READY   STATUS              RESTARTS   AGE     IP            NODE    NOMINATED NODE   READINESS GATES
+cargo-kafka-capture-client                     1/1     Running             0          3m48s   10.244.0.17   part5   <none>           <none>
+cargo-kafka-dual-role-0                        1/1     Running             0          5m46s   10.244.0.4    part5   <none>           <none>
+cargo-kafka-entity-operator-56d8574877-78cb2   2/2     Running             0          5m16s   10.244.0.5    part5   <none>           <none>
+cargo-kafka-host-74bd9cc687-x2mjv              0/1     ContainerCreating   0          0s      <none>        part5   <none>           <none>
+strimzi-cluster-operator-64785b5d4d-qb4mw      1/1     Running             0          6m45s   10.244.0.2    part5   <none>           <none>
