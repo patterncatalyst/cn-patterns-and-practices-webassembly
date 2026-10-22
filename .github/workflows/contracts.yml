@@ -447,6 +447,25 @@ jobs:
       - name: Build the Part 6 ch26 Spin app (build.sh)
         run: ${{ env.PART6_DIR }}/spin/build.sh
 
+      # r07c: ch27's wasi-nn component is a cargo-component crate, but it
+      # targets a LOCAL world (wit/world.wit) that imports the vendored
+      # wasi:nn interfaces under wit/deps/wasi-nn/ (copied from the wasmtime
+      # v50.0.0 source tree) — not contracts/wit. build.sh does `cargo
+      # component build --release` (which regenerates its own committed
+      # src/bindings.rs against that vendored WIT, not the book's contract)
+      # plus a static WIT-surface assertion (imports only wasi:*, imports
+      # wasi:nn/graph, exports wasi:cli/run). It builds on stable Rust with
+      # no OpenVINO present, because the guest only imports wasi:nn — those
+      # imports resolve at `wasmtime run` time on a wasmtime built with
+      # --features wasi-nn, not at compile time. The LIVE inference run
+      # (OpenVINO + a wasmtime built from source) is the user's own run, not
+      # CI. Because this crate's bindings.rs is generated from the vendored
+      # wasi:nn WIT rather than contracts/wit, it is deliberately EXCLUDED
+      # from the bindings-drift gate below — same treatment as the ch25
+      # proxy-wasm filter, the ch26 Spin app, and Part 5's kafka-host above.
+      - name: Build the Part 6 ch27 wasi-nn component (build-only)
+        run: ${{ env.PART6_DIR }}/wasi-nn/build.sh
+
       # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
       # building — the two providers (Rust + Go) AND the two consumers
