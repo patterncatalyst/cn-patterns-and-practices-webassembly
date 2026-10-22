@@ -1,0 +1,67 @@
+$ kubectl get deploy metrics-server -n kube-system
+NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+metrics-server   1/1     1            1           52m
+
+$ kubectl get hpa cargo-http -n part5-kubernetes -o yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"cargo-http","app.kubernetes.io/part-of":"part5-kubernetes"},"name":"cargo-http","namespace":"part5-kubernetes"},"spec":{"behavior":{"scaleDown":{"policies":[{"periodSeconds":30,"type":"Pods","value":1}],"stabilizationWindowSeconds":60},"scaleUp":{"policies":[{"periodSeconds":15,"type":"Pods","value":2}],"stabilizationWindowSeconds":0}},"maxReplicas":5,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":50,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"cargo-http"}}}
+  creationTimestamp: "2026-10-22T03:12:02Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/name: cargo-http
+    app.kubernetes.io/part-of: part5-kubernetes
+  name: cargo-http
+  namespace: part5-kubernetes
+  resourceVersion: "8263"
+  uid: 2ac93fff-6ddf-4260-890a-80b3691c4f0d
+spec:
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 30
+        type: Pods
+        value: 1
+      selectPolicy: Max
+      stabilizationWindowSeconds: 60
+    scaleUp:
+      policies:
+      - periodSeconds: 15
+        type: Pods
+        value: 2
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 50
+        type: Utilization
+    type: Resource
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cargo-http
+status:
+  conditions:
+  - lastTransitionTime: "2026-10-22T03:12:02Z"
+    message: the HPA controller was able to get the target's current scale
+    reason: SucceededGetScale
+    status: "True"
+    type: AbleToScale
+  - lastTransitionTime: "2026-10-22T03:12:02Z"
+    message: 'the HPA was unable to compute the replica count: failed to get cpu utilization:
+      did not receive metrics for targeted pods (pods might be unready)'
+    reason: FailedGetResourceMetric
+    status: "False"
+    type: ScalingActive
+  currentMetrics:
+  - type: ""
+  currentReplicas: 1
+  desiredReplicas: 0
+  observedGeneration: 1

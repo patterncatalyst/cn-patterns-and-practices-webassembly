@@ -1,0 +1,23 @@
+# 3 x 64 in-cluster request loops driving cargo-http; sampling its OWN CPU + HPA utilization every 20s
+[t=0s] cargo-http CPU=2% of request (target 50%), replicas=1
+[t=20s] cargo-http CPU=2% of request (target 50%), replicas=1
+[t=40s] cargo-http CPU=2% of request (target 50%), replicas=1
+[t=60s] cargo-http CPU=2% of request (target 50%), replicas=1
+[t=80s] cargo-http CPU=2% of request (target 50%), replicas=1
+[t=100s] cargo-http CPU=2% of request (target 50%), replicas=1
+
+$ kubectl top pod -n part5-kubernetes
+NAME                               CPU(cores)   MEMORY(bytes)   
+cargo-http-8445d4c5d6-dl55k        1m           6Mi             
+cargo-http-load-5868786db5-2slgb   249m         24Mi            
+cargo-http-load-5868786db5-ddtj4   247m         24Mi            
+cargo-http-load-5868786db5-lr7zz   248m         24Mi            
+
+$ kubectl get hpa,deploy cargo-http -n part5-kubernetes
+NAME                                             REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/cargo-http   Deployment/cargo-http   cpu: 2%/50%   1         5         1          2m52s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/cargo-http   1/1     1            1           54m
+
+FINDING: peak cargo-http CPU under load was 2% of its 50m request — below the 50% target; the HPA correctly held replicas at 1 (no CPU signal to scale on).

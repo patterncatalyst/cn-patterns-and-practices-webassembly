@@ -1,0 +1,13 @@
+$ kubectl get httpscaledobject,deploy,svc,ingress -n part5-kubernetes -o wide
+NAME                                       TARGETWORKLOAD                  TARGETSERVICE     MINREPLICAS   MAXREPLICAS   AGE   READY
+httpscaledobject.http.keda.sh/cargo-http   apps/v1/Deployment/cargo-http   cargo-http:8080   0             5             9s    True
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                     SELECTOR
+deployment.apps/cargo-http   1/1     1            1           32m   cargo-http   cargo-http-wasm:minikube   app.kubernetes.io/name=cargo-http
+
+NAME                             TYPE           CLUSTER-IP     EXTERNAL-IP                                                  PORT(S)    AGE   SELECTOR
+service/cargo-http               ClusterIP      10.105.4.230   <none>                                                       8080/TCP   32m   app.kubernetes.io/name=cargo-http
+service/keda-interceptor-proxy   ExternalName   <none>         keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local   8080/TCP   16m   <none>
+
+NAME                                   CLASS   HOSTS                       ADDRESS        PORTS   AGE
+ingress.networking.k8s.io/cargo-http   nginx   cargo.192.168.49.2.nip.io   192.168.49.2   80      32m

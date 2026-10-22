@@ -76,7 +76,12 @@ cat > "$NODE_SCRIPT" <<'NODE'
 set -euo pipefail
 CFG=/etc/containerd/config.toml
 if grep -q 'containerd.runtimes.wasmtime\]' "$CFG"; then
-  echo "install-shim.sh(node): wasmtime runtime already registered — skipping edit"
+  # Already registered: the config is unchanged, so DO NOT restart containerd.
+  # An unconditional restart here needlessly bounces every running Pod on the
+  # node — and a Wasm Pod that was mid-flight across the restart gets SIGKILLed
+  # (exit 137) and wedges into CrashLoopBackOff. Re-running install-shim (e.g.
+  # between Part 5 chapters) must be a no-op when nothing changed.
+  echo "install-shim.sh(node): wasmtime runtime already registered — config unchanged, NOT restarting containerd"
 else
   cp "$CFG" "${CFG}.bak.$(date +%s)"
   awk '
@@ -89,15 +94,17 @@ else
   mv "${CFG}.new" "$CFG"
   echo "install-shim.sh(node): inserted wasmtime runtime block:"
   grep -n 'wasmtime' "$CFG" || true
+  echo "install-shim.sh(node): restarting containerd (config changed) ..."
+  systemctl restart containerd
+  # Wait for the CRI socket to answer again.
+  for i in $(seq 1 30); do
+    if ctr version >/dev/null 2>&1; then echo "install-shim.sh(node): containerd back after ${i}s"; break; fi
+    sleep 1
+    [ "$i" -eq 30 ] && { echo "install-shim.sh(node): FAIL — containerd did not come back" >&2; exit 1; }
+  done
 fi
-echo "install-shim.sh(node): restarting containerd ..."
-systemctl restart containerd
-# Wait for the CRI socket to answer again.
-for i in $(seq 1 30); do
-  if ctr version >/dev/null 2>&1; then echo "install-shim.sh(node): containerd back after ${i}s"; break; fi
-  sleep 1
-  [ "$i" -eq 30 ] && { echo "install-shim.sh(node): FAIL — containerd did not come back" >&2; exit 1; }
-done
+# Always confirm containerd is answering (whether or not we restarted it).
+ctr version >/dev/null 2>&1 || { echo "install-shim.sh(node): FAIL — containerd not responding" >&2; exit 1; }
 NODE
 minikube cp "$NODE_SCRIPT" "$PROFILE:/tmp/register-wasmtime-runtime.sh" -p "$PROFILE"
 minikube ssh -p "$PROFILE" -- "sudo bash /tmp/register-wasmtime-runtime.sh && sudo rm -f /tmp/register-wasmtime-runtime.sh"

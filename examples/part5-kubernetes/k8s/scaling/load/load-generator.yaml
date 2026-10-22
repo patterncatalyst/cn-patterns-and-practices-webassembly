@@ -56,7 +56,11 @@ spec:
           resources:
             requests:
               cpu: "50m"
-              memory: "32Mi"
+              memory: "64Mi"
             limits:
               cpu: "250m"
-              memory: "64Mi"
+              # 256Mi, not 64Mi: a high CONCURRENCY (dozens of parallel busybox
+              # wget loops) needs the headroom — at 64Mi the Pod OOMKills and the
+              # load never sustains, which masks the real finding (even sustained
+              # heavy load barely moves the Wasm handler's CPU).
+              memory: "256Mi"

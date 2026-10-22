@@ -71,14 +71,12 @@ spec:
     - name: messaging-kafka
       type: capability
       properties:
-        # Upstream ships NO semver release for this provider — only
-        # commit-SHA builds aliased `canary` (confirmed via the ghcr package
-        # page 2026-10-21; latest commit-SHA tag at kickoff was 6c67eb2, ~8
-        # months old). Pinned to the commit SHA, not the floating `canary`
-        # alias, so a re-run never silently picks up a different build.
-        # TBD-confirm-at-kickoff: re-check ghcr for a newer commit-SHA tag
-        # before the live run.
-        image: ghcr.io/wasmcloud/messaging-kafka:6c67eb2
+        # messaging-kafka ships a stable semver release 0.2.0 (confirmed at
+        # kickoff 2026-10-21 via the ghcr tag list: 0.2.0 stable, 0.2.0-rc.1
+        # prerelease, plus `canary`/commit-SHA builds). Pinned to the stable
+        # semver 0.2.0, not a commit SHA or the floating `canary` alias.
+        # `wash inspect` confirms vendor=wasmcloud, version=0.2.0, x86_64-linux.
+        image: ghcr.io/wasmcloud/messaging-kafka:0.2.0
       traits:
         # provider (source, the CONSUMER) -> kafka-handler (target) on
         # wasmcloud:messaging/handler — one call per delivered message.

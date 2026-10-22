@@ -72,7 +72,7 @@ spec:
         # commit-SHA builds for this provider (no semver release); see that
         # file's comment for the full survey note and the
         # TBD-confirm-at-kickoff flag.
-        image: ghcr.io/wasmcloud/messaging-kafka:6c67eb2
+        image: ghcr.io/wasmcloud/messaging-kafka:0.2.0
       traits:
         - type: link
           properties:

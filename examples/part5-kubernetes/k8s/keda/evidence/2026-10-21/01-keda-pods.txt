@@ -1,0 +1,12 @@
+$ kubectl get pods -n keda -o wide
+NAME                                                    READY   STATUS    RESTARTS      AGE   IP            NODE    NOMINATED NODE   READINESS GATES
+keda-add-ons-http-controller-manager-688fc95b85-dhlgc   1/1     Running   0             17m   10.244.0.21   part5   <none>           <none>
+keda-add-ons-http-external-scaler-c8dd44788-55kjq       1/1     Running   0             17m   10.244.0.24   part5   <none>           <none>
+keda-add-ons-http-external-scaler-c8dd44788-jfwnh       1/1     Running   0             17m   10.244.0.23   part5   <none>           <none>
+keda-add-ons-http-external-scaler-c8dd44788-k2x65       1/1     Running   0             17m   10.244.0.25   part5   <none>           <none>
+keda-add-ons-http-interceptor-55ff55547d-54tmk          1/1     Running   0             17m   10.244.0.22   part5   <none>           <none>
+keda-add-ons-http-interceptor-55ff55547d-m2zrk          1/1     Running   0             16m   10.244.0.26   part5   <none>           <none>
+keda-add-ons-http-interceptor-55ff55547d-qqww2          1/1     Running   0             16m   10.244.0.27   part5   <none>           <none>
+keda-admission-webhooks-6c974699d8-8xn4x                1/1     Running   0             17m   10.244.0.20   part5   <none>           <none>
+keda-operator-577d8b5b4b-pcgf7                          1/1     Running   1 (17m ago)   17m   10.244.0.18   part5   <none>           <none>
+keda-operator-metrics-apiserver-6d56b644bb-ncb2t        1/1     Running   0             17m   10.244.0.19   part5   <none>           <none>
