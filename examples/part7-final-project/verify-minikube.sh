@@ -139,6 +139,9 @@ minikube addons enable ingress -p "$PROFILE"
 kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=180s
 
 step "Step 5: deploy the shared otel-lgtm sink (if not already up)"
+# The reused ch24 otel-lgtm overlay renders into $NAMESPACE (part5-kubernetes);
+# create it so a clean profile (no prior Part 5 deploy) has it before the apply.
+kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -k "$SCRIPT_DIR/k8s/observability/overlays/minikube"
 kubectl rollout status deployment/otel-lgtm -n "$NAMESPACE" --timeout=240s
 

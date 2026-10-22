@@ -79,6 +79,9 @@ fi
 PROFILE="$PROFILE" "$PART5_K8S/install-shim.sh"
 minikube addons enable ingress -p "$PROFILE" >/dev/null 2>&1 || true
 kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=180s
+# The reused ch24 otel-lgtm overlay renders into $NAMESPACE (part5-kubernetes);
+# create it so a clean profile (no prior Part 5 deploy) has it before the apply.
+kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -k "$SCRIPT_DIR/k8s/observability/overlays/minikube"
 kubectl rollout status deployment/otel-lgtm -n "$NAMESPACE" --timeout=240s
 PROFILE="$PROFILE" "$PART5_K8S/observability/enable-shim-otel.sh"
