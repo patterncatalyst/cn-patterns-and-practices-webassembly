@@ -16,7 +16,7 @@
 # `cargo-spin.wasm` + `spin.toml`, `USER 10001`, `ENV HOME=/app`,
 # `ENTRYPOINT ["spin","up","--listen","0.0.0.0:8080","-f","/app/spin.toml"]`.
 #
-# securityContext deliberately does NOT set runAsUser: the image's numeric
+# securityContext omits runAsUser: the image's numeric
 # `USER 10001` already satisfies `runAsNonRoot: true` (the admission check
 # only requires a non-zero numeric UID be configured somewhere — image or
 # pod), and restricted-v2 on CRC assigns its OWN uid from the project's

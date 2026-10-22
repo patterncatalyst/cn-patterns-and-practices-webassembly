@@ -148,8 +148,22 @@ if [[ "$PUSH" -eq 1 ]]; then
     echo "spin/build.sh: FAIL — gh auth token failed; run 'gh auth login' first" >&2
     exit 1
   }
-  echo "spin/build.sh: pushing to $IMAGE_REF ..."
+  echo "spin/build.sh: pushing the Spin application to $IMAGE_REF (minikube SpinKube path) ..."
   echo "$GH_TOKEN" | spin registry login ghcr.io -u "${GHCR_OWNER:-patterncatalyst}" --password-stdin
   spin registry push "$IMAGE_REF" -f "$RUN_MANIFEST"
   echo "spin/build.sh: pushed $IMAGE_REF"
+
+  # The CRC path pulls a container image (the Spin runtime around cargo-spin.wasm),
+  # not the Spin OCI application — build and push it here too so both deploy
+  # targets have their image ready.
+  RUNTIME_IMAGE_REF="${RUNTIME_IMAGE_REF:-ghcr.io/${GHCR_OWNER:-patterncatalyst}/cargo-spin-runtime:crc}"
+  if command -v docker >/dev/null 2>&1; then
+    echo "spin/build.sh: building + pushing the CRC runtime image $RUNTIME_IMAGE_REF ..."
+    echo "$GH_TOKEN" | docker login ghcr.io -u "${GHCR_OWNER:-patterncatalyst}" --password-stdin
+    docker build --provenance=false -f "$SCRIPT_DIR/Dockerfile" -t "$RUNTIME_IMAGE_REF" "$SCRIPT_DIR"
+    docker push "$RUNTIME_IMAGE_REF"
+    echo "spin/build.sh: pushed $RUNTIME_IMAGE_REF"
+  else
+    echo "spin/build.sh: docker not found — skipped the CRC runtime image; build+push it per README before the CRC deploy" >&2
+  fi
 fi

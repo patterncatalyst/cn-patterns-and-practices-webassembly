@@ -688,7 +688,7 @@ jobs:
       # r07b (ch26 Spin/SpinKube) — same offline treatment as ch25 above: render
       # the minikube overlay (Namespace + SpinApp + Ingress) through kustomize +
       # kubeconform, and validate the standalone CRC manifests as-committed.
-      # SpinApp (core.spinoperator.dev) is a CRD with no bundled schema ->
+      # SpinApp (core.spinkube.dev) is a CRD with no bundled schema ->
       # skipped by -ignore-missing-schemas, same reasoning as WasmPlugin/wadm
       # above; the Route is likewise an OpenShift CRD. The LIVE SpinKube runs
       # (minikube + CRC) are evidence-only under

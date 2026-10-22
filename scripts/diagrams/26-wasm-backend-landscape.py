@@ -60,7 +60,7 @@ runs_row = [
     ["minikube", "CRC"],
     ["minikube", "CRC"],
     ["minikube (full SpinKube)", "CRC (spin up in container)"],
-    ["minikube", "reference only, not run in this book"],
+    ["runwasi shim model", "reference only, not run here"],
 ]
 
 nodes = [
