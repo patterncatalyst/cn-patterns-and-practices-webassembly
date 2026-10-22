@@ -1,0 +1,39 @@
+[package]
+name = "cargo-wasi-nn"
+version = "0.1.0"
+edition = "2024"
+
+# A wasi-nn image-classification command component (chapter 27). This crate
+# targets a LOCAL world (wit/world.wit) that imports the vendored wasi:nn
+# interfaces (wit/deps/wasi-nn/, copied verbatim from the wasmtime v50.0.0
+# source tree) as a path dependency — the same local-world + path-dependency
+# shape every other Part 2/6 cargo-component crate in this book uses for
+# patterncatalyst:cargo, applied here to a WASI proposal interface instead of
+# the book's own domain contract.
+[package.metadata.component]
+package = "patterncatalyst:cargo-wasi-nn"
+
+[package.metadata.component.target]
+path = "wit"
+world = "classify-cli"
+
+[package.metadata.component.target.dependencies]
+"wasi:nn" = { path = "wit/deps/wasi-nn" }
+
+[package.metadata.component.dependencies]
+
+[dependencies]
+wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
+
+# Pure-Rust decode-only build: default features are OFF because the default
+# set pulls in `rayon` (thread-pool parallelism, unavailable on wasm32-wasip1,
+# which has no `clone`/thread-spawn syscall) plus codecs (avif/webp/tiff/...)
+# this crate never touches. `jpeg` (zune-core + zune-jpeg) decodes the
+# fixture; `png` (the `png` crate) costs nothing extra and keeps the door open
+# for a non-JPEG fixture later. Both are pure Rust — no native/C codec
+# dependency, confirmed by this crate building for wasm32-wasip1 (see
+# build.sh).
+[dependencies.image]
+version = "=0.25.10"
+default-features = false
+features = ["jpeg", "png"]

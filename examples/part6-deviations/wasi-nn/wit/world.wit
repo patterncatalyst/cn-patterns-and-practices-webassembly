@@ -1,0 +1,23 @@
+package patterncatalyst:cargo-wasi-nn@0.1.0;
+
+/// A wasi-nn image-classification CLI command (chapter 27). This world
+/// IMPORTS the four interfaces of the vendored `wasi:nn` package
+/// (wit/deps/wasi-nn/wasi-nn.wit, copied verbatim from the wasmtime v50.0.0
+/// source tree at crates/wasi-nn/wit/wasi-nn.wit) and nothing else at the WIT
+/// level — no `patterncatalyst:cargo` domain interfaces, since this crate
+/// classifies a cargo PHOTO rather than modeling the booking/handling
+/// domain.
+///
+/// Like `examples/part2-building-components/consumer-rust`'s `cargo-cli`
+/// world, this world declares no `wasi:cli` imports of its own. Because the
+/// crate is a cargo-component *command* (a `[[bin]]` with `fn main`),
+/// cargo-component's command adapter synthesizes the `wasi:cli/run` export
+/// plus the underlying stdio/filesystem-preopen/clocks imports — the same
+/// shape that makes `consumer-rust`'s build directly `wasmtime run`-able with
+/// no extra WIT declared for them here.
+world classify-cli {
+    import wasi:nn/tensor@0.2.0-rc-2024-10-28;
+    import wasi:nn/graph@0.2.0-rc-2024-10-28;
+    import wasi:nn/inference@0.2.0-rc-2024-10-28;
+    import wasi:nn/errors@0.2.0-rc-2024-10-28;
+}

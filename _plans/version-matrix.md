@@ -103,11 +103,20 @@ plan against, re-verified live when their chapter lands.
 | runtime-class-manager | **v0.2.0** — Helm chart `oci://ghcr.io/spinframework/charts/runtime-class-manager:0.2.0`; installs the shim (the KWasm successor) |
 | cert-manager | **v1.21.2** — spin-operator webhook prerequisite; fall back to v1.20.0 only if v0.6.1 requires it |
 | Note | Reused unchanged from earlier tiers: minikube v1.39.0, Kubernetes v1.37.1, containerd v2.3.4, ingress-nginx v1.15.1, CRC 2.64.0 / OCP 4.22.14, Rust 1.99.1, wasm-tools 1.262.0, wac 0.12.0, kubeconform v0.8.0. |
+| **Part 6 Deviations tier — r07c ch27 wasi-nn pins (surveyed 2026-10-22)** | |
+| wasmtime (host, from source, `--features wasi-nn`) | **v50.0.0** — reuses the book pin |
+| wasmtime-wasi-nn crate | **50.x** (tracks wasmtime) — pulled into wasmtime-cli |
+| openvino (Rust crate) | **0.11.0** — transitive via `wasmtime-wasi-nn` (confirm `max_stable_version` at kickoff) |
+| OpenVINO runtime (user installs) | **2026.4.1** — github.com/openvinotoolkit/openvino |
+| wasi:nn WIT | **wasi:[email protected]** (confirm) — vendored from wasmtime v50.0.0 `crates/wasi-nn/wit/` |
+| image crate (in-component preprocessing) | **0.25.x** (pin exact at kickoff) — pure Rust, builds for wasm |
+| model | **MobileNet OpenVINO IR**, Apache-2.0 — download.01.org/openvinotoolkit/fixtures/mobilenet/, fetched and gitignored |
+| Rust | **1.99.1** stable — no nightly |
+| Note | Reused unchanged from earlier tiers: cargo-component 0.21.1, wasm-tools 1.262.0. |
 | **Kubernetes deployment tier (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
 | Istio | Firmed to **1.31.2** at r07a (see the Part 6 tier above). Source: https://github.com/istio/istio/releases/tag/1.31.2 |
 | KEDA | Firmed to **v2.21.0** at r06d (see the Part 5 scaling tier above); this snapshot row stands for the later Ch25+ re-survey. Source: https://github.com/kedacore/keda/releases/tag/v2.21.0 |
-| **wasi-nn (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
-| wasi-nn backend (OpenVINO) | Snapshot: the `wasmtime-wasi-nn` crate tracks wasmtime's version directly (v50.0.0 as of this survey; source https://crates.io/crates/wasmtime-wasi-nn). The OpenVINO backend toolkit itself is at **2026.4.1**, released 2026-10-01. Source: https://github.com/openvinotoolkit/openvino/releases/tag/2026.4.1 — re-verify live when Ch27 lands |
+| wasi-nn (OpenVINO) | Firmed to the pins above at r07c (see the Part 6 Deviations tier — r07c ch27 wasi-nn pins). Source: https://github.com/openvinotoolkit/openvino/releases/tag/2026.4.1 |
 
 ## Dependency policy
 

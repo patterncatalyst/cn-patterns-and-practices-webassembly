@@ -930,3 +930,25 @@ container** — a `spin up` entrypoint, fronted by an edge-TLS Route — because
 the `restricted-v2` SCC the CRC chapters hold to, the same constraint ch18's
 minikube/CRC split hit (DRQ-048) and that moved ch19 to the wasmCloud operator
 (DRQ-054).
+
+## DRQ-082 — r07c ch27 design: wasi-nn component, wasmtime-from-source host, OpenVINO backend, MobileNet fixture
+
+Ch27, "wasi-nn," ships its own example tree,
+`examples/part6-deviations/wasi-nn/` (`contracts/wit` stays pristine). The
+component is a `cargo-component` build that imports `wasi:nn`, performs image
+preprocessing in-component, and calls `load-by-name` to resolve the model —
+not `load-bytes` — against the OpenVINO backend (SETTLED at DRQ-014). The host
+is the `wasmtime` CLI built from source with `--features wasi-nn` against an
+OpenVINO install; there is no custom embedding host, unlike the native
+`cargo-kafka-host` pattern from Ch23 (DRQ-080). The model is a MobileNet
+OpenVINO IR fixture (download.01.org OMZ, Apache-2.0), fetched and
+checksummed at build time, gitignored rather than committed. CI builds the
+component only — it imports `wasi:nn`, resolved at runtime, so it compiles
+without an OpenVINO install present — and the component is excluded from the
+bindings-drift gate, the same posture as every wasi-nn/proxy-wasm/Spin
+example tree in Part 6. No Kubernetes deployment is in scope: running wasi-nn
+on-cluster would need a node-level shim plus an OpenVINO install on the node,
+which neither the minikube nor the CRC deployment tiers carry, so it stays
+out of scope for this chapter. The live inference run — installing OpenVINO
+and building wasmtime from source — is the user's to execute; the chapter
+footer flips from pending to verified after their pass.
