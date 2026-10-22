@@ -4,11 +4,11 @@
 Control plane (top band): the WasmPlugin CR (extensions.istio.io/v1alpha1)
 names an OCI reference — oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
 — and istiod pulls that reference and pushes the compiled filter module's
-config out to every matching Envoy sidecar.
+config out to the ingress gateway's Envoy.
 
-Data plane (bottom band): a client request crosses the Istio ingress
-gateway, reaches the Envoy sidecar, and the proxy-wasm filter runs before the
-cargo-http component ever sees it. The filter checks for the x-cargo-tenant
+Data plane (bottom band): a client request reaches the Istio ingress
+gateway, whose Envoy runs the proxy-wasm filter before the cargo-http
+component ever sees it. The filter checks for the x-cargo-tenant
 header: missing it short-circuits the request with a 403; present, the
 request proceeds to the component and the filter injects
 x-cargo-filtered-by on the way back out.
@@ -30,7 +30,7 @@ bands = [
      "label": "Control plane — the WasmPlugin CR distributes the filter module",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 270, "w": 1140, "h": 340,
-     "label": "Data plane — request path through ingress, sidecar filter, and the component",
+     "label": "Data plane — request path through the gateway filter and the component",
      "fill": "#f1f5f9"},
 ]
 
@@ -43,23 +43,21 @@ nodes = [
      "lines": ["WasmPlugin CR", "extensions.istio.io/v1alpha1"],
      "style": "accent"},
     {"x": 760, "y": 90, "w": 220, "h": 100,
-     "lines": ["istiod", "pushes config to sidecars"],
+     "lines": ["istiod", "pushes config to the gateway Envoy"],
      "style": "user"},
 
     # data plane
-    {"x": 60, "y": 320, "w": 160, "h": 60,
+    {"x": 60, "y": 360, "w": 150, "h": 60,
      "lines": ["client"], "style": "sub"},
-    {"x": 260, "y": 320, "w": 220, "h": 60,
-     "lines": ["Istio ingress gateway"], "style": "box"},
-    {"x": 540, "y": 290, "w": 300, "h": 200,
-     "lines": ["Envoy sidecar"], "style": "box"},
-    {"x": 570, "y": 330, "w": 240, "h": 90,
+    {"x": 250, "y": 290, "w": 330, "h": 210,
+     "lines": ["Istio ingress gateway (Envoy)"], "style": "box"},
+    {"x": 280, "y": 340, "w": 270, "h": 95,
      "lines": ["proxy-wasm filter", "x-cargo-tenant present? else 403",
                "inject x-cargo-filtered-by on egress"],
      "style": "accent"},
-    {"x": 630, "y": 440, "w": 120, "h": 40,
+    {"x": 340, "y": 450, "w": 150, "h": 38,
      "lines": ["missing -> 403"], "style": "ghost"},
-    {"x": 920, "y": 320, "w": 220, "h": 60,
+    {"x": 700, "y": 360, "w": 220, "h": 60,
      "lines": ["cargo-http component", "wasi:http"], "style": "user"},
 
     {"x": 80, "y": 640, "w": 1020, "h": 100,
@@ -71,17 +69,16 @@ nodes = [
 edges = [
     {"x1": 340, "y1": 140, "x2": 400, "y2": 140, "label": "pulls module"},
     {"x1": 700, "y1": 140, "x2": 760, "y2": 140, "label": "registers"},
-    {"x1": 870, "y1": 190, "x2": 690, "y2": 290, "dashed": True, "label": "distributes config"},
+    {"x1": 820, "y1": 190, "x2": 430, "y2": 290, "dashed": True, "label": "distributes config to the gateway"},
 
-    {"x1": 220, "y1": 350, "x2": 260, "y2": 350},
-    {"x1": 480, "y1": 350, "x2": 540, "y2": 350, "label": "filter runs first"},
-    {"x1": 690, "y1": 420, "x2": 690, "y2": 440, "dashed": True, "label": "missing header"},
-    {"x1": 810, "y1": 375, "x2": 920, "y2": 350, "label": "tenant header present"},
+    {"x1": 210, "y1": 390, "x2": 250, "y2": 390},
+    {"x1": 415, "y1": 435, "x2": 415, "y2": 450, "dashed": True, "label": "missing header"},
+    {"x1": 580, "y1": 390, "x2": 700, "y2": 390, "label": "tenant header present"},
 ]
 
 notes = [
     {"x": 590, "y": 785, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Response flows back through the sidecar with x-cargo-filtered-by injected before it reaches the client."},
+     "text": "The filter injects x-cargo-filtered-by on the response path out of the gateway before it reaches the client."},
 ]
 
 gd.emit("25-wasmplugin-request-path", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

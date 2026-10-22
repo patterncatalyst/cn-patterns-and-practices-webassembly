@@ -2,14 +2,19 @@
 # examples/part6-deviations/istio/istio-install.sh
 #
 # Install Istio 1.31.2 onto the Part 5 minikube profile (context "$PROFILE",
-# default "part5" — see ../../part5-kubernetes/k8s/lib.sh) and enable sidecar
-# injection on the part5-kubernetes namespace, so the EXISTING cargo-http
-# Deployment/Service/RuntimeClass (examples/part5-kubernetes/k8s/base) gets an
-# Envoy sidecar on its next rollout. No new app, no new namespace — this is
-# purely a mesh layered onto Part 5's unmodified deployment.
+# default "part5" — see ../../part5-kubernetes/k8s/lib.sh) and prepare the
+# istio-ingressgateway to run the ch25 proxy-wasm filter. No new app, no new
+# namespace, NO sidecar injection — this is purely a mesh layered onto Part
+# 5's unmodified deployment.
+#
+# NO sidecar injection: a `runtimeClassName: wasmtime` Pod runs one
+# container runtime for every container in it, so this design runs the
+# filter in the ingress gateway's own Envoy (../gateway-wasmplugin.yaml)
+# instead of a sidecar; cargo-http stays a pure Wasm Pod with no injection
+# label (see base/kustomization.yaml).
 #
 # AUTHOR-ONLY: this BUILD pass does not touch a cluster. A later live-verify
-# pass runs this for real, against an already-running Part 5 minikube profile
+# pass runs this against an already-running Part 5 minikube profile
 # (../../part5-kubernetes/k8s/verify-minikube.sh --keep).
 #
 # Istio <-> Kubernetes skew (read before running):
@@ -64,8 +69,18 @@ istioctl install \
 kubectl -n istio-system rollout status deployment/istiod --timeout=180s
 kubectl -n istio-system rollout status deployment/istio-ingressgateway --timeout=180s
 
-step "3. sidecar injection on namespace $NAMESPACE"
-kubectl label namespace "$NAMESPACE" istio-injection=enabled --overwrite
+step "3. ghcr-pull image-pull secret in istio-system (the gateway's namespace)"
+# cargo-wasmfilter is a PRIVATE ghcr package; the istio-ingressgateway Envoy's
+# agent needs registry credentials to fetch it on the gateway's own WasmPlugin
+# (../gateway-wasmplugin.yaml, imagePullSecret: ghcr-pull) — reusing `gh`'s
+# already-authenticated token, the same ghcr access pattern used elsewhere in
+# this book (see lgtm feedback: Bitwarden/gh-token secrets, never hardcode).
+kubectl create secret docker-registry ghcr-pull \
+  --docker-server=ghcr.io \
+  --docker-username=patterncatalyst \
+  --docker-password="$(gh auth token)" \
+  -n istio-system \
+  --dry-run=client -o yaml | kubectl apply -f -
 
 step "4. NodePort the ingress gateway (house rule: no port-forward; a minikube-ip + NodePort URL is the nip.io entry point)"
 # The demo profile's istio-ingressgateway Service is type LoadBalancer by
@@ -78,15 +93,8 @@ step "4. NodePort the ingress gateway (house rule: no port-forward; a minikube-i
 kubectl -n istio-system patch svc istio-ingressgateway --type=merge -p '{"spec":{"type":"NodePort"}}'
 kubectl -n istio-system get svc istio-ingressgateway
 
-step "5. roll the cargo-http Deployment so the sidecar webhook fires"
-if kubectl get deployment/cargo-http -n "$NAMESPACE" >/dev/null 2>&1; then
-  kubectl rollout restart deployment/cargo-http -n "$NAMESPACE"
-  kubectl rollout status deployment/cargo-http -n "$NAMESPACE" --timeout=180s
-else
-  echo "istio-install.sh: deployment/cargo-http not found yet in $NAMESPACE — apply examples/part6-deviations/istio/overlays/minikube first (kubectl apply -k overlays/minikube), which creates it with the injection label already in place; no separate restart needed in that order."
-fi
-
 echo
 echo "istio-install.sh: OK — Istio $ISTIO_VERSION ($ISTIO_PROFILE profile) installed on profile '$PROFILE';"
-echo "  namespace '$NAMESPACE' has istio-injection=enabled; istio-ingressgateway is NodePort."
+echo "  istio-ingressgateway is NodePort and has a ghcr-pull secret for the filter image."
+echo "  No sidecar injection anywhere — cargo-http (namespace '$NAMESPACE') stays a pure Wasm Pod."
 echo "  next: kubectl apply -k overlays/minikube && ./verify-istio-minikube.sh"

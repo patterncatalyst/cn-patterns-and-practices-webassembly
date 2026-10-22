@@ -3,18 +3,24 @@
 # examples/part6-deviations/istio/install-ossm.sh
 #
 # Install OpenShift Service Mesh 3 (the Sail operator's distribution of Istio
-# 1.31.2) on OpenShift Local (CRC) and enable sidecar injection on the EXISTING
-# Part 5 wasmCloud namespace ($NS — see
-# ../../part5-kubernetes/openshift/lib.sh), so the operator-managed
-# wasmcloud-host Deployment gets an Envoy sidecar on its next rollout. This is
-# the CRC counterpart to ./istio-install.sh. Pinned CSV, Manual approval,
-# approve ONLY the named InstallPlan — the house OperatorHub convention (see
-# the lgtm-crc skill and ../../part5-kubernetes/openshift/install-cma.sh).
+# 1.31.2) on OpenShift Local (CRC) and prepare the istio-ingressgateway to run
+# the ch25 proxy-wasm filter. This is the CRC counterpart to ./istio-install.sh.
+# Pinned CSV, Manual approval, approve ONLY the named InstallPlan — the house
+# OperatorHub convention (see the lgtm-crc skill and
+# ../../part5-kubernetes/openshift/install-cma.sh).
+#
+# NO sidecar injection on the wasmCloud namespace: the same gateway-level
+# filter design as minikube (see ../gateway-wasmplugin.yaml and
+# ../README-istio.md) keeps this book's two cluster paths architecturally
+# aligned: the filter always runs in the ingress gateway's Envoy
+# (openshift/wasmplugin.yaml, istio-system), never on deploy/$HOSTCFG. This
+# script therefore never labels $NS for injection and never restarts
+# deploy/$HOSTCFG for a sidecar.
 #
 # Prerequisite: ../../part5-kubernetes/openshift/install-operator.sh AND
 # ../../part5-kubernetes/openshift/deploy.sh already applied — the wasmCloud
 # platform + the cargo-http app must already be running in namespace "$NS"
-# before this script's injection label does anything useful.
+# before ../verify-istio-crc.sh can route to it.
 #
 # TBD-confirm-at-kickoff: the exact Subscription `channel` / `startingCSV` for
 # OpenShift Service Mesh 3 (OperatorHub package `servicemeshoperator3`) — this
@@ -24,12 +30,6 @@
 # and correct OSSM_STARTING_CSV below if it differs — same Manual-approval,
 # approve-only-the-named-InstallPlan convention as
 # ../../part5-kubernetes/openshift/install-cma.sh.
-#
-# Also TBD-confirm-at-kickoff: whether the Sail operator's non-revisioned
-# `Istio` CR honors the plain `istio-injection=enabled` namespace label (same
-# as community/upstream Istio) or requires the revision-tagged
-# `istio.io/rev=<name>` label instead. Step 5 below sets BOTH — harmless
-# together, and avoids a second live-only surprise.
 #
 # Idempotent (oc apply). Never starts/stops the cluster.
 #
@@ -120,15 +120,21 @@ wait_for 300 "istio-ingressgateway Deployment available" \
     oc wait --for=condition=available deploy -l app=istio-ingressgateway -n "$ISTIO_NS" --timeout=10s
 ok "istiod + istio-ingressgateway ready in $ISTIO_NS"
 
-step "6/6 Sidecar injection on namespace $NS (the Part 5 wasmCloud app namespace)"
-oc label namespace "$NS" istio-injection=enabled --overwrite >/dev/null || fail "label namespace $NS (istio-injection)"
-oc label namespace "$NS" istio.io/rev=default --overwrite >/dev/null 2>&1 || true
-ok "namespace $NS labeled for sidecar injection"
-if oc get "deploy/$HOSTCFG" -n "$NS" >/dev/null 2>&1; then
-    oc rollout restart "deploy/$HOSTCFG" -n "$NS" >/dev/null || fail "rollout restart deploy/$HOSTCFG"
-    ok "deploy/$HOSTCFG restarted (sidecar webhook now fires on its Pods)"
-else
-    warn "deploy/$HOSTCFG not found yet in $NS — run ../../part5-kubernetes/openshift/install-operator.sh + deploy.sh first, then: oc rollout restart deploy/$HOSTCFG -n $NS"
+step "6/6 ghcr-pull image-pull secret in $ISTIO_NS (the gateway's namespace)"
+# cargo-wasmfilter is a PRIVATE ghcr package; the istio-ingressgateway Envoy's
+# agent needs registry credentials to fetch it on the gateway's own WasmPlugin
+# (../openshift/wasmplugin.yaml, imagePullSecret: ghcr-pull) — reusing `gh`'s
+# already-authenticated token, same pattern as ../istio-install.sh's minikube
+# counterpart.
+oc create secret docker-registry ghcr-pull \
+    --docker-server=ghcr.io \
+    --docker-username=patterncatalyst \
+    --docker-password="$(gh auth token)" \
+    -n "$ISTIO_NS" \
+    --dry-run=client -o yaml | oc apply -f - >/dev/null || fail "apply ghcr-pull secret in $ISTIO_NS"
+ok "ghcr-pull secret present in $ISTIO_NS"
+if ! oc get "deploy/$HOSTCFG" -n "$NS" >/dev/null 2>&1; then
+    warn "deploy/$HOSTCFG not found yet in $NS — run ../../part5-kubernetes/openshift/install-operator.sh + deploy.sh first"
 fi
 
 printf '    next: ./verify-istio-crc.sh\n'

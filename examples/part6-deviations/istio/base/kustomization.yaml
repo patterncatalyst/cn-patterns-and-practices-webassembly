@@ -2,16 +2,17 @@
 #
 # Pulls in the UNMODIFIED Part 5 app (Namespace, RuntimeClass, Deployment,
 # Service, ingress-nginx Ingress — examples/part5-kubernetes/k8s/base) and
-# layers the ch25 Istio objects on top: WasmPlugin (loads the proxy-wasm
-# filter into the sidecar), Gateway + VirtualService (the mesh-routed entry
-# point this chapter's live verification actually curls).
+# layers the ch25 Istio mesh entry point on top: Gateway + VirtualService (the
+# mesh-routed path this chapter's live verification actually curls).
 #
-# The namespace-label patch is what turns on sidecar injection: the
-# MutatingWebhookConfiguration `istioctl install` registers only fires for
-# Pods CREATED in a namespace carrying istio-injection=enabled. This patch sets
-# it declaratively; ../istio-install.sh also sets it imperatively (both are
-# idempotent and agree — belt and suspenders across the two entry points an
-# operator might use).
+# No WasmPlugin here and no sidecar-injection namespace label. A
+# `runtimeClassName: wasmtime` Pod runs one container runtime for every
+# container in it, so this design keeps cargo-http a pure Wasm Pod, with no
+# sidecar and no injection label — the proxy-wasm filter instead loads into
+# the istio-ingressgateway's own Envoy, a normal Pod, via
+# ../gateway-wasmplugin.yaml (applied directly, not through this
+# kustomization — it targets istio-system, not this app's namespace; see
+# ../verify-istio-minikube.sh and ../README-istio.md).
 #
 # contracts/wit is untouched: this directory contains no component source,
 # only deployment manifests for the EXISTING app.wasm (sha256 eff7f5ee…).
@@ -20,16 +21,5 @@ kind: Kustomization
 
 resources:
   - ../../../part5-kubernetes/k8s/base
-  - wasmplugin.yaml
   - gateway.yaml
   - virtualservice.yaml
-
-patches:
-  - target:
-      kind: Namespace
-      name: part5-kubernetes
-    patch: |-
-      - op: add
-        path: /metadata/labels
-        value:
-          istio-injection: enabled

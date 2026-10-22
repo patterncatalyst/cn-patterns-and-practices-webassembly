@@ -12,32 +12,30 @@ By the end of this chapter you can:
 
 - Explain why a `WasmPlugin`'s filter module is a **proxy-wasm core module**, a different Wasm ABI from every Component Model artifact this book has built so far, and name the three concrete differences: no WIT world, no `wit-bindgen` output, and a different host (Envoy's proxy-wasm VM, not `containerd-shim-wasmtime` or the wasmCloud host).
 - Read `examples/part6-deviations/istio-wasmfilter/src/lib.rs` and `Cargo.toml` and point to the exact lines that make this crate a proxy-wasm module rather than a component: the `proxy_wasm::main!` macro, the `RootContext`/`HttpContext` trait pair, and the absence of `[package.metadata.component]`.
-- Trace a request through Figure 25.2's distribution and request path: how a `WasmPlugin` names an OCI reference, how istiod pushes that module's config to a matching Envoy sidecar, and where in the chain the filter's `x-cargo-tenant` check runs relative to the cargo-http component.
-- State the one substrate difference that changes what "two Wasm worlds in one Pod" actually means on CRC: the containerd shim never runs there, so the second Wasm world sharing the mesh sidecar's Pod is the wasmCloud host process, not `containerd-shim-wasmtime`.
+- Trace a request through Figure 25.2's distribution and request path: how a `WasmPlugin` names an OCI reference, how istiod pushes that module's config to the matching Envoy (the ingress gateway's own, not a sidecar), and where the `x-cargo-tenant` check runs relative to the cargo-http Pod.
+- State the design constraint that places the filter at the gateway rather than beside the app: a `runtimeClassName: wasmtime` Pod runs one container runtime for every container it carries, so an injected Istio sidecar cannot share that Pod with the Wasm app, on minikube or CRC.
 - Decide, for a given cross-cutting concern, whether a `WasmPlugin`/proxy-wasm filter at the mesh layer or a Component Model interposer (Chapter 20) at the application layer is the right placement, and name the newer API, `TrafficExtension`, that supersedes `WasmPlugin` for new filter wiring going forward.
 
 ## Why this matters
 
-Every chapter from Part 2 through Part 5 has built, composed, and deployed one kind of Wasm artifact: a Component Model component, compiled with `cargo-component` against a WIT world drawn from `contracts/wit`, hosted either by `containerd-shim-wasmtime` on minikube or by the wasmCloud operator on CRC. Istio runs Wasm too, but it runs a different kind of Wasm entirely. A `WasmPlugin` resource loads a **proxy-wasm core module** into Envoy, the sidecar Istio injects into a Pod, and that module is built with a different crate, a different macro, a different toolchain invocation, and a different host than anything this book has touched so far. The filter has no WIT world. It has no `bindings.rs`. It never imports or exports a `patterncatalyst:cargo` interface, and it never touches `contracts/wit` at all.
+Every chapter from Part 2 through Part 5 has built, composed, and deployed one kind of Wasm artifact: a Component Model component, compiled with `cargo-component` against a WIT world drawn from `contracts/wit`, hosted either by `containerd-shim-wasmtime` on minikube or by the wasmCloud operator on CRC. Istio runs Wasm too, but a different kind entirely. A `WasmPlugin` resource loads a **proxy-wasm core module** into Envoy, built with a different crate, a different macro, a different toolchain invocation, and a different host than anything this book has touched so far. The filter has no WIT world. It has no `bindings.rs`. It never imports or exports a `patterncatalyst:cargo` interface, and it never touches `contracts/wit` at all.
 
-That contrast is this chapter's entire teaching point, not a footnote on the way to a demo. `examples/part6-deviations/istio-wasmfilter` is built with `cargo build --release --target wasm32-wasip1`, plain cargo, no `cargo-component` anywhere in the build script. Its `Cargo.toml` depends on the `proxy-wasm` crate at version `0.2.5` and declares `crate-type = ["cdylib"]`, with no `[package.metadata.component]` section at all, because there is no component here to describe. The crate's own header comment names the comparison directly: it solves a similar "inspect, allow, or deny a request" problem to Chapter 20's `sidecar-filter`, but as a core-module Envoy extension instead of a WIT component composed with `wac`. Lay the two crates side by side and the differences are the lesson:
+That contrast is this chapter's teaching point. `examples/part6-deviations/istio-wasmfilter` is built with `cargo build --release --target wasm32-wasip1`, plain cargo, no `cargo-component` anywhere in the build script. Its `Cargo.toml` depends on the `proxy-wasm` crate at version `0.2.5` and declares `crate-type = ["cdylib"]`, with no `[package.metadata.component]` section, because there is no component here to describe. The crate's own header comment names the comparison directly: it solves the same "inspect, allow, or deny a request" problem as Chapter 20's `sidecar-filter`, but as a core-module Envoy extension instead of a WIT component composed with `wac`. Lay the two crates side by side and the differences are the lesson:
 
 | | `part5-kubernetes/sidecar-filter` (Ch. 20) | `part6-deviations/istio-wasmfilter` (this chapter) |
 |---|---|---|
 | ABI | Component Model (WIT) | proxy-wasm (Envoy) |
 | Crate deps | `wit-bindgen-rt` | `proxy-wasm` |
 | Build | `cargo component build` | `cargo build --target wasm32-wasip1` |
-| Generated code | `src/bindings.rs` from WIT | none — the crate's traits *are* the ABI |
-| Host | containerd `wasmtime` shim (runwasi) | Envoy's proxy-wasm VM inside `istio-proxy` |
-| Composition | `wac plug` into `app.wasm` | none — loaded directly by Envoy |
+| Generated code | `src/bindings.rs` from WIT | none: the crate's traits *are* the ABI |
+| Host | containerd `wasmtime` shim (runwasi) | Envoy's proxy-wasm VM |
+| Composition | `wac plug` into `app.wasm` | none: loaded directly by Envoy |
 
-Once Istio is layered on top of the Part 5 deployment, the `cargo-http` Pod runs two independently toolchained Wasm worlds that share nothing but the Pod's network namespace: the Component Model app this book has built throughout, under `containerd-shim-wasmtime`, and this chapter's proxy-wasm filter, under Envoy's own proxy-wasm VM. Figure 25.1 draws that side by side.
+The filter runs in the Istio ingress gateway's own Envoy, not in a sidecar on the `cargo-http` Pod. A Pod carrying `runtimeClassName: wasmtime` runs one container runtime for every container it holds, so an injected Envoy sidecar would inherit that same RuntimeClass and cannot run beside the Wasm app; the `WasmPlugin` instead targets the gateway's Pod, an ordinary Envoy with no RuntimeClass at all. `cargo-http` stays exactly the Part 5 pure-Wasm Pod it has always been — no sidecar, no injection label, no change to its Deployment, Service, or RuntimeClass. Figure 25.1 draws the result: two Wasm worlds, in two Pods, across the mesh.
 
-{% include excalidraw.html file="25-two-wasm-worlds-one-pod" alt="A Pod boundary labeled cargo-http, two Wasm worlds, one network namespace. Inside, two containers side by side. Left: the Envoy sidecar container injected by Istio, containing the proxy-wasm filter cargo-wasmfilter, loaded by a WasmPlugin CR, core-module ABI via the proxy-wasm crate, running first in the request path. Right: the cargo-http container, the unchanged Part 5 Wasm substrate, running the cargo-http component with the wasi:http ABI, Component Model, hosted by containerd-shim-wasmtime. An inbound client request arrow enters at the top and routes into the sidecar first. A bottom ink band states: proxy-wasm core-module ABI (Envoy host) is not the Component Model (wasmtime host); different toolchain, proxy-wasm crate / plain cargo, not cargo-component; different host runtime, same Pod." caption="Figure 25.1 — two Wasm worlds, one Pod: the injected Envoy sidecar's proxy-wasm filter and the unmodified Component Model cargo-http component, sharing a network namespace and nothing else." %}
+{% include excalidraw.html file="25-two-wasm-worlds-in-the-mesh" alt="Two Pod boundaries side by side. Left: Pod istio-ingress-gateway, an ordinary Envoy with no RuntimeClass, running the proxy-wasm filter cargo-wasmfilter, loaded by the gateway's WasmPlugin CR, core-module ABI via the proxy-wasm crate; it checks x-cargo-tenant, returning 403 if missing, and injects x-cargo-filtered-by on the way out. Right: Pod cargo-http, runtimeClassName wasmtime, no sidecar, running the unchanged Part 5 Component Model app with the wasi:http ABI, hosted by containerd-shim-wasmtime. A client request arrow enters the gateway Pod first, then crosses to the cargo-http Pod. A bottom ink band states: a runtimeClassName: wasmtime Pod runs one container runtime, so the mesh filter runs in the gateway's Envoy, not a sidecar; two Wasm ABIs, proxy-wasm core module and Component Model, now split across two Pods instead of sharing one." caption="Figure 25.1 — two Wasm worlds across the mesh: the ingress gateway's proxy-wasm filter and the cargo-http Pod's unmodified Component Model app, in separate Pods with no shared RuntimeClass." %}
 
-Nothing about the `cargo-http` Deployment, Service, or RuntimeClass changes to make this happen. Both clusters in this chapter reuse the exact Part 5 app unmodified; this chapter layers a mesh and a filter onto it, it does not touch the app.
-
-Both halves of this chapter are **pending live verification**: the manifests and scripts below are transcribed directly from the example tree, and the two verify scripts are written to run headless against an already-running Part 5 profile, but neither the minikube path nor the CRC path has been run against a live cluster as part of this chapter's authoring. Every spot below where a live cluster's output belongs is marked as pending rather than invented.
+Both halves of this chapter verify the same 403/200 behavior through the gateway's filter. The minikube path is **verified live, 2026-10-22**, against a running cluster; evidence is committed under `examples/part6-deviations/istio/evidence/2026-10-22/`. The CRC path is **pending live verification**: its manifests and scripts are transcribed from the example tree, and the verify script is written to run headless against an already-running Part 5 OpenShift deployment, but it has not yet been run against a live cluster.
 
 ## The filter: a minimal proxy-wasm HTTP filter
 
@@ -179,7 +177,7 @@ The crate name `cargo-wasmfilter` normalizes its dash to an underscore in the co
 
 A `WasmPlugin`'s `spec.url` field with an `oci://` scheme is the entire distribution contract: Istio's fetcher pulls the named OCI reference and reads a `/plugin.wasm` file from its root. The README documents two ways to produce that image, a `docker buildx` build against a one-line `FROM scratch` + `COPY ... /plugin.wasm` Dockerfile (the same minimal-image pattern Part 5's `Dockerfile` already uses for `/app.wasm`, just a different file name because the consumer differs), or `wash push`, which pushes the raw `.wasm` as a generic OCI artifact without a Docker-style layered image. Either path lands the same bytes at `oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio`, the reference both clusters' `WasmPlugin` manifests name.
 
-`examples/part6-deviations/istio/base/wasmplugin.yaml` is the minikube `WasmPlugin`, scoped with an explicit selector against the Part 5 app's own Pod labels:
+`examples/part6-deviations/istio/gateway-wasmplugin.yaml` is the minikube `WasmPlugin`. It targets the ingress gateway's own Envoy directly, in `istio-system`, not the app's namespace:
 
 {% raw %}
 ```yaml
@@ -187,23 +185,26 @@ apiVersion: extensions.istio.io/v1alpha1
 kind: WasmPlugin
 metadata:
   name: cargo-wasmfilter
-  namespace: part5-kubernetes
+  namespace: istio-system
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: cargo-http
+      istio: ingressgateway
   url: oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
+  imagePullSecret: ghcr-pull
   pluginName: cargo-wasmfilter
   phase: AUTHZ
   pluginConfig: {}
 ```
 {% endraw %}
 
-`phase: AUTHZ` places the filter among Istio's authorization-shaped extensions, ordered after Istio's own authentication and authorization filters and before the request reaches the application container — the same structural slot Chapter 20's embargo interposer occupies inside the app's own Pod, now enforced one layer out, at the mesh. Applying a `WasmPlugin` does not touch Kubernetes' own scheduler or any Deployment object; istiod watches `WasmPlugin` resources directly and pushes an ECDS (Extension Config Discovery Service) update to every Envoy sidecar whose Pod matches the selector, which then fetches the OCI reference and loads the module into its own proxy-wasm VM as an HTTP filter. Figure 25.2 draws both halves of that story, the control-plane distribution and the data-plane request path, together.
+`selector.matchLabels` targets `istio: ingressgateway`, the label the `demo` profile's `istio-ingressgateway` Deployment carries, not any label on `cargo-http`. `imagePullSecret: ghcr-pull` names a `docker-registry` Secret in this same namespace, `istio-system`, because `cargo-wasmfilter` is a private ghcr package and the gateway Envoy's own agent needs credentials to pull it; `istio-install.sh` creates that secret from `gh auth token`. `phase: AUTHZ` places the filter among Istio's authorization-shaped extensions, ordered after Istio's own authentication and authorization filters and before the request is proxied onward, now enforced at the mesh edge in the gateway's own Envoy, before the request ever leaves for the `cargo-http` Pod.
 
-{% include excalidraw.html file="25-wasmplugin-request-path" alt="Two stacked bands. Top, control plane: an OCI reference oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio feeds a WasmPlugin CR (extensions.istio.io/v1alpha1), which registers with istiod; istiod distributes the filter's config to matching Envoy sidecars via a dashed distributes-config arrow. Bottom, data plane: a client sends a request through the Istio ingress gateway into an Envoy sidecar box containing the proxy-wasm filter, labeled x-cargo-tenant present? else 403, inject x-cargo-filtered-by on egress; a missing-header path breaks off to a 403 box, while a present-header path continues to the cargo-http component (wasi:http). A bottom ink band states: TrafficExtension is the newer unified API and supersedes WasmPlugin for new filter config; WasmPlugin remains supported, existing filters keep working." caption="Figure 25.2 — WasmPlugin distribution (control plane) and the request path through the sidecar filter to the cargo-http component (data plane)." %}
+Applying a `WasmPlugin` does not touch Kubernetes' own scheduler or any Deployment object; istiod watches `WasmPlugin` resources directly and pushes an ECDS (Extension Config Discovery Service) update to every Envoy whose Pod matches the selector (here, only the gateway's own Envoy), which fetches the OCI reference and loads the module into its proxy-wasm VM as an HTTP filter. Figure 25.2 draws both halves of that story, the control-plane distribution and the data-plane request path, together.
 
-A request enters through Istio's ingress gateway, which Chapter 25's `base/gateway.yaml` and `base/virtualservice.yaml` stand up as a *second* entry point alongside Part 5's original `ingress-nginx` Ingress — both coexist, but this chapter's live verification goes through the Istio path specifically, because that is the only path the proxy-wasm filter sits in front of:
+{% include excalidraw.html file="25-wasmplugin-request-path" alt="Two stacked bands. Top, control plane: an OCI reference oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio feeds a WasmPlugin CR (extensions.istio.io/v1alpha1) scoped to the ingress gateway, which registers with istiod; istiod distributes the filter's config to the matching gateway Envoy via a dashed distributes-config arrow. Bottom, data plane: a client request crosses the Istio ingress gateway, where the proxy-wasm filter runs, labeled x-cargo-tenant present? else 403, inject x-cargo-filtered-by on egress; a missing-header path breaks off to a 403 box, while a present-header path continues across the mesh to the cargo-http Pod's Component Model app (wasi:http). A bottom ink band states: TrafficExtension is the newer unified API and supersedes WasmPlugin for new filter config; WasmPlugin remains supported, existing filters keep working." caption="Figure 25.2 — WasmPlugin distribution to the ingress gateway's Envoy (control plane), and the request path from there, across the mesh, to the cargo-http Pod (data plane)." %}
+
+A request enters through Istio's ingress gateway, which Chapter 25's `base/gateway.yaml` and `base/virtualservice.yaml` stand up as a second entry point alongside Part 5's original `ingress-nginx` Ingress; both coexist, but this chapter's live verification goes through the Istio path specifically, because that is the only path the proxy-wasm filter sits in front of:
 
 {% raw %}
 ```yaml
@@ -242,11 +243,11 @@ spec:
 ```
 {% endraw %}
 
-The `VirtualService` routes to the existing Part 5 `cargo-http` Service on port 8080 — no new Service, no change to the app's own Deployment. From the gateway, the request reaches the `cargo-http` Pod's Envoy sidecar before it reaches the app container at all, because that ordering is exactly what sidecar injection means: every Pod inbound connection passes through `istio-proxy` first. The filter's `on_http_request_headers` runs there, either stops the chain with a 403 or lets the request continue to the application, and `on_http_response_headers` stamps the response on the way back out.
+The `VirtualService` routes to the existing Part 5 `cargo-http` Service on port 8080 — no new Service, no change to the app's own Deployment. The proxy-wasm filter runs in the gateway's own Envoy before the request ever leaves for the `cargo-http` Pod: `on_http_request_headers` either stops the chain with a 403 or lets the request continue across the mesh, and `on_http_response_headers` stamps the response on the way back out.
 
 ## minikube: Istio layered onto the existing profile
 
-`examples/part6-deviations/istio/istio-install.sh` installs Istio 1.31.2 with `istioctl install`, pinned by `--set tag=1.31.2` against the `demo` profile, not `minimal`, because `base/gateway.yaml` and `base/virtualservice.yaml` need `istio-ingressgateway`, which the `minimal` profile omits. The script runs `istioctl x precheck` as a gate before installing anything, and its own header comment states exactly why that check matters here rather than being a generic good-practice step: Istio 1.31 officially supports Kubernetes 1.32 through 1.36, and Part 5 pins minikube's control plane to `v1.37.1`, one minor past that documented ceiling. If `precheck` reports a blocker, the fix is to re-create the minikube profile with `KUBERNETES_VERSION` re-pinned into the supported window before retrying, not to proceed past a failed gate:
+`examples/part6-deviations/istio/istio-install.sh` installs Istio 1.31.2 with `istioctl install`, pinned by `--set tag=1.31.2` against the `demo` profile, not `minimal`, because `base/gateway.yaml` and `base/virtualservice.yaml` need `istio-ingressgateway`, which the `minimal` profile omits. The script runs `istioctl x precheck` as a gate before installing anything: Istio 1.31 officially supports Kubernetes 1.32 through 1.36, and Part 5 pins minikube's control plane to `v1.37.1`, one minor past that documented ceiling. If `precheck` reports a blocker, the fix is to re-create the minikube profile with `KUBERNETES_VERSION` re-pinned into the supported window before retrying, not to proceed past a failed gate:
 
 {% raw %}
 ```bash
@@ -256,28 +257,54 @@ istioctl x precheck --context "$PROFILE" \
 ```
 {% endraw %}
 
-Once the control plane is up, the script labels the `part5-kubernetes` namespace `istio-injection=enabled`, patches `istio-ingressgateway`'s Service to `NodePort` (the `demo` profile's default `LoadBalancer` type stays `<pending>` on minikube's docker driver without a separate `minikube tunnel`, and this book's house rule rules out both a tunnel and a port-forward), and rolls the existing `cargo-http` Deployment so the sidecar injection webhook actually fires on a fresh Pod. `verify-istio-minikube.sh` then applies the ch25 overlay (`WasmPlugin` + `Gateway` + `VirtualService` on top of the unmodified app), rolls `cargo-http` again, and checks for a Pod reporting two ready containers, the app and the injected `istio-proxy`:
+Once the control plane is up, the script creates the `ghcr-pull` image-pull secret in `istio-system` and patches `istio-ingressgateway`'s Service to `NodePort`: the `demo` profile's default `LoadBalancer` type stays `<pending>` on minikube's docker driver without a separate `minikube tunnel`, and this book's house rule rules out both a tunnel and a port-forward. No namespace gets an injection label, and no app Deployment gets rolled; `cargo-http` stays a pure Wasm Pod throughout.
+
+`verify-istio-minikube.sh` applies the ch25 overlay (the unmodified Part 5 app plus `Gateway` and `VirtualService`), then applies `gateway-wasmplugin.yaml` directly into `istio-system` and rolls the ingress gateway, not the app:
 
 {% raw %}
 ```bash
-step "2/6 Roll cargo-http so the sidecar webhook + WasmPlugin attach"
-kubectl rollout restart deployment/cargo-http -n "$NAMESPACE"
-kubectl rollout status deployment/cargo-http -n "$NAMESPACE" --timeout=180s
-echo "verify-istio-minikube.sh: expect READY 2/2 below (app container + istio-proxy sidecar)"
+step "1/6 Apply the ch25 app-side overlay (Gateway + VirtualService; NO WasmPlugin, NO injection label)"
+kubectl apply -k "$SCRIPT_DIR/overlays/minikube"
+echo "verify-istio-minikube.sh: expect READY 1/1 below (pure Wasm app Pod, NO istio-proxy sidecar)"
 kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=cargo-http \
   -o custom-columns='POD:.metadata.name,READY:.status.containerStatuses[*].ready'
+
+step "2/6 ghcr-pull secret in istio-system + apply the gateway-side WasmPlugin"
+kubectl create secret docker-registry ghcr-pull \
+  --docker-server=ghcr.io \
+  --docker-username=patterncatalyst \
+  --docker-password="$(gh auth token)" \
+  -n istio-system \
+  --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f "$SCRIPT_DIR/gateway-wasmplugin.yaml"
+kubectl -n istio-system rollout status deployment/istio-ingressgateway --timeout=180s
 ```
 {% endraw %}
 
-The script resolves the ingress gateway's live NodePort and the minikube VM's IP, patches the `Gateway` and `VirtualService` hosts to a `nip.io`-style hostname built from that IP, same convention as every other Part 5 Ingress host in this book, and then asserts both halves of the filter's behavior through the real network path, never a port-forward: a request without `x-cargo-tenant` must return 403, and a request with `x-cargo-tenant: acme` must return 200, the exact cargo JSON, and the `x-cargo-filtered-by: cargo-wasmfilter` response header:
+The script resolves the ingress gateway's live NodePort and the minikube VM's IP, patches the `Gateway` and `VirtualService` hosts to a `nip.io`-style hostname built from that IP, same convention as every other Part 5 Ingress host in this book, and then asserts both halves of the filter's behavior through the real network path, never a port-forward: a request without `x-cargo-tenant` must return 403, and a request with `x-cargo-tenant: acme` must return 200, the exact cargo JSON, and the `x-cargo-filtered-by: cargo-wasmfilter` response header. **Verified live, 2026-10-22**, against minikube IP `192.168.49.2`, ingress gateway NodePort `30920`:
 
-<!-- LIVE-OUTPUT ch25 minikube istio: fill from examples/part6-deviations/istio/evidence/<date>/01-no-tenant-403.txt after the gated run --> *(verified-live output lands here after the cluster run: the WITHOUT-`x-cargo-tenant` request returning HTTP 403 with the filter's own JSON body through the Istio ingress gateway's NodePort.)*
+{% raw %}
+```
+$ curl -s -o /dev/null -w '%{http_code}\n' -H "Host: cargo-istio.192.168.49.2.nip.io" \
+  http://192.168.49.2:30920/cargo/CARGO-USNYC-DEHAM
+403
+```
+{% endraw %}
 
-<!-- LIVE-OUTPUT ch25 minikube istio: fill from examples/part6-deviations/istio/evidence/<date>/02-with-tenant-200.txt after the gated run --> *(verified-live output lands here after the cluster run: the WITH-`x-cargo-tenant: acme` request returning HTTP 200, the exact cargo JSON, and a response header `x-cargo-filtered-by: cargo-wasmfilter`.)*
+{% raw %}
+```
+$ curl -sS -D - -H "Host: cargo-istio.192.168.49.2.nip.io" -H 'x-cargo-tenant: acme' \
+  http://192.168.49.2:30920/cargo/CARGO-USNYC-DEHAM
+HTTP/1.1 200 OK
+x-cargo-filtered-by: cargo-wasmfilter
+...
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+```
+{% endraw %}
 
-A 403 on the first request proves the filter runs and enforces its policy; a 200 with the stamped header on the second proves the SAME Pod's Component Model app, under `containerd-shim-wasmtime`, still answers normally once the filter lets a request through — the two Wasm worlds Figure 25.1 draws, both doing their own job, in the same Pod, on the same request.
+A 403 on the first request proves the gateway's filter runs and enforces its policy; a 200 with the stamped header on the second proves the same `cargo-http` Pod's Component Model app, under `containerd-shim-wasmtime`, answers normally once the filter lets a request through — the two Wasm worlds Figure 25.1 draws, split across the mesh instead of sharing a Pod, each doing its own job on the same request. Full evidence, including the gateway's own log line fetching the filter image from ghcr, is committed under `examples/part6-deviations/istio/evidence/2026-10-22/`.
 
-## CRC: OpenShift Service Mesh 3, and a different second Wasm world
+## CRC: OpenShift Service Mesh 3, the same gateway design
 
 CRC does not run community Istio directly; it runs **OpenShift Service Mesh 3**, the Sail operator's distribution of Istio 1.31.2, installed by `install-ossm.sh` through the same OperatorHub pattern this book uses everywhere else on CRC: a `Subscription` with `installPlanApproval: Manual`, a pinned `startingCSV`, and an explicit approval of only the one named `InstallPlan`:
 
@@ -320,36 +347,9 @@ spec:
 ```
 {% endraw %}
 
-The script's own header comment flags two items as unconfirmed against a live cluster at the time of this authoring pass: the exact `startingCSV` string for `servicemeshoperator3` on the `stable` channel, which needs a live `oc get packagemanifest servicemeshoperator3 -n openshift-marketplace` check before the real run, and whether the Sail operator's non-revisioned `Istio` CR honors the plain `istio-injection=enabled` namespace label the same way community Istio does, or requires the revision-tagged `istio.io/rev=<name>` label instead. The script sets both labels on the target namespace rather than betting on one:
+The script's own header comment flags one item as unconfirmed against a live cluster at the time of this authoring pass: the exact `startingCSV` string for `servicemeshoperator3` on the `stable` channel, which needs a live `oc get packagemanifest servicemeshoperator3 -n openshift-marketplace` check before the real run; `OSSM_STARTING_CSV` defaults to `servicemeshoperator3.v3.1.0` pending that confirmation.
 
-{% raw %}
-```bash
-step "6/6 Sidecar injection on namespace $NS (the Part 5 wasmCloud app namespace)"
-oc label namespace "$NS" istio-injection=enabled --overwrite >/dev/null || fail "label namespace $NS (istio-injection)"
-oc label namespace "$NS" istio.io/rev=default --overwrite >/dev/null 2>&1 || true
-```
-{% endraw %}
-
-The namespace in question is `wasmcloud`, the Part 5 OpenShift app's own namespace, and that fact is the nuance that changes what "two Wasm worlds" means on this cluster. Chapter 19 already established that CRC's `restricted-v2` SCC blocks the privileged RHCOS `MachineConfig` the containerd `wasmtime` shim needs, which is why Part 5's CRC path never runs the raw shim at all and instead deploys the app through the wasmCloud operator, hosting the compiled Component Model component inside the `wasmcloud-host` Pod the operator manages. When Istio's sidecar gets injected into that same Pod here, the Pod's second Wasm world is not `containerd-shim-wasmtime`, because that process has never run anywhere on this cluster; it is the **wasmCloud host process itself**. The same two-ABI contrast Figure 25.1 draws for minikube still holds — a proxy-wasm filter in Envoy, a Component Model component under a different host — but the host on the application side of that contrast is wasmCloud's own runtime on CRC, not the shim.
-
-`openshift/wasmplugin.yaml` reflects that same operator-ownership fact in a design choice, not just a namespace swap. Part 5's CRC app is a single operator-managed Deployment, `wasmcloud-host`, whose Pod template labels the wasmCloud operator owns, not this chapter. Guessing at those labels for an explicit `matchLabels` selector and getting them wrong would silently attach the filter to nothing, so this manifest omits `spec.selector` entirely:
-
-{% raw %}
-```yaml
-apiVersion: extensions.istio.io/v1alpha1
-kind: WasmPlugin
-metadata:
-  name: cargo-wasmfilter
-  namespace: wasmcloud
-spec:
-  url: oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
-  pluginName: cargo-wasmfilter
-  phase: AUTHZ
-  pluginConfig: {}
-```
-{% endraw %}
-
-A selector-less `WasmPlugin` scopes, by documented Istio behavior, to every sidecar-injected workload in the namespace it is applied to. On CRC that namespace holds exactly one such workload, `wasmcloud-host`, so the effect is identical to an explicit selector without betting on an unconfirmed label. The manifest's own header comment frames this as the chosen tradeoff, with a note to tighten it to an explicit selector once the live labels are confirmed, as defense-in-depth against a second workload later landing in the same namespace, not as a correctness requirement today.
+CRC shares minikube's design: the filter runs in the gateway's Envoy, never beside the app. `install-ossm.sh` never labels the `wasmcloud` namespace for injection and never restarts `deploy/$HOSTCFG`, the operator-managed wasmCloud host Deployment. `openshift/wasmplugin.yaml` carries the same spec as minikube's `gateway-wasmplugin.yaml` (same OCI reference, same `phase: AUTHZ`, same `istio: ingressgateway` selector), now in OSSM3's `istio-system`. CRC's app Pod is an ordinary container the wasmCloud operator manages, not a RuntimeClass-scoped Wasm Pod, so a co-located sidecar there would not hit the same constraint directly; the manifest still targets the gateway, keeping one design across both cluster paths so both verify scripts assert the identical 403/200 behavior through the same code path.
 
 The Route, Gateway, and VirtualService follow the same edge-TLS pattern every CRC chapter in this book uses:
 
@@ -372,17 +372,17 @@ spec:
 ```
 {% endraw %}
 
-The router terminates TLS at the edge and forwards plain HTTP to the gateway's `http2` port, the same split Part 5's own CRC Route already uses in front of the wasmCloud operator's Service; the `VirtualService` then routes that plain-HTTP request on to the existing `cargo-http` Service in the `wasmcloud` namespace, port 8000, no new Service created. `verify-istio-crc.sh` applies all four manifests, resolves the Route's assigned host and patches `Gateway`/`VirtualService` to match, rolls `deploy/$HOSTCFG` (the operator-managed wasmCloud host Deployment) so the sidecar and the `WasmPlugin` both attach, and then runs the identical two-request proof minikube's script runs, through a CA-verified `https://` request against the real edge-TLS Route, never `-k`, never a port-forward:
+The router terminates TLS at the edge and forwards plain HTTP to the gateway's `http2` port, the same split Part 5's own CRC Route already uses in front of the wasmCloud operator's Service; the `VirtualService` routes that plain-HTTP request on to the existing `cargo-http` Service in the `wasmcloud` namespace, port 8000, no new Service created. `verify-istio-crc.sh` applies the four manifests (idempotent `oc apply`), resolves the Route's assigned host and patches `Gateway`/`VirtualService` to match, waits on the ingress gateway's own rollout, and runs the identical two-request proof minikube's script runs, through a CA-verified `https://` request against the real edge-TLS Route, never `-k`, never a port-forward. **Pending live verification**:
 
 <!-- LIVE-OUTPUT ch25 CRC istio: fill from examples/part6-deviations/istio/evidence/<date>/03-no-tenant-403.txt after the gated run --> *(verified-live output lands here after the cluster run: the WITHOUT-`x-cargo-tenant` request returning HTTP 403 through the edge-TLS Route, CA-verified.)*
 
 <!-- LIVE-OUTPUT ch25 CRC istio: fill from examples/part6-deviations/istio/evidence/<date>/04-with-tenant-200.txt after the gated run --> *(verified-live output lands here after the cluster run: the WITH-`x-cargo-tenant: acme` request returning HTTP 200, the exact cargo JSON, and a response header `x-cargo-filtered-by: cargo-wasmfilter`.)*
 
-The filter's behavior is identical on both clusters: a missing header denies locally in Envoy before the request ever reaches the wasmCloud host, and a present header lets the request through, stamped with proof the filter ran. What differs between the two runs is entirely underneath that filter, in which runtime hosts the Component Model side of the Pod.
+The filter's behavior is identical on both clusters: a missing header denies at the gateway before the request ever reaches the app Pod, and a present header lets the request through, stamped with proof the filter ran. What differs between the two runs is the control plane (community Istio vs. OSSM3/Sail) and the app's own host underneath the filter (`containerd-shim-wasmtime` on minikube, the wasmCloud operator on CRC), not where the filter executes, which is the ingress gateway's Envoy on both paths.
 
 ## Decision: mesh-layer filter, Component Model interposer, or TrafficExtension
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Reach for a <code>WasmPlugin</code>/proxy-wasm filter when the concern is mesh-layer, language-agnostic, and about traffic policy that applies uniformly across every workload Envoy fronts: tenant-header enforcement, rate limiting, request/response header injection, or any cross-cutting rule that should not require every application team to rebuild their own Wasm component to get it. The filter runs ahead of the application entirely, in Envoy's own process, built from any language proxy-wasm supports, and deployed by applying one CRD, no redeploy of the workload itself beyond the sidecar rollout injection already requires. Reach for a Component Model interposer, the shape Chapter 20 built, when the concern is app-layer and needs to operate on TYPED domain values, <code>Booking</code>, <code>RouteSpec</code>, <code>CargoError</code>, rather than raw HTTP headers and bytes: a policy that has to reason about the shape of a booking request, not just whether a header is present, belongs inside the component graph where WIT has already validated that shape, not in a filter that only ever sees an HTTP request before any domain logic runs. Between the two there is no overlap to resolve by taste: a proxy-wasm filter cannot see a <code>Booking</code> record, and a Component Model interposer has no hook into Envoy's listener chain at all. Looking forward, <code>TrafficExtension</code> (<code>istio.io</code>, 1.30+) is the newer unified API for wiring Wasm and native extensions into the mesh, and istiod transforms an existing <code>WasmPlugin</code> into that model under the hood; <code>WasmPlugin</code> itself stays fully supported, and nothing in this chapter's manifests needs to change today, but new filter wiring going forward should default to <code>TrafficExtension</code> rather than treating <code>WasmPlugin</code> as the only entry point.</p></div>
+<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Reach for a <code>WasmPlugin</code>/proxy-wasm filter when the concern is mesh-layer, language-agnostic, and about traffic policy that applies uniformly across every workload the gateway fronts: tenant-header enforcement, rate limiting, request/response header injection, or any cross-cutting rule that should not require every application team to rebuild their own Wasm component to get it. The filter runs ahead of the application entirely, in Envoy's own process, built from any language proxy-wasm supports, and deployed by applying one CRD — istiod pushes the config live, no redeploy of the app workload required. Reach for a Component Model interposer, the shape Chapter 20 built, when the concern is app-layer and needs to operate on typed domain values, <code>Booking</code>, <code>RouteSpec</code>, <code>CargoError</code>, rather than raw HTTP headers and bytes: a policy that has to reason about the shape of a booking request, not just whether a header is present, belongs inside the component graph where WIT has already validated that shape, not in a filter that only ever sees an HTTP request before any domain logic runs. Between the two there is no overlap to resolve by taste: a proxy-wasm filter cannot see a <code>Booking</code> record, and a Component Model interposer has no hook into Envoy's listener chain at all. Looking forward, <code>TrafficExtension</code> (<code>istio.io</code>, 1.30+) is the newer unified API for wiring Wasm and native extensions into the mesh, and istiod transforms an existing <code>WasmPlugin</code> into that model under the hood; <code>WasmPlugin</code> itself stays fully supported, and nothing in this chapter's manifests needs to change today, but new filter wiring going forward should default to <code>TrafficExtension</code> rather than treating <code>WasmPlugin</code> as the only entry point.</p></div>
 
 ## For deeper coverage
 

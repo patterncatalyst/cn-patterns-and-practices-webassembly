@@ -1,0 +1,14 @@
+$ kubectl -n part5-kubernetes get pod (pure Wasm app, NO sidecar)
+NAME READY STATUS RESTARTS AGE
+cargo-http-7b84c7974c-2cwk9 1/1 Running 0 84s
+
+$ istio-ingressgateway fetched the proxy-wasm filter from ghcr:
+2026-10-22T12:09:06.143026Z	info	wasm	fetching image patterncatalyst/cargo-wasmfilter from registry ghcr.io with tag istio
+
+$ curl (no x-cargo-tenant) -> filter denies
+HTTP 403
+
+$ curl -H 'x-cargo-tenant: acme' -> 200 + injected header + cargo JSON
+HTTP/1.1 200 OK
+x-cargo-filtered-by: cargo-wasmfilter
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
