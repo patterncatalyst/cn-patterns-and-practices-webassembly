@@ -87,7 +87,14 @@ minikube addons enable ingress -p "$PROFILE"
 kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=180s
 
 step "Step 4: deploy the SpinApp (overlays/minikube)"
-kubectl apply -k "$SCRIPT_DIR/overlays/minikube"
+# The ingress-nginx admission webhook can refuse connections for a few seconds
+# after the controller rollout reports complete; retry the apply until it lands.
+apply_waited=0
+until kubectl apply -k "$SCRIPT_DIR/overlays/minikube"; do
+  (( apply_waited >= 120 )) && { echo "verify-spinkube-minikube.sh: FAIL — overlay apply did not succeed within 120s" >&2; exit 1; }
+  echo "verify-spinkube-minikube.sh: apply failed (ingress webhook likely not ready yet) — retrying in 5s"
+  sleep 5; apply_waited=$(( apply_waited + 5 ))
+done
 kubectl rollout status "deployment/$SPINAPP_NAME" -n "$SPINAPP_NAMESPACE" --timeout=180s
 kubectl get spinapp,deploy,svc,ingress -n "$SPINAPP_NAMESPACE" -o wide
 

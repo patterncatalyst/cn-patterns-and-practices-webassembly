@@ -56,7 +56,14 @@ assert_file "$SPIN_APP_WASM" "cargo-spin.wasm"
 PROFILE="$PROFILE" "$SCRIPT_DIR/install-spinkube.sh"
 minikube addons enable ingress -p "$PROFILE" >/dev/null 2>&1 || true
 kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=180s
-kubectl apply -k "$SCRIPT_DIR/overlays/minikube"
+# The ingress-nginx admission webhook can refuse connections for a few seconds
+# after the controller rollout reports complete; retry the apply until it lands.
+apply_waited=0
+until kubectl apply -k "$SCRIPT_DIR/overlays/minikube"; do
+  (( apply_waited >= 120 )) && { echo "capture-evidence.sh: FAIL — overlay apply did not succeed within 120s" >&2; exit 1; }
+  echo "capture-evidence.sh: apply failed (ingress webhook likely not ready yet) — retrying in 5s"
+  sleep 5; apply_waited=$(( apply_waited + 5 ))
+done
 kubectl rollout status "deployment/$SPINAPP_NAME" -n "$SPINAPP_NAMESPACE" --timeout=180s
 # Belt-and-suspenders: if anything bounced the ingress controller, wait again
 # before trusting it to route.
@@ -118,8 +125,11 @@ echo "=== 04 pods (get + describe) ==="
   printf '$ kubectl get pods -n %s -o wide\n' "$SPINAPP_NAMESPACE"
   kubectl get pods -n "$SPINAPP_NAMESPACE" -o wide
   printf '\n$ kubectl describe pod (RuntimeClass + node)\n'
-  kubectl describe pod -l app.kubernetes.io/name="$SPINAPP_NAME" -n "$SPINAPP_NAMESPACE" \
-    | grep -Ei 'Name:|Node:|Runtime Class Name:|Status:|Image:|Started|Ready' | head -20
+  pod="$(kubectl get pods -n "$SPINAPP_NAMESPACE" -o name | head -1)"
+  if [[ -n "$pod" ]]; then
+    kubectl describe "$pod" -n "$SPINAPP_NAMESPACE" \
+      | grep -Ei 'Name:|Node:|Runtime Class Name:|Status:|Image:|Started|Ready' | head -20 || true
+  fi
 } | tee "$OUT/04-pods.txt"
 
 echo "=== 05 http through the ingress edge ==="

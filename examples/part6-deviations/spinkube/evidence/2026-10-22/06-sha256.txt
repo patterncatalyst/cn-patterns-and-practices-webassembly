@@ -1,0 +1,2 @@
+$ sha256sum /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part6-deviations/spin/cargo-spin.wasm
+9c90970b4e67a0e0bc2b0f9944a9d8af7a38f2aae9bad2f6c4276f2f26c7228c  /home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part6-deviations/spin/cargo-spin.wasm

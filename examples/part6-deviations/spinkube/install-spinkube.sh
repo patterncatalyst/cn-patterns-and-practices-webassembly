@@ -127,9 +127,8 @@ kubectl get runtimeclass "$SPIN_RUNTIMECLASS"
 # 3. spin-operator CRDs + shim-executor + the operator chart
 # ---------------------------------------------------------------------------
 
-step "3/4 spin-operator $SPIN_OPERATOR_VERSION CRDs + shim-executor ($SPIN_EXECUTOR) + Helm"
+step "3/4 spin-operator $SPIN_OPERATOR_VERSION CRDs + Helm"
 kubectl apply -f "$SPIN_OPERATOR_CRDS_URL"
-kubectl apply -f "$SPIN_OPERATOR_SHIM_EXECUTOR_URL"
 helm upgrade --install spin-operator "$SPIN_OPERATOR_CHART" \
   --version "$SPIN_OPERATOR_VERSION" \
   --namespace "$SPIN_OPERATOR_NAMESPACE" --create-namespace \
@@ -141,13 +140,17 @@ kubectl get pods -n "$SPIN_OPERATOR_NAMESPACE"
 # 4. ghcr-pull image-pull secret for the private cargo-spin package
 # ---------------------------------------------------------------------------
 
-step "4/4 ghcr-pull secret ($PULL_SECRET) in $SPINAPP_NAMESPACE"
+step "4/4 app namespace $SPINAPP_NAMESPACE: SpinAppExecutor ($SPIN_EXECUTOR) + ghcr-pull secret ($PULL_SECRET)"
 TOKEN="$(gh auth token 2>/dev/null)" || { echo "install-spinkube.sh: FAIL — gh auth token failed; run 'gh auth login' first" >&2; exit 1; }
 kubectl create namespace "$SPINAPP_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+# SpinAppExecutor is namespaced; the SpinApp references an executor in its own
+# namespace, so create it in the app namespace (the release manifest carries no
+# namespace of its own).
+kubectl apply -n "$SPINAPP_NAMESPACE" -f "$SPIN_OPERATOR_SHIM_EXECUTOR_URL"
 kubectl create secret docker-registry "$PULL_SECRET" \
   --docker-server=ghcr.io --docker-username="$GHCR_OWNER" --docker-password="$TOKEN" \
   -n "$SPINAPP_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-echo "install-spinkube.sh: pull secret '$PULL_SECRET' applied in namespace '$SPINAPP_NAMESPACE'"
+echo "install-spinkube.sh: SpinAppExecutor '$SPIN_EXECUTOR' + pull secret '$PULL_SECRET' applied in namespace '$SPINAPP_NAMESPACE'"
 
 echo
 echo "install-spinkube.sh: OK — cert-manager $CERT_MANAGER_INSTALLED, runtime-class-manager"

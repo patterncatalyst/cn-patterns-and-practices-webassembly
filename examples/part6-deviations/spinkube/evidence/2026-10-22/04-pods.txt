@@ -1,0 +1,21 @@
+$ kubectl get pods -n part6-spin -o wide
+NAME                          READY   STATUS    RESTARTS   AGE   IP            NODE    NOMINATED NODE   READINESS GATES
+cargo-spin-7c4b99d85b-p2nzv   1/1     Running   0          94s   10.244.0.12   part5   <none>           <none>
+
+$ kubectl describe pod (RuntimeClass + node)
+Name:                cargo-spin-7c4b99d85b-p2nzv
+Runtime Class Name:  wasmtime-spin-v2
+Node:                part5/192.168.49.2
+                     core.spinkube.dev/app.cargo-spin.status=ready
+Status:              Running
+    Image:         ghcr.io/patterncatalyst/cargo-spin:spinkube
+      Started:      Thu, 22 Oct 2026 16:24:19 -0400
+    Ready:          True
+  PodReadyToStartContainers   True 
+  Ready                       True 
+  ContainersReady             True 
+    SecretName:  cargo-spin-760b133c
+    SecretName:  spin-ca
+    ConfigMapName:           kube-root-ca.crt
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+  Normal  Started    92s   kubelet            spec.containers{cargo-spin}: Container started

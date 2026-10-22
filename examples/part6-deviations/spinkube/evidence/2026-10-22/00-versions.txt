@@ -1,0 +1,20 @@
+$ minikube version --short
+v1.39.0
+
+$ kubectl --context part5 version
+Client Version: v1.37.1
+Kustomize Version: v5.8.1
+Server Version: v1.37.1
+
+# SpinKube stack (pinned)
+cert-manager          : v1.21.2 (fallback v1.20.0)
+runtime-class-manager : 0.2.0 (oci://ghcr.io/spinframework/charts/runtime-class-manager)
+containerd-shim-spin  : v0.26.0
+shim manifest         : https://github.com/spinframework/containerd-shim-spin/releases/download/v0.26.0/runtime-class-manager-shim-v1alpha1-v0.26.0.yaml
+spin-operator         : 0.6.1 (oci://ghcr.io/spinframework/charts/spin-operator)
+executor              : containerd-shim-spin
+
+$ helm list -A --kube-context part5
+NAME                 	NAMESPACE            	REVISION	UPDATED                                	STATUS  	CHART                      	APP VERSION
+runtime-class-manager	runtime-class-manager	3       	2026-10-22 16:25:43.66956982 -0400 EDT 	deployed	runtime-class-manager-0.2.0	v0.2.0     
+spin-operator        	spin-operator        	3       	2026-10-22 16:25:44.857794668 -0400 EDT	deployed	spin-operator-0.6.1        	v0.6.1     
