@@ -1,0 +1,9 @@
+--- Services (operator-created, one per Application) ---
+SVC                TYPE        PORTS   SELECTOR
+cargo-final-rust   ClusterIP   8000    <none>
+cargo-final-go     ClusterIP   8000    <none>
+EP    ADDRS
+--- Routes (edge TLS) ---
+ROUTE              HOST                                                TERMINATION   PORT
+cargo-final-go     cargo-final-go-wasmcloud-final.apps-crc.testing     edge          8000
+cargo-final-rust   cargo-final-rust-wasmcloud-final.apps-crc.testing   edge          8000

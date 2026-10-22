@@ -1,0 +1,9 @@
+# CA-verified against the cluster ingress CA (curl --cacert combined-bundle), never -k, never port-forward.
+$ curl --cacert <ingress-ca> https://cargo-final-rust-wasmcloud-final.apps-crc.testing/cargo/CARGO-USNYC-DEHAM   (rust)
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+$ curl --cacert <ingress-ca> https://cargo-final-go-wasmcloud-final.apps-crc.testing/cargo/CARGO-USNYC-DEHAM     (go)
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+$ curl -o /dev/null -w %{http_code} https://cargo-final-rust-wasmcloud-final.apps-crc.testing/cargo/NOPE (rust)
+404
+$ curl -o /dev/null -w %{http_code} https://cargo-final-go-wasmcloud-final.apps-crc.testing/cargo/NOPE   (go)
+404

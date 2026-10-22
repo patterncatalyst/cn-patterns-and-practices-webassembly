@@ -113,6 +113,8 @@ plan against, re-verified live when their chapter lands.
 | model | **MobileNet OpenVINO IR**, Apache-2.0 — download.01.org/openvinotoolkit/fixtures/mobilenet/, fetched and gitignored |
 | Rust | **1.99.1** stable — no nightly |
 | Note | Reused unchanged from earlier tiers: cargo-component 0.21.1, wasm-tools 1.262.0. |
+| **Part 7 final project tier — r08 ch28 (no new pins)** | |
+| Note | ch28 introduces **no new version pins**. It reuses the firm Part 5 tier (`containerd-shim-wasmtime` v0.6.1; minikube v1.39.0 / Kubernetes v1.37.1; ingress-nginx v1.15.1; `grafana/otel-lgtm` 0.33.1; CRC 2.64.0 / OCP 4.22.14; wasmcloud-platform Helm chart 0.1.2) and the Part 6 tier (Istio 1.31.2 on minikube / OSSM3 Sail `servicemeshoperator3.v3.1.0` at Istio 1.26.2 on CRC; proxy-wasm 0.2.5) as-is, plus the standing toolchain (wasmtime 50, wac 0.12.0, wasm-tools 1.262.0, cargo-component 0.21.1, TinyGo 0.43). The two composites (`cargo-rust.wasm`, `cargo-go.wasm`) are `wac plug` build artifacts, not new dependency pins. |
 | **Kubernetes deployment tier (TBD-at-kickoff; snapshot only, surveyed live when the relevant chapter lands)** | |
 | Istio | Firmed to **1.31.2** at r07a (see the Part 6 tier above). Source: https://github.com/istio/istio/releases/tag/1.31.2 |
 | KEDA | Firmed to **v2.21.0** at r06d (see the Part 5 scaling tier above); this snapshot row stands for the later Ch25+ re-survey. Source: https://github.com/kedacore/keda/releases/tag/v2.21.0 |

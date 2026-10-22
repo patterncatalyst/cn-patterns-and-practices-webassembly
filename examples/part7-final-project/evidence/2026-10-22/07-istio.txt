@@ -1,0 +1,32 @@
+
+--- cargo-rust, WITHOUT x-cargo-tenant ---
+$ curl -s -o /dev/null -w %{http_code} -H "Host: cargo-rust-istio.192.168.49.2.nip.io" http://192.168.49.2:31807/cargo/CARGO-USNYC-DEHAM
+403
+
+--- cargo-rust, WITH x-cargo-tenant: acme ---
+$ curl -sS -D - -H "Host: cargo-rust-istio.192.168.49.2.nip.io" -H "x-cargo-tenant: acme" http://192.168.49.2:31807/cargo/CARGO-USNYC-DEHAM
+HTTP/1.1 200 OK
+content-type: application/json
+date: Thu, 22 Oct 2026 22:56:42 GMT
+x-envoy-upstream-service-time: 0
+x-cargo-filtered-by: cargo-wasmfilter
+server: istio-envoy
+transfer-encoding: chunked
+
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
+
+--- cargo-go, WITHOUT x-cargo-tenant ---
+$ curl -s -o /dev/null -w %{http_code} -H "Host: cargo-go-istio.192.168.49.2.nip.io" http://192.168.49.2:31807/cargo/CARGO-USNYC-DEHAM
+403
+
+--- cargo-go, WITH x-cargo-tenant: acme ---
+$ curl -sS -D - -H "Host: cargo-go-istio.192.168.49.2.nip.io" -H "x-cargo-tenant: acme" http://192.168.49.2:31807/cargo/CARGO-USNYC-DEHAM
+HTTP/1.1 200 OK
+content-type: application/json
+date: Thu, 22 Oct 2026 22:56:42 GMT
+x-envoy-upstream-service-time: 1
+x-cargo-filtered-by: cargo-wasmfilter
+server: istio-envoy
+transfer-encoding: chunked
+
+{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}

@@ -1,0 +1,69 @@
+# examples/part7-final-project/k8s/base/deployment-go.yaml
+#
+# The Go half of the two-language assembly (../../build.sh's cargo-go.wasm,
+# packaged as the image cargo-go:final) — otherwise identical to
+# ./deployment-rust.yaml: same RuntimeClass, same probe shape, same resource
+# ceiling. Both composites export the identical wasi:http/incoming-handler
+# world and serve byte-identical JSON (../../build.sh's smoke test already
+# proves this before either image is built); running them as twin Deployments
+# here is what ../../verify-minikube.sh's two-language assertion checks live.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-go
+  labels:
+    app.kubernetes.io/name: cargo-go
+    app.kubernetes.io/part-of: part7-final-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cargo-go
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cargo-go
+        app.kubernetes.io/part-of: part7-final-project
+    spec:
+      runtimeClassName: wasmtime
+      containers:
+        - name: cargo-go
+          image: cargo-go:final
+          imagePullPolicy: IfNotPresent
+          command: ["/app.wasm"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            failureThreshold: 20
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-go
+  labels:
+    app.kubernetes.io/name: cargo-go
+    app.kubernetes.io/part-of: part7-final-project
+spec:
+  selector:
+    app.kubernetes.io/name: cargo-go
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

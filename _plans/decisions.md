@@ -952,3 +952,53 @@ which neither the minikube nor the CRC deployment tiers carry, so it stays
 out of scope for this chapter. The live inference run — installing OpenVINO
 and building wasmtime from source — is the user's to execute; the chapter
 footer flips from pending to verified after their pass.
+
+## DRQ-083 — r08 ch28 design: Part 7 final project, a pure assembly of existing components, no new component
+
+Ch28, the Part 7 final project, introduces no new component: it is a pure
+assembly of components already built across Parts 2, 3, 5, and 6, under the
+heading "one contract, two languages, one substrate, one trace."
+`contracts/wit` stays pristine — the final project composes, deploys, and
+observes; it does not extend the contract. Two composites of the same cargo
+domain are built with `wac plug` from already-built artifacts: `cargo-rust.wasm`
+(the Part 3 `http-rust` front door plugged into the Part 2 Rust cargo
+provider) and `cargo-go.wasm` (the Part 3 `http-go`/TinyGo front door plugged
+into the Part 2 Go cargo provider). Both composites serve byte-identical
+cargo JSON over `wasi:http/incoming-handler` — the chapter's proof that the
+WIT contract is substrate- and language-neutral end to end.
+
+Both composites deploy under the `containerd-shim-wasmtime` `RuntimeClass`
+behind a single ingress, with the ch25 Istio proxy-wasm `WasmPlugin` gateway
+filter (DRQ-079) folded in unchanged at that one ingress: the `x-cargo-tenant`
+header still drives the 403/200 + `x-cargo-filtered-by` behavior, now in
+front of two language implementations instead of one. Each shim emits OTel at
+the same honest scope recorded at DRQ-072/Ch24 — a shim lifecycle span, not
+in-component tracing — into the in-cluster `otel-lgtm` collector, giving one
+trace per language rather than a single merged trace; the chapter is explicit
+that the per-language traces are not stitched together, since nothing in the
+assembly introduces a shared trace context across the two composites.
+
+Live verification is dual-cluster, both languages on both clusters. minikube
+is the primary, full-assembly pass: both composites, the Istio gateway
+filter, and the OTel trace capture, all live. CRC runs a reduced pass: both
+composites deployed via the wasmCloud operator (the Part 5 CRC tier, DRQ-054)
+behind one edge-TLS Route, with no mesh — the ch25 Istio filter stays a
+minikube-only element of this chapter, consistent with OSSM/Sail's narrower
+role on CRC throughout Part 6.
+
+KEDA scale-to-zero (Ch23) stays conceptual and cross-referenced only: the
+Ch23 HTTP add-on and the ch25 Istio gateway filter both want to own ingress
+for their respective demos, and stacking both live under one assembly is out
+of scope for the final project. The chapter notes the combination is
+possible in principle and points back to Ch23/Ch25 rather than re-proving it.
+
+CI for ch28 covers two static gates only, no cluster: a part7 build step that
+runs `wac plug` over the already-built Part 2/Part 3 artifacts (no new WIT
+bindings are generated, so this step is excluded from the bindings-drift
+gate, the same posture as every pure-assembly or host-only tree in this
+book), and `kubeconform` over the part7 overlays and CRD instances (the
+two-composite Kubernetes manifests plus the wasmCloud operator CRD instances
+for the CRC reduced pass).
+
+No new tool or component version is introduced by ch28: it reuses the Part 5
+and Part 6 tiers as pinned (version-matrix.md).

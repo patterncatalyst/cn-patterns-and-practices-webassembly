@@ -466,6 +466,23 @@ jobs:
       - name: Build the Part 6 ch27 wasi-nn component (build-only)
         run: ${{ env.PART6_DIR }}/wasi-nn/build.sh
 
+      # r08: the Part 7 final project's build.sh wac-plugs two ALREADY-BUILT
+      # composites — cargo-rust.wasm (Part 3 http-rust front door plugged into
+      # the Part 2 Rust cargo provider) and cargo-go.wasm (Part 3 http-go/
+      # TinyGo plugged into the Part 2 Go cargo provider) — reusing both
+      # parts' own build recipes unmodified, same two-language-one-contract
+      # pairing Part 4's ch15 wasmcloud/build.sh already proves for the Rust
+      # side alone. --no-image skips the OCI image build (no docker needed in
+      # this job); --load is cluster-only and never runs here. This is NOT a
+      # cargo-component crate of its own — no WIT, no generated bindings.rs —
+      # so it is deliberately EXCLUDED from the bindings-drift gate below,
+      # same treatment as the ch25 proxy-wasm filter, the ch26 Spin app, and
+      # Part 5's kafka-host above. The LIVE minikube/CRC runs are evidence-
+      # only, verified by hand under examples/part7-final-project/{k8s,
+      # istio,openshift}/evidence/ — never a CI step.
+      - name: Build the Part 7 final-project assembly (build.sh)
+        run: examples/part7-final-project/build.sh --no-image
+
       # Drift gate: verify.sh (above) already regenerated all four sets of
       # committed generated bindings from contracts/wit as a side effect of
       # building — the two providers (Rust + Go) AND the two consumers
@@ -720,3 +737,28 @@ jobs:
             examples/part6-deviations/spinkube/openshift/deployment.yaml \
             examples/part6-deviations/spinkube/openshift/service.yaml \
             examples/part6-deviations/spinkube/openshift/route.yaml
+
+      # r08 (ch28 final project) — same offline treatment as ch25/ch26 above:
+      # render the minikube overlay (the cargo-rust/cargo-go Deployments'
+      # imagePullPolicy: Never patch over ../../base) and the Istio overlay
+      # (the same two Deployments plus the Gateway/VirtualService) through
+      # kustomize + kubeconform, then kubeconform the standalone CRC manifests
+      # as-committed. WasmCloudHostConfig and the wadm core.oam.dev
+      # Application are CRDs with no bundled schema -> skipped by
+      # -ignore-missing-schemas, same reasoning as the Part 5/ch25 CRD
+      # instances above; route.openshift.io/v1 Route is likewise schema-less
+      # here. The LIVE minikube + CRC runs are evidence-only under
+      # examples/part7-final-project/{k8s,istio,openshift}/evidence/ — never a
+      # CI step.
+      - name: Validate Part 7 final-project manifests (kubeconform) — minikube + Istio overlays, CRC manifests
+        run: |
+          kubectl kustomize examples/part7-final-project/k8s/overlays/minikube \
+            | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+          kubectl kustomize examples/part7-final-project/istio/overlays/minikube \
+            | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+          kubectl kustomize examples/part7-final-project/k8s/observability/overlays/minikube \
+            | kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary -
+          kubeconform -strict -kubernetes-version 1.37.1 -ignore-missing-schemas -summary \
+            examples/part7-final-project/openshift/route.yaml \
+            examples/part7-final-project/openshift/wadm-final.yaml \
+            examples/part7-final-project/openshift/wasmcloud-host.yaml

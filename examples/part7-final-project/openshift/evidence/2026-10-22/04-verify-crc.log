@@ -1,0 +1,20 @@
+
+[1m==> 0/4 Preflight: both Routes exist[0m
+    ✓ edge-TLS Routes https://cargo-final-rust-wasmcloud-final.apps-crc.testing/ (rust) and https://cargo-final-go-wasmcloud-final.apps-crc.testing/ (go)
+
+[1m==> 1/4 Readiness: a real 200 through each edge-TLS Route[0m
+    ✓ https://cargo-final-rust-wasmcloud-final.apps-crc.testing/cargo/CARGO-USNYC-DEHAM -> 200 after 0s
+    ✓ https://cargo-final-go-wasmcloud-final.apps-crc.testing/cargo/CARGO-USNYC-DEHAM -> 200 after 0s
+
+[1m==> 2/4 Exact cargo JSON, both languages, byte-identical (CA-verified, through the Routes)[0m
+    ✓ GET /cargo/CARGO-USNYC-DEHAM returned the exact cargo JSON on BOTH Routes, byte-identical
+
+[1m==> 3/4 404 for an unknown tracking id, both languages[0m
+    ✓ GET /cargo/NOPE -> 404 on both Routes
+
+[1m==> 4/4 Summary[0m
+    ✓ cargo-rust : https://cargo-final-rust-wasmcloud-final.apps-crc.testing
+    ✓ cargo-go   : https://cargo-final-go-wasmcloud-final.apps-crc.testing
+
+PASS — Part 7 final project, reduced OpenShift Local (CRC) pass: both language composites deployed by the wasmCloud operator to one in-cluster host, each served the exact cargo JSON and a 404 through its own edge-TLS Route (CA-verified against the cluster's own ingress CA, never -k/port-forward/NodePort), byte-identical across Rust and Go. No service mesh on this cluster.
+exit 0

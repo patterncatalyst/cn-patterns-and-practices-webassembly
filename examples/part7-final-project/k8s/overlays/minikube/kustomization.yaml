@@ -1,0 +1,32 @@
+# examples/part7-final-project/k8s/overlays/minikube/kustomization.yaml
+#
+# Forces imagePullPolicy: Never on both app containers so the kubelet never
+# tries a registry pull for images that only exist in minikube's node
+# containerd store (loaded by ../../../build.sh --load / `minikube image
+# load`) — same convention as
+# examples/part5-kubernetes/k8s/overlays/minikube/kustomization.yaml. No image
+# retag transformer is needed here: unlike Part 5's build.sh (which
+# parameterizes a single $IMAGE tag, :dev -> :minikube), ../../../build.sh
+# always packages the fixed tags cargo-rust:final / cargo-go:final that
+# ../base already references directly.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-rust
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Deployment
+      name: cargo-go
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

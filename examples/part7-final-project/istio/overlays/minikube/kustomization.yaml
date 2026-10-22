@@ -1,0 +1,35 @@
+# examples/part7-final-project/istio/overlays/minikube/kustomization.yaml
+#
+# Same retag/imagePullPolicy pin as ../../../k8s/overlays/minikube — this
+# overlay pulls the SAME two Deployments (via ../../base, which pulls
+# ../../k8s/base), so the images need the identical
+# minikube-local-containerd-store treatment. Mirrors
+# examples/part6-deviations/istio/overlays/minikube/kustomization.yaml, which
+# repeats Part 5's single-Deployment patch for the same reason.
+#
+# Prerequisite: ../../../verify-minikube.sh has already built + loaded both
+# images and deployed the app via ../../../k8s/overlays/minikube; this overlay
+# then layers the ch25 Istio objects on top of that SAME running
+# Deployment/Service pair (kubectl apply -k here does not recreate the app, it
+# adds the Gateway + VirtualService; see ../../base).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: cargo-rust
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Deployment
+      name: cargo-go
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

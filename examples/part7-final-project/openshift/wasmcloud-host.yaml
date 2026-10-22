@@ -1,0 +1,40 @@
+# WasmCloudHostConfig — the in-cluster wasmCloud host the operator reconciles
+# into a Deployment (wasmCloud host container + a NATS leaf sidecar), hosting
+# BOTH language composites for this project's reduced CRC pass. This is the
+# OpenShift counterpart to the minikube RuntimeClass/containerd shim path; on
+# OpenShift a managed host replaces node-level shim surgery (restricted-v2
+# cannot grant the privileged RHCOS MachineConfig the raw shim needs).
+#
+# Byte-identical to examples/part5-kubernetes/openshift/wasmcloud-host.yaml
+# except namespace/natsAddress, which move to this project's own
+# "wasmcloud-final" project so the reduced pass can run standalone.
+#
+# Pinned to the pairing Part 4 and Part 5 proved:
+#   version 1.9.1             — the chart's default host (appVersion 1.2.1) is
+#                                too old for provider 0.27.0's wRPC protocol
+#                                ("failed to shutdown synchronous parameter
+#                                channel: not connected", HTTP 500). 1.9.1
+#                                speaks wasi:http 0.2.x and runs both
+#                                wasi:http/incoming-handler@0.2.8 composites.
+#   natsAddress                — the chart publishes the NATS Service as
+#                                nats.<namespace>.svc.cluster.local:4222.
+#   registryCredentialsSecret  — a docker-registry secret (deploy.sh creates
+#                                it) so the host can pull BOTH private ghcr
+#                                component images.
+#
+# No securityContext is pinned here: the operator leaves the host/leaf
+# containers' securityContext unset, so restricted-v2 assigns a
+# namespace-range UID and applies drop-ALL / no-privilege-escalation /
+# seccomp=RuntimeDefault itself.
+apiVersion: k8s.wasmcloud.dev/v1alpha1
+kind: WasmCloudHostConfig
+metadata:
+  name: wasmcloud-host
+  namespace: wasmcloud-final
+spec:
+  hostReplicas: 1
+  lattice: default
+  version: "1.9.1"
+  natsAddress: nats://nats.wasmcloud-final.svc.cluster.local
+  registryCredentialsSecret: ghcr-pull
+  allowLatest: false

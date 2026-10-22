@@ -1,0 +1,49 @@
+# examples/part7-final-project/k8s/base/ingress.yaml
+#
+# ONE ingress-nginx Ingress, TWO host-based rules — the two-language proof's
+# edge path (host -> ingress-nginx -> Service -> Pod -> shim -> component), no
+# port-forward, no NodePort, no `minikube service` (same house rule as
+# examples/part5-kubernetes/k8s/base/ingress.yaml, which this mirrors).
+#
+# Two nip.io hosts rather than one host with /rust + /go path prefixes: both
+# composites answer their own GET /cargo/{id} route unprefixed, so host-based
+# routing needs no rewrite-target annotation on either rule — simpler and less
+# fragile than a path-rewrite that would otherwise have to strip a prefix
+# ingress-nginx itself added.
+#
+# Hosts here are generic placeholders, exactly like Part 5's; ../../
+# verify-minikube.sh and ../../capture-evidence.sh patch both rules live to
+# cargo-rust.<minikube-ip>.nip.io / cargo-go.<minikube-ip>.nip.io.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cargo-final
+  annotations:
+    # Same "my rule actually matched" signal as Part 5: ingress-nginx stamps
+    # this cookie only on a response that went through one of THIS Ingress's
+    # rules, never on its generic default-backend 404.
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "part7-cargo-affinity"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cargo-rust.part7-final-project.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cargo-rust
+                port:
+                  number: 8080
+    - host: cargo-go.part7-final-project.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cargo-go
+                port:
+                  number: 8080

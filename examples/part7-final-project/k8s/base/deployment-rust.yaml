@@ -1,0 +1,81 @@
+# examples/part7-final-project/k8s/base/deployment-rust.yaml
+#
+# The Rust half of the two-language assembly (../../build.sh's cargo-rust.wasm,
+# packaged as the image cargo-rust:final) running under the SAME runwasi
+# containerd-shim-wasmtime RuntimeClass as Part 5
+# (examples/part5-kubernetes/k8s/base/runtimeclass.yaml — referenced by name
+# here, not duplicated; installed by
+# examples/part5-kubernetes/k8s/install-shim.sh, which this unit's
+# ../../verify-minikube.sh calls unmodified).
+#
+# Shape is a straight copy of examples/part5-kubernetes/k8s/base/deployment.yaml
+# (runtimeClassName: wasmtime, command: ["/app.wasm"], TCP probes on 8080 — the
+# component answers GET / with 404, so a TCP probe is the correct
+# liveness/readiness signal, same reasoning as Part 5). No securityContext is
+# set here, matching Part 5's base deployment exactly: that manifest has no
+# securityContext section, and this RuntimeClass path (a Wasm module run by the
+# containerd shim, not a Linux process under runc) has no committed, live
+# evidence anywhere in this repo that restrictive PodSecurityContext fields
+# (runAsNonRoot, etc.) are compatible with it. Inventing one here, untested,
+# would risk breaking the one thing this unit must prove live — parity with
+# the verified-working Part 5 shape wins over a speculative security hardening.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-rust
+  labels:
+    app.kubernetes.io/name: cargo-rust
+    app.kubernetes.io/part-of: part7-final-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cargo-rust
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cargo-rust
+        app.kubernetes.io/part-of: part7-final-project
+    spec:
+      runtimeClassName: wasmtime
+      containers:
+        - name: cargo-rust
+          image: cargo-rust:final
+          imagePullPolicy: IfNotPresent
+          command: ["/app.wasm"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            failureThreshold: 20
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-rust
+  labels:
+    app.kubernetes.io/name: cargo-rust
+    app.kubernetes.io/part-of: part7-final-project
+spec:
+  selector:
+    app.kubernetes.io/name: cargo-rust
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

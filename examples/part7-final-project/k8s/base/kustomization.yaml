@@ -1,0 +1,24 @@
+# examples/part7-final-project/k8s/base/kustomization.yaml
+#
+# The final project's own namespace, both app Deployments/Services, and the
+# ingress-nginx Ingress that fronts both, plus the SAME cluster-scoped
+# `wasmtime` RuntimeClass Part 5 defines (./runtimeclass.yaml — a duplicate of
+# examples/part5-kubernetes/k8s/base/runtimeclass.yaml's content, not a fork;
+# see that file's header for why kustomize's load-restriction sandbox forced
+# the duplication instead of a cross-tree file reference). Both units are
+# expected to run on the SAME minikube profile ("part5", per
+# ../../build.sh --load), and
+# examples/part5-kubernetes/k8s/install-shim.sh already installs the shim +
+# applies this exact object before either unit's app Deployment ever gets
+# scheduled.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: part7-final-project
+
+resources:
+  - namespace.yaml
+  - runtimeclass.yaml
+  - deployment-rust.yaml
+  - deployment-go.yaml
+  - ingress.yaml

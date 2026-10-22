@@ -1,0 +1,25 @@
+# examples/part7-final-project/Containerfile
+#
+# A thin OCI image that carries ONLY one composite .wasm, selected by the
+# WASM build-arg (cargo-rust.wasm or cargo-go.wasm). The runwasi
+# `containerd-shim-wasmtime` shim mounts this image's rootfs, reads the OCI
+# config's command (/app.wasm), and loads that file as a Wasm component — it
+# never needs a Linux userland, so the base is `scratch` and the image is just
+# the component plus OCI metadata. Same shape as
+# examples/part5-kubernetes/Dockerfile; parameterized here so one Containerfile
+# serves both languages instead of forking the recipe per language.
+#
+# build.sh writes cargo-rust.wasm / cargo-go.wasm next to this file first (wac
+# plug recompose), then `docker build`s this once per composite. Both .wasm
+# files are gitignored; neither image is ever committed — `minikube image
+# load` copies straight into the node's containerd image store, no registry.
+ARG WASM=cargo-rust.wasm
+
+FROM scratch
+ARG WASM
+COPY ${WASM} /app.wasm
+# The shim uses the OCI command/args to locate the module in the rootfs. The
+# Deployment sets `command: ["/app.wasm"]` explicitly, but ENTRYPOINT is set
+# here too so `ctr run <image> <id>` (a go/no-go smoke test with no extra args)
+# also works.
+ENTRYPOINT ["/app.wasm"]

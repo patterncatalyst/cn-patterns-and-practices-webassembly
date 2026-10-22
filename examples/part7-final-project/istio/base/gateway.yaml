@@ -1,0 +1,40 @@
+# examples/part7-final-project/istio/base/gateway.yaml
+#
+# A SECOND, mesh-routed entry point into both cargo-rust and cargo-go,
+# alongside this unit's own ingress-nginx Ingress
+# (../../k8s/base/ingress.yaml, pulled in unmodified by ./kustomization.yaml;
+# both coexist, same pattern as
+# examples/part6-deviations/istio/base/gateway.yaml next to Part 5's Ingress).
+# ../../verify-minikube.sh's Istio assertions (the x-cargo-tenant 403/200
+# contract) go through THIS path, so the ch25 proxy-wasm filter
+# (../gateway-wasmplugin.yaml) actually sits in front of the request.
+#
+# ONE Gateway, TWO hosts — one listener, host-based routing to each language,
+# the same host-not-path choice ../../k8s/base/ingress.yaml makes for the
+# ingress-nginx edge, for the same reason (no rewrite-target needed).
+#
+# selector: istio: ingressgateway — the SAME istio-ingressgateway workload
+# ch25's examples/part6-deviations/istio/base/gateway.yaml already selects.
+# Istio merges multiple Gateway resources that select the same workload as
+# long as their hosts do not collide (they do not: cargo-istio.<ip>.nip.io
+# there, cargo-rust-istio/cargo-go-istio.<ip>.nip.io here), so this unit's
+# Gateway coexists with ch25's without edits to either.
+#
+# hosts are placeholders; ../../verify-minikube.sh patches both live to
+# cargo-rust-istio.<minikube-ip>.nip.io / cargo-go-istio.<minikube-ip>.nip.io.
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: cargo-final-gateway
+  namespace: part7-final-project
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "cargo-rust-istio.part7-final-project.example"
+        - "cargo-go-istio.part7-final-project.example"

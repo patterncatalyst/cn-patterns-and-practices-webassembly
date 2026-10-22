@@ -1,0 +1,38 @@
+# examples/part7-final-project/k8s/observability/overlays/minikube/kustomization.yaml
+#
+# Reuses the ch24 otel-lgtm sink VERBATIM — no copy of
+# examples/part5-kubernetes/k8s/observability/base's Deployment/Service lives
+# here, only this pointer plus the same resource-budget patch that overlay
+# already applies. otel-lgtm is a single shared sink per node: the
+# containerd-shim-wasmtime shim's OTel export is a node-level (containerd
+# process) setting, not a namespace- or Deployment-scoped one
+# (../../../../part5-kubernetes/k8s/observability/enable-shim-otel.sh), so
+# every Wasm Pod on the node — Part 5's original cargo-http and this unit's
+# cargo-rust/cargo-go, regardless of which namespace they run in — reports to
+# the same otel-lgtm Pod once enable-shim-otel.sh has run. Standing up a
+# second sink here would just be two otel-lgtm Pods receiving traces from the
+# same node-level export, which proves nothing extra and wastes the
+# default-sized minikube VM's resources.
+#
+# The inner base kustomization already pins `namespace: part5-kubernetes`
+# (examples/part5-kubernetes/k8s/observability/base/kustomization.yaml); this
+# overlay does not override it, so `kubectl apply -k` here lands the sink in
+# that namespace regardless of where this unit's own app overlay
+# (../../../overlays/minikube) puts cargo-rust/cargo-go.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../../../part5-kubernetes/k8s/observability/base
+
+patches:
+  - target:
+      kind: Deployment
+      name: otel-lgtm
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "2Gi"

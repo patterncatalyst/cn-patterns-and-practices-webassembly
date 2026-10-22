@@ -1,0 +1,98 @@
+# wadm application manifests (OAM core.oam.dev/v1beta1) for the Part 7 final
+# project's REDUCED OpenShift Local (CRC) pass: TWO Applications, one per
+# language composite — cargo-final-rust (Part 3 http-rust plugged into the
+# Part 2 Rust cargo provider) and cargo-final-go (Part 3 http-go/TinyGo plugged
+# into the Part 2 Go cargo provider). Both export wasi:http/incoming-handler
+# and serve byte-identical cargo JSON — the two-language-one-contract thesis,
+# proved live on CRC without a mesh.
+#
+# Shape: the SAME component+httpserver+link+daemonscaler unit
+# examples/part5-kubernetes/openshift/wadm.yaml uses (Ch19), one Application
+# per language — the proven shape from Ch20's coexisting apps. The wasmCloud
+# operator creates one Service per Application, named after it (cargo-final-rust
+# / cargo-final-go), each exposing its httpserver provider's listen port; each
+# Service is fronted by its own edge-TLS Route (route.yaml).
+#
+# daemonscaler (not spreadscaler) on every trait, same reason as Ch19: the
+# operator creates a Kubernetes Service for httpserver providers scaled with a
+# daemonscaler; spreadscaler Service creation is not implemented in the operator.
+#
+# deploy.sh rewrites __RUST_REF__/__GO_REF__ to the pushed ghcr refs (the
+# in-cluster host pulls them; same private-ghcr + pull-secret pattern as Ch19).
+# Both composites are byte-for-byte the ones ../build.sh produces. contracts/wit
+# stays pristine — nothing here edits an interface.
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-final-rust
+  annotations:
+    version: v0.0.1
+    description: "Part 7 final project — Rust cargo composite on the wasmCloud lattice (CRC)"
+spec:
+  components:
+    - name: cargo-rust
+      type: component
+      properties:
+        image: __RUST_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+
+    - name: httpserver-rust
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        - type: link
+          properties:
+            target: cargo-rust
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-rust-listen
+                properties:
+                  address: 0.0.0.0:8000
+        - type: daemonscaler
+          properties:
+            replicas: 1
+---
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: cargo-final-go
+  annotations:
+    version: v0.0.1
+    description: "Part 7 final project — Go cargo composite on the wasmCloud lattice (CRC)"
+spec:
+  components:
+    - name: cargo-go
+      type: component
+      properties:
+        image: __GO_REF__
+      traits:
+        - type: daemonscaler
+          properties:
+            replicas: 1
+
+    - name: httpserver-go
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/http-server:0.27.0
+      traits:
+        - type: link
+          properties:
+            target: cargo-go
+            namespace: wasi
+            package: http
+            interfaces:
+              - incoming-handler
+            source_config:
+              - name: cargo-go-listen
+                properties:
+                  address: 0.0.0.0:8000
+        - type: daemonscaler
+          properties:
+            replicas: 1
