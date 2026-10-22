@@ -3,7 +3,8 @@
 
 The same cargo-wasi-nn component sits above the model-agnostic wasi:nn API;
 the host wires that API to whichever inference backend it has installed —
-OpenVINO (this chapter), ONNX Runtime, PyTorch, or WinML — without the
+OpenVINO (this chapter), ONNX Runtime, TensorFlow, TensorFlow Lite, PyTorch,
+or ggml, the graph-encoding values the wasi:nn WIT enumerates — without the
 component's WIT imports or its compiled bytes changing. The right-hand band
 contrasts the alternative most teams reach for instead: calling a separate
 model server over HTTP, which adds a network hop, a second deployment, and
@@ -37,14 +38,18 @@ nodes = [
      "lines": ["wasi:nn API", "load-by-name · init-execution-context · compute"],
      "style": "accent"},
 
-    {"x": 60, "y": 500, "w": 200, "h": 140,
+    {"x": 55, "y": 500, "w": 135, "h": 140,
      "lines": ["OpenVINO", "this chapter"], "style": "accent"},
-    {"x": 280, "y": 500, "w": 200, "h": 140,
-     "lines": ["ONNX Runtime"], "style": "user"},
-    {"x": 500, "y": 500, "w": 200, "h": 140,
+    {"x": 205, "y": 500, "w": 135, "h": 140,
+     "lines": ["ONNX", "Runtime"], "style": "user"},
+    {"x": 355, "y": 500, "w": 135, "h": 140,
+     "lines": ["TensorFlow"], "style": "user"},
+    {"x": 505, "y": 500, "w": 135, "h": 140,
+     "lines": ["TensorFlow", "Lite"], "style": "user"},
+    {"x": 655, "y": 500, "w": 135, "h": 140,
      "lines": ["PyTorch"], "style": "user"},
-    {"x": 720, "y": 500, "w": 200, "h": 140,
-     "lines": ["WinML"], "style": "user"},
+    {"x": 805, "y": 500, "w": 135, "h": 140,
+     "lines": ["ggml"], "style": "user"},
 
     # alternative: HTTP to an external model server
     {"x": 1060, "y": 170, "w": 380, "h": 90,
@@ -67,10 +72,12 @@ nodes = [
 
 edges = [
     {"x1": 500, "y1": 220, "x2": 500, "y2": 300},
-    {"x1": 500, "y1": 390, "x2": 160, "y2": 500},
-    {"x1": 500, "y1": 390, "x2": 380, "y2": 500},
-    {"x1": 500, "y1": 390, "x2": 600, "y2": 500},
-    {"x1": 500, "y1": 390, "x2": 820, "y2": 500},
+    {"x1": 500, "y1": 390, "x2": 122, "y2": 500},
+    {"x1": 500, "y1": 390, "x2": 272, "y2": 500},
+    {"x1": 500, "y1": 390, "x2": 422, "y2": 500},
+    {"x1": 500, "y1": 390, "x2": 572, "y2": 500},
+    {"x1": 500, "y1": 390, "x2": 722, "y2": 500},
+    {"x1": 500, "y1": 390, "x2": 872, "y2": 500},
 
     {"x1": 1250, "y1": 260, "x2": 1250, "y2": 330},
     {"x1": 1250, "y1": 400, "x2": 1250, "y2": 460},
@@ -80,7 +87,7 @@ edges = [
 
 notes = [
     {"x": 750, "y": 930, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "The four backends are interchangeable from the component's side — only the host's wasi:nn wiring picks one."},
+     "text": "These backends are interchangeable from the component's side — only the host's wasi:nn wiring picks one."},
 ]
 
 gd.emit("27-wasi-nn-portability-map", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

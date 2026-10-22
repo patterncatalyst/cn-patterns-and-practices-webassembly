@@ -3,12 +3,10 @@
 // IN THE GUEST (no host-side preprocessing), classifies it against a
 // `load-by-name`d OpenVINO graph, and prints the top-5 ImageNet labels.
 //
-// Preprocessing, tensor layout, and the label offset below are not guesses:
-// each is sourced from the model's own IR and from wasmtime's own WIT-based
-// wasi-nn test program for this exact backend (see the citations inline and
-// in README.md). Nothing here is tuned against a known-good answer; the
-// values come from reading the graph and the upstream test, not from trial
-// and error.
+// The preprocessing, tensor layout, and label offset below are each sourced
+// from the model's own IR (shape, reverse_input_channels, mean/scale, output
+// width) and from wasmtime's WIT-based wasi-nn test program for this backend;
+// see the citations inline and in README.md.
 #[allow(warnings)]
 mod bindings;
 
