@@ -1,0 +1,20 @@
+
+[1m==> 0/4 Preflight: Route exists[0m
+    ✓ edge-TLS Route https://cargo-spin-part6-spin.apps-crc.testing/
+
+[1m==> 1/4 Readiness: a real 200 through the edge-TLS Route[0m
+    ✓ Route serving (HTTP 200) on /cargo/CARGO-USNYC-DEHAM after 0s
+
+[1m==> 2/4 Exact cargo JSON (CA-verified, through the Route)[0m
+    ✓ GET /cargo/CARGO-USNYC-DEHAM returned the exact cargo JSON
+
+[1m==> 3/4 404 for an unknown tracking id[0m
+    ✓ GET /cargo/NOPE -> 404
+
+[1m==> 4/4 Resilience: delete the pod; the Deployment restores it, traffic recovers[0m
+    deleting pod cargo-spin-666d648b88-558ct ...
+    ✓ Route serving (HTTP 200) on /cargo/CARGO-USNYC-DEHAM after 5s
+    ✓ pod recreated by the Deployment; traffic recovered to the exact cargo JSON
+
+PASS — ch26 Spin app on OpenShift Local (CRC, crc-admin context): the spin CLI running inside a restricted-v2 container served the exact cargo JSON and a 404 through an edge-TLS Route (CA-verified against the cluster's own ingress CA, never -k/port-forward/NodePort); and recovered after the pod was deleted.
+exit 0

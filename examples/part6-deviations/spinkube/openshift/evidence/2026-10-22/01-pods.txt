@@ -1,0 +1,2 @@
+cargo-spin-666d648b88-558ct   true    0          restricted-v2   1000680000
+namespace uid-range: 1000680000/10000

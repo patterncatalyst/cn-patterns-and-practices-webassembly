@@ -1,0 +1,8 @@
+--- Service ---
+SVC          TYPE        PORT   SELECTOR
+cargo-spin   ClusterIP   8080   map[app.kubernetes.io/name:cargo-spin]
+EP           ADDRS
+cargo-spin   10.217.0.48
+--- Route (edge TLS) ---
+ROUTE        HOST                                     TERMINATION   PORT
+cargo-spin   cargo-spin-part6-spin.apps-crc.testing   edge          http
