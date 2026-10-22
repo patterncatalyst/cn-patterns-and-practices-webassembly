@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 900" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
+<rect x="20" y="120" width="560" height="580" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="32" y="140" font-size="12" font-weight="700" fill="#1d1d1d">minikube — full SpinKube</text>
+<rect x="600" y="120" width="560" height="580" rx="12" fill="#f1f5f9" stroke="#ddd"/>
+<text x="612" y="140" font-size="12" font-weight="700" fill="#1d1d1d">CRC — restricted-v2 container (no shim/operator/CRD)</text>
+<rect x="390" y="20" width="400" height="70" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="590.0" y="53.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Spin app: cargo-spin.wasm</text>
+<text x="590.0" y="70.0" font-size="11.5" fill="#555555" text-anchor="middle">exports wasi:http/handler@0.3.0</text>
+<rect x="80" y="170" width="440" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="300.0" y="205.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">client</text>
+<rect x="80" y="270" width="440" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="300.0" y="310.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">nip.io Ingress</text>
+<rect x="80" y="380" width="440" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="300.0" y="420.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Service: cargo-spin</text>
+<rect x="80" y="490" width="440" height="170" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
+<text x="300.0" y="558.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">SpinApp pod</text>
+<text x="300.0" y="575.0" font-size="11.5" fill="#555555" text-anchor="middle">RuntimeClass: wasmtime-spin-v2</text>
+<text x="300.0" y="590.0" font-size="11.5" fill="#555555" text-anchor="middle">containerd-shim-spin v0.26.0 · Spin 4.1</text>
+<text x="300.0" y="605.0" font-size="11.5" fill="#555555" text-anchor="middle">under spin-operator</text>
+<rect x="660" y="170" width="440" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
+<text x="880.0" y="205.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">client</text>
+<rect x="660" y="270" width="440" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="880.0" y="310.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">edge-TLS Route</text>
+<rect x="660" y="380" width="440" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="880.0" y="420.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Service: cargo-spin</text>
+<rect x="660" y="490" width="440" height="170" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="880.0" y="565.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Deployment pod</text>
+<text x="880.0" y="582.5" font-size="11.5" fill="#555555" text-anchor="middle">ordinary container, no shim/operator/CRD</text>
+<text x="880.0" y="597.5" font-size="11.5" fill="#555555" text-anchor="middle">spin up — Spin CLI 4.2.4</text>
+<rect x="20" y="720" width="1140" height="140" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="590.0" y="788.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Same Spin app, same wasi:http/handler@0.3.0 export — the host differs, not the app.</text>
+<text x="590.0" y="805.0" font-size="11.5" fill="#555555" text-anchor="middle">containerd-shim-spin needs a privileged node install; restricted-v2 does not allow it, so CRC runs the Spin CLI in an ordinary container instead.</text>
+<path d="M490,90 L300,170" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M690,90 L880,170" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M300,230 L300,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M300,340 L300,380" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M300,450 L300,490" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M880,230 L880,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M880,340 L880,380" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M880,450 L880,490" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="590" y="890" font-size="12" fill="#555555" text-anchor="middle">No port-forward on either path: Ingress on minikube, Route on CRC.</text>
+</svg>

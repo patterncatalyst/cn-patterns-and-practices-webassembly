@@ -1,0 +1,21 @@
+# examples/part6-deviations/spinkube/openshift/service.yaml
+#
+# ClusterIP in front of the cargo-spin Deployment (./deployment.yaml), port
+# 8080 — the same port `spin up --listen 0.0.0.0:8080` binds inside the
+# container. ./route.yaml puts an edge-TLS Route in front of this Service;
+# nothing talks to the pod directly (no NodePort, no port-forward).
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-spin
+  labels:
+    app.kubernetes.io/name: cargo-spin
+    app.kubernetes.io/part-of: part6-deviations-spin
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: cargo-spin
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

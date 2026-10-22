@@ -1,0 +1,29 @@
+# examples/part6-deviations/spinkube/openshift/route.yaml
+#
+# Edge-TLS Route -> the cargo-spin Service (./service.yaml). The router
+# terminates TLS here and forwards plain HTTP to the Service's `http` port;
+# the pod itself never sees TLS. No explicit host: the OpenShift router
+# assigns the project default (`cargo-spin-<project>.apps-crc.testing`);
+# deploy.sh reads it back with `oc get route ... -o jsonpath='{.spec.host}'`,
+# same pattern as ../../../part5-kubernetes/openshift/deploy.sh and
+# ../../istio/openshift/route.yaml.
+#
+# insecureEdgeTerminationPolicy: Redirect — plain HTTP on the Route's host
+# bounces to HTTPS; every CA-verified curl in verify-crc.sh/capture-
+# evidence.sh speaks HTTPS directly (never -k, never port-forward).
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: cargo-spin
+  labels:
+    app.kubernetes.io/name: cargo-spin
+    app.kubernetes.io/part-of: part6-deviations-spin
+spec:
+  to:
+    kind: Service
+    name: cargo-spin
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

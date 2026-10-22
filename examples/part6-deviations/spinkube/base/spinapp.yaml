@@ -1,0 +1,34 @@
+# The cargo HTTP front door, running as a Fermyon Spin application on
+# Kubernetes via the full SpinKube platform (spin-operator + runtime-class-
+# manager + containerd-shim-spin) — a different stack from Part 5's manual
+# containerd-shim-wasmtime RuntimeClass, and from Part 4's wasmCloud host.
+#
+# cargo-spin.wasm serves the same cargo domain as the earlier chapters
+# (wac-plug-composed from the unedited Part 2 Rust provider; see
+# ../../spin/build.sh), but exports `wasi:http/handler@0.3.0` (wasip3), which
+# is why this chapter requires containerd-shim-spin >= v0.26.0 (embeds Spin
+# 4.1.0) rather than an older shim build.
+#
+# Key fields:
+#   * executor: containerd-shim-spin — the SpinAppExecutor name the
+#     spin-operator.shim-executor.yaml manifest ships; it tells the operator
+#     which RuntimeClass (wasmtime-spin-v2) to schedule this Pod onto.
+#   * image — a PRIVATE ghcr Spin OCI artifact; imagePullSecrets references the
+#     ghcr-pull secret install-spinkube.sh creates from `gh auth token`.
+#   * The spin-operator reconciles this SpinApp into a Deployment AND a
+#     Service both named `cargo-spin` (the SpinApp's own name), the Service
+#     listening on port 80 — see base/ingress.yaml.
+apiVersion: core.spinkube.dev/v1alpha1
+kind: SpinApp
+metadata:
+  name: cargo-spin
+  namespace: part6-spin
+  labels:
+    app.kubernetes.io/name: cargo-spin
+    app.kubernetes.io/part-of: part6-spin
+spec:
+  image: ghcr.io/patterncatalyst/cargo-spin:spinkube
+  executor: containerd-shim-spin
+  replicas: 1
+  imagePullSecrets:
+    - name: ghcr-pull

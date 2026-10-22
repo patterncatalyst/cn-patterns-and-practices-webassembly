@@ -1,0 +1,41 @@
+# ingress-nginx Ingress — the ONLY externally reachable path into the cluster
+# for this example. The live curl in verify-spinkube-minikube.sh /
+# capture-evidence.sh goes host -> Ingress -> Service -> Pod -> shim ->
+# component; no port-forward, no NodePort, no `minikube service` shortcut
+# (house rule).
+#
+# `service.name: cargo-spin` / `port: 80` is NOT something this manifest
+# invents: it is the Deployment+Service pair the spin-operator creates when it
+# reconciles the SpinApp named `cargo-spin` (base/spinapp.yaml) — same name,
+# port 80 by default (SpinKube's documented quickstart pairing).
+#
+# The `host` here is a generic placeholder so base/ stays deployable on any
+# ingress-nginx cluster. verify-spinkube-minikube.sh patches it live to
+# `cargo-spin.<minikube-ip>.nip.io` (nip.io resolves <anything>.<ip>.nip.io ->
+# <ip>, so the URL's own authority IS a real DNS-resolvable Ingress host — no
+# /etc/hosts edit, no tunnel).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cargo-spin
+  namespace: part6-spin
+  annotations:
+    # Deterministic "my rule actually matched" signal: ingress-nginx stamps
+    # this cookie only on responses that went through THIS Ingress rule, never
+    # on its generic default-backend 404 — verify-spinkube-minikube.sh waits
+    # for it before trusting the Ingress (a config reload is asynchronous).
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "part6-spin-affinity"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cargo-spin.part6-spin.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cargo-spin
+                port:
+                  number: 80

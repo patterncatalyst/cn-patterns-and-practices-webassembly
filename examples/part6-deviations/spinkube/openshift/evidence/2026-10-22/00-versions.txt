@@ -1,0 +1,9 @@
+CRC version: 2.64.0+458092
+OpenShift version: 4.22.14
+MicroShift version: 4.22.13
+Server Version: 4.22.14
+Kubernetes Version: v1.35.6
+--- runtime image ---
+ghcr.io/patterncatalyst/cargo-spin-runtime:crc
+--- spin CLI version (in-container) ---
+spin 4.2.4 (276c5c2 2026-10-21)

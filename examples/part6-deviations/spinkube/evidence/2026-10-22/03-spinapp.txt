@@ -1,0 +1,54 @@
+$ kubectl get spinapp cargo-spin -n part6-spin -o yaml
+apiVersion: core.spinkube.dev/v1alpha1
+kind: SpinApp
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"core.spinkube.dev/v1alpha1","kind":"SpinApp","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"cargo-spin","app.kubernetes.io/part-of":"part6-spin"},"name":"cargo-spin","namespace":"part6-spin"},"spec":{"executor":"containerd-shim-spin","image":"ghcr.io/patterncatalyst/cargo-spin:spinkube","imagePullSecrets":[{"name":"ghcr-pull"}],"replicas":1}}
+  creationTimestamp: "2026-10-22T20:24:17Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/name: cargo-spin
+    app.kubernetes.io/part-of: part6-spin
+  name: cargo-spin
+  namespace: part6-spin
+  resourceVersion: "13059"
+  uid: 39746287-3670-422b-999f-a108901cd076
+spec:
+  checks: {}
+  enableAutoscaling: false
+  executor: containerd-shim-spin
+  image: ghcr.io/patterncatalyst/cargo-spin:spinkube
+  imagePullSecrets:
+  - name: ghcr-pull
+  replicas: 1
+  resources: {}
+  runtimeConfig: {}
+status:
+  activeScheduler: containerd-shim-spin
+  conditions:
+  - lastTransitionTime: "2026-10-22T20:24:19Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-10-22T20:24:17Z"
+    message: ReplicaSet "cargo-spin-7c4b99d85b" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  readyReplicas: 1
+
+$ kubectl get deploy,svc,ingress -n part6-spin -o wide
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                        SELECTOR
+deployment.apps/cargo-spin   1/1     1            1           94s   cargo-spin   ghcr.io/patterncatalyst/cargo-spin:spinkube   core.spinkube.dev/app-name=cargo-spin,core.spinkube.dev/app.cargo-spin.status=ready
+
+NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+service/cargo-spin   ClusterIP   10.111.73.58   <none>        80/TCP    94s   core.spinkube.dev/app.cargo-spin.status=ready
+
+NAME                                   CLASS   HOSTS                            ADDRESS        PORTS   AGE
+ingress.networking.k8s.io/cargo-spin   nginx   cargo-spin.192.168.49.2.nip.io   192.168.49.2   80      94s
+
+# the runtimeClassName that routes this Pod to the Spin shim:
+$ kubectl get deploy cargo-spin -n part6-spin -o jsonpath={.spec.template.spec.runtimeClassName}
+wasmtime-spin-v2
