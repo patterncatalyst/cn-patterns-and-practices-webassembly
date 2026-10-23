@@ -1,5 +1,5 @@
 """
-build_diagrams.py — render the figure library for this deck (SVG -> PNG).
+build_diagrams.py: render the figure library for this deck (SVG -> PNG).
 
 Step 1: cairosvg-render every book figure (assets/diagrams/*.svg in the
         cn-patterns-and-practices-webassembly repo) into ./png/<name>.png
