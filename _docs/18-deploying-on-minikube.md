@@ -185,19 +185,17 @@ Status:              Running
     Ready:          True
 ```
 
-`Runtime Class Name: wasmtime` on a `1/1 Running` Pod is the direct confirmation that this specific Pod is running under the shim, not `runc`: the mechanism this whole chapter exists to wire up, stated back by `kubectl` itself. The full version matrix this run confirms, pulled from `k8s/evidence/2026-10-21/00-versions.txt` and the README's pin table: minikube `v1.39.0` (docker driver, containerd runtime), Kubernetes `v1.37.1`, containerd `v2.3.4` on the node, the runwasi shim at `v0.6.1`, and the `ingress-nginx` addon's controller at `v1.15.1`.
+`Runtime Class Name: wasmtime` on a `1/1 Running` Pod is the direct confirmation that this specific Pod is running under the shim, not `runc`: the mechanism this whole chapter exists to wire up, stated back by `kubectl` itself.
 
-**Verified live 2026-10-21 (minikube v1.39.0 / Kubernetes v1.37.1 / containerd-shim-wasmtime v0.6.1).** This is one of two cluster paths this site tests headless with equal weight. Chapter 19 takes the identical component to OpenShift Local (CRC): the same `app.wasm`, a different operator-managed story for getting a Wasm-aware runtime onto the node, and a Route in place of this chapter's Ingress.
+Chapter 19 takes the identical component to OpenShift Local (CRC): the same `app.wasm`, a different operator-managed story for getting a Wasm-aware runtime onto the node, and a Route in place of this chapter's Ingress.
 
-Run the whole proof directly:
+## Build, run, observe
 
 ```bash
-examples/part5-kubernetes/k8s/verify-minikube.sh --keep
+cd examples/part5-kubernetes/k8s && ./verify-minikube.sh
 ```
 
-`--keep` leaves the `part5` profile running afterward for inspection with `kubectl`; omit it and the script deletes the profile on exit regardless of pass or fail. `capture-evidence.sh` is the headless variant that writes the committed `evidence/<date>/` files this chapter quotes from, and `teardown.sh` removes the profile (or just the app, with `--app-only`) when you're done.
-
-The go/no-go question this example answers, whether the raw runwasi shim would serve the component without hitting a known feature gap (runwasi issue #1004 was the risk this project tracked going in), resolved clean on the first run. The shim served the component with no wall hit, so this is the mechanism Part 5 uses here; a wasmCloud-operator-based fallback was not needed for this component.
+`verify-minikube.sh` starts the `part5` minikube profile (docker driver, containerd runtime), builds and loads the component image, installs the `containerd-shim-wasmtime` shim, applies the overlay with `runtimeClassName: wasmtime`, patches the Ingress to a live `nip.io` host, then asserts a real HTTP 200 with the exact cargo JSON through the ingress-nginx edge and a 404 for an unknown cargo id, with no port-forward and no NodePort. Expect `PASS` once both assertions hold. `--keep` leaves the profile up for inspection with `kubectl`, `capture-evidence.sh` writes the `evidence/<date>/` files, and the README records the version matrix each run confirms.
 
 <div class="callout callout--safe"><p class="callout__title">Decision</p><p>Two choices in this chapter's scripts exist to answer a question a container-image workflow never has to ask. First, the packaging path: a component has no language runtime and no OS userland to carry, so wrapping it in a full multi-stage container build would be solving a problem that doesn't exist here. A <code>FROM scratch</code> image with one <code>COPY</code> is the correct amount of packaging for a ~290 KiB artifact, and <code>--provenance=false</code> exists only because BuildKit's default attestation manifest complicates the one thing that matters afterward: unambiguous platform resolution for <code>minikube image load</code> and the shim. Second, the shim-install ordering: install-shim.sh's containerd restart bounces every Pod on the node, so it runs before the ingress addon is enabled rather than after, trading a theoretical few seconds of idle time for avoiding a second, flaky ingress-controller reconciliation right when the verification script needs that controller stable. The third and most important lesson generalizes past this one example: a rollout reporting <code>Ready</code> and an Ingress reporting an address are necessary conditions, not sufficient ones, because ingress-nginx's default backend can mimic a real response during an asynchronous config reload. The only thing worth trusting is a real HTTP 200 behind a signal, here a cookie that is never stamped by the default backend, that proves the right rule, not a look-alike, matched.</p></div>
 
