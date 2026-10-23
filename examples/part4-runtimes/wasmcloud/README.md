@@ -1,4 +1,4 @@
-# ch15 / ch16 — Running the same component on wasmCloud
+# ch15 / ch16: Running the same component on wasmCloud
 
 This example deploys the cargo HTTP front door to a local **wasmCloud** lattice
 and proves it serves live traffic through the HTTP server capability provider.
@@ -11,7 +11,7 @@ part2 rust cargo provider  ─┐
 part3 http-rust front door ─┘                        └─ wasmCloud httpserver link (ch15)
 ```
 
-Everything here reuses the Part 2/3 crates by *building* them — nothing is forked
+Everything here reuses the Part 2/3 crates by *building* them; nothing is forked
 or edited, and `contracts/wit` stays pristine.
 
 ## Scripts
@@ -20,7 +20,7 @@ or edited, and `contracts/wit` stays pristine.
 | --- | --- |
 | `build.sh` | rebuilds the Part 2 provider + Part 3 http-rust and `wac plug`s them into `app.wasm` (prints its sha256). |
 | `capture-evidence.sh` | full headless live run: `wash up` -> deploy -> link -> HTTP asserts -> resilience -> sha256 -> secret scrub, teeing to `evidence/<date>/`. |
-| `prove-same-bytes.sh` | ch16: serves the SAME `app.wasm` under `wasmtime serve` and asserts the identical JSON + the sha256. |
+| `prove-same-bytes.sh` | ch16: serves the same `app.wasm` under `wasmtime serve` and asserts the identical JSON + the sha256. |
 | `teardown.sh` | idempotent: undeploy + delete the app, `wash down --all`. |
 
 ```bash
@@ -35,12 +35,12 @@ export WASH_DISABLE_INTERACTIVE=1
 A wadm 0.21.x / OAM `core.oam.dev/v1beta1` Application with two things in the
 lattice and a link between them:
 
-- **`cargo-http` (component)** — `image: file://./app.wasm`. A local file ref, so
+- **`cargo-http` (component)**: `image: file://./app.wasm`. A local file ref, so
   no registry push is needed. `wash up` and `wash app deploy` are both run from
   this directory, so the host resolves the relative path (it records the absolute
   `file:///…/app.wasm` in its log). A `spreadscaler` keeps one instance running.
-- **`httpserver` (capability)** — `image: ghcr.io/wasmcloud/http-server:0.27.0`.
-- **the link** — a `link` trait on the provider (source) targeting the component,
+- **`httpserver` (capability)**: `image: ghcr.io/wasmcloud/http-server:0.27.0`.
+- **the link**: a `link` trait on the provider (source) targeting the component,
   on `wasi:http/incoming-handler`, with the listen address as source config:
 
   ```yaml
@@ -58,7 +58,7 @@ lattice and a link between them:
 
 ### The httpserver provider tag, and why
 
-`ghcr.io/wasmcloud/http-server:0.27.0` — the latest released semver tag of the
+`ghcr.io/wasmcloud/http-server:0.27.0`: the latest released semver tag of the
 provider (surveyed from the ghcr tag list; the only tags past that are
 commit-SHA builds). It speaks `wasi:http` 0.2.x and is compatible with the
 wasmcloud host **1.9.1** bundled in **wash 0.43.0**. Our `app.wasm` exports
@@ -79,11 +79,11 @@ compatible 0.2.x patch levels, so the link is satisfied.
    and `GET /cargo/NOPE` returns `404`.
 4. **Resilience / self-healing:** `wash scale component … --max-instances 0`
    removes the component while the provider's listener stays up. Traffic
-   immediately fails (`500`, "failed to invoke `wrpc:http/incoming-handler`" — the
-   provider is up but there is no component to handle the request), then wadm's
-   SpreadScaler reconciles the component back to one instance and traffic recovers
-   to `200` within a couple of seconds. No redeploy needed.
-5. `sha256sum app.wasm` is recorded — the same hash `prove-same-bytes.sh` records
+   immediately fails with `500` ("failed to invoke `wrpc:http/incoming-handler`"):
+   the provider is up but there is no component to handle the request. Then
+   wadm's SpreadScaler reconciles the component back to one instance, and traffic
+   recovers to `200` within a couple of seconds. No redeploy needed.
+5. `sha256sum app.wasm` is recorded: the same hash `prove-same-bytes.sh` records
    for the `wasmtime serve` run.
 
 Evidence is under `evidence/<YYYY-MM-DD>/` (committed): `00-wash-version`,
@@ -93,17 +93,17 @@ Evidence is under `evidence/<YYYY-MM-DD>/` (committed): `00-wash-version`,
 ### Verified run (2026-10-21)
 
 - Host: wasmcloud 1.9.1 (wash 0.43.0), provider `http-server:0.27.0`.
-- `app.wasm` sha256 `eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3`
-  — identical under wasmCloud and `wasmtime serve`.
+- `app.wasm` sha256 `eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3`:
+  identical under wasmCloud and `wasmtime serve`.
 - Resilience: scale-to-0 -> `500` -> self-heal -> `200` recovered in ~2 s.
 
-## Gotchas worth a chapter callout
+## Notes worth a chapter callout
 
 - **`exported component resources are not supported in wasmCloud runtime and will
-  be ignored`** — a host WARN at component start. Our `handling` interface exports
+  be ignored`**: a host WARN at component start. Our `handling` interface exports
   a `cargo-tracker` *resource*; the wasmCloud runtime ignores exported resources
   (use a provider for that shape). The HTTP path only uses `booking`, so it is
-  unaffected — but it is a real difference from `wasmtime serve`, which runs the
+  unaffected, but it is a real difference from `wasmtime serve`, which runs the
   component as-is.
 - **Local file refs resolve against the deploy CWD.** `file://./app.wasm` works
   because every `wash` command runs from this directory. If you deploy from
@@ -115,4 +115,4 @@ Evidence is under `evidence/<YYYY-MM-DD>/` (committed): `00-wash-version`,
   is exactly how you see self-healing: wadm detects the drift and restores the
   declared instance count.
 - **`app.wasm` is gitignored** (293 KiB build output); `build.sh` regenerates it
-  deterministically. The `evidence/` text files ARE committed.
+  deterministically. The `evidence/` text files are committed.

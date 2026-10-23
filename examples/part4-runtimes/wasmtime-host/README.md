@@ -1,8 +1,8 @@
-# ch14 — Embedding wasmtime: host-provided imports and Store/Engine controls
+# ch14: Embedding wasmtime, host-provided imports and Store/Engine controls
 
 A native Rust host (`host/`) embeds the **wasmtime 50** component-model runtime
 and drives a guest component (`guest/`) through four scenarios, asserting that
-each host-side control actually fires. This goes beyond the Part 2/3 hosts, which
+each host-side control fires. This goes beyond the Part 2/3 hosts, which
 only load a component and call its exports.
 
 ```
@@ -26,7 +26,7 @@ the guest. It exits non-zero on any missed assertion (CI gate). Both
 
 The LOCAL world `wit/host-world.wit` defines `host-caps` with two host functions
 (`host-quote`, `host-now`) and a guest `run` export. The repository contract
-under `contracts/wit` is **not** touched — this is a self-contained local world.
+under `contracts/wit` is **not** touched: this is a self-contained local world.
 
 The host implements `host-caps` in Rust and wires it into the component `Linker`
 with the generated binding:
@@ -45,33 +45,33 @@ host_caps::add_to_linker::<HostState, HasSelf<HostState>>(&mut linker, |s| s)?;
 The guest's `run("clean", …)` calls across the boundary into both functions; the
 host asserts it saw the calls and that the returned summary carries the host's
 data. WASI is added with the same idiom as the Part 2 host
-(`wasmtime_wasi::p2::add_to_linker_sync`) — the guest's std/alloc/stdio imports
+(`wasmtime_wasi::p2::add_to_linker_sync`): the guest's std/alloc/stdio imports
 resolve through it.
 
-### 2. Fuel — `OutOfFuel` trap
+### 2. Fuel: `OutOfFuel` trap
 
 `Config::consume_fuel(true)` + `Store::set_fuel(100_000)`. The guest's `spin`
 loop exhausts the budget and the call traps with `Trap::OutOfFuel`. A contrast
 run with ample fuel succeeds and reports fuel consumed, so "the meter fired" is
 distinct from "the guest failed".
 
-### 3. Epoch interruption — `Interrupt` trap
+### 3. Epoch interruption: `Interrupt` trap
 
 `Config::epoch_interruption(true)` + `Store::set_epoch_deadline(1)` + a ticker
 thread calling `Engine::increment_epoch()` every 5 ms. The `spin` loop is
 interrupted and the call traps with `Trap::Interrupt`. A contrast run with a far
 deadline completes.
 
-### 4. ResourceLimiter — denied memory growth
+### 4. ResourceLimiter: denied memory growth
 
 A `StoreLimits` (wasmtime's built-in `ResourceLimiter`) caps linear memory at
 8 MiB via `Store::limiter`. The guest's `grow` run tries to hold 64 MiB; the
 growth past the cap is denied, and the Rust allocator turns the failed
-`memory.grow` into an abort (a trap — you'll see `memory allocation of … bytes
-failed` on stderr from the guest). The SAME `grow` succeeds under a 256 MiB cap,
+`memory.grow` into an abort (a trap: you'll see `memory allocation of … bytes
+failed` on stderr from the guest). The same `grow` succeeds under a 256 MiB cap,
 proving the deny was the limiter.
 
-## Gotchas worth a chapter callout
+## Notes worth a chapter callout
 
 - **wasmtime 50 errors are not `anyhow`.** wasmtime returns its own
   `wasmtime::Error`; `anyhow`'s `.context()` does not apply. The host uses a tiny

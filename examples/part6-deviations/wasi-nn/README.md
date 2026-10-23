@@ -1,7 +1,7 @@
 # cargo-wasi-nn (chapter 27: wasi-nn, portable inference from Wasm)
 
 A `cargo-component` **command** component that classifies a cargo photo
-against an OpenVINO MobileNetV2 graph through `wasi:nn` — the WASI proposal
+against an OpenVINO MobileNetV2 graph through `wasi:nn`, the WASI proposal
 for host-accelerated ML inference. Everything that is Wasm-portable (image
 decode, resize, tensor layout, top-k ranking) runs in the guest; only the
 model load and the matrix math cross the `wasi:nn` boundary into the host's
@@ -21,7 +21,7 @@ fixtures/cargo.jpg --[image crate, in-guest]--> NCHW/BGR/f32 tensor
 
 There is no host crate in this directory. The host is the `wasmtime` CLI
 itself, built from source with the `wasi-nn` Cargo feature against a real
-OpenVINO installation — see [Running it live](#running-it-live-the-users-path).
+OpenVINO installation; see [Running it live](#running-it-live-the-users-path).
 This directory supplies the guest component and the scripts that build it,
 fetch its model, and document the run order; it does not install OpenVINO or
 build wasmtime.
@@ -31,7 +31,7 @@ build wasmtime.
 Every earlier Part 2–5 example in this book imports `patterncatalyst:cargo`,
 a WIT contract this book owns and controls. `wasi:nn` is different: it is a
 **pre-1.0, release-candidate** WASI proposal
-(`wasi:nn@0.2.0-rc-2024-10-28` — note the `-rc-<date>` suffix, not a stable
+(`wasi:nn@0.2.0-rc-2024-10-28`: note the `-rc-<date>` suffix, not a stable
 `0.2.x`), and unlike `wasi:cli`/`wasi:filesystem`/`wasi:clocks` it ships
 **inside the wasmtime repository itself**
 (`crates/wasi-nn/wit/wasi-nn.wit`), not in a separate `wasi-nn` spec repo
@@ -54,17 +54,17 @@ import wasi:nn/errors@0.2.0-rc-2024-10-28;
 ```
 
 Like `examples/part2-building-components/consumer-rust`'s `cargo-cli` world,
-`classify-cli` declares no `wasi:cli` imports of its own — cargo-component's
+`classify-cli` declares no `wasi:cli` imports of its own: cargo-component's
 command adapter synthesizes `wasi:cli/run` plus the stdio/filesystem-preopen
 imports because this crate is a `[[bin]]` with `fn main`, the same mechanism
 that makes `consumer-rust` directly `wasmtime run`-able without declaring
 WASI imports by hand.
 
-## The WIT API actually in this wasmtime, not the one from older tutorials
+## The WIT API in this wasmtime, not the one from older tutorials
 
 The WIT shipped in wasmtime v50.0.0 uses `graph.init-execution-context()` and
 a single `compute(inputs: list<named-tensor>) -> result<list<named-tensor>,
-error>` call — **not** the older `set-input(index, tensor)` /
+error>` call, **not** the older `set-input(index, tensor)` /
 `compute()` / `get-output(index)` triad some older wasi-nn tutorials and the
 legacy WITX API still show (`crates/wasi-nn/src/witx.rs` in the same
 wasmtime tree keeps that shape alive for backward compatibility, but the WIT
@@ -80,23 +80,23 @@ in `src/main.rs` needs, in its own `<layer>` and `<meta_data>` elements:
 | Decision | Value used | Where it comes from |
 |---|---|---|
 | Input tensor name | `"input"` | `<layer id="0" name="input" type="Parameter">` |
-| Shape | `[1, 3, 224, 224]` (NCHW) | same layer: `<data shape="1,3,224,224"/>` — Model Optimizer's own NHWC→NCHW conversion (`disable_nhwc_to_nchw=False` in `<meta_data>`); the fixture's download URL name, `tensor-1x224x224x3-f32.bgr`, describes the *original* TensorFlow NHWC shape, not what the compiled OpenVINO graph reads |
-| Channel order | BGR | `<meta_data><cli_parameters><reverse_input_channels value="True">` — a Model Optimizer flag used exactly when an RGB-trained model is fed BGR input and the reversal is folded into the graph |
-| Normalization | none (raw 0–255 as `f32`) | `mean_values = input[127.5,127.5,127.5]` and `scale_values = input[127.5]` in the same metadata are implemented as `Multiply`/`Add` nodes immediately after the input layer — the graph normalizes, so the guest must not normalize twice |
+| Shape | `[1, 3, 224, 224]` (NCHW) | same layer: `<data shape="1,3,224,224"/>`; Model Optimizer's own NHWC→NCHW conversion (`disable_nhwc_to_nchw=False` in `<meta_data>`); the fixture's download URL name, `tensor-1x224x224x3-f32.bgr`, describes the *original* TensorFlow NHWC shape, not what the compiled OpenVINO graph reads |
+| Channel order | BGR | `<meta_data><cli_parameters><reverse_input_channels value="True">`: a Model Optimizer flag used exactly when an RGB-trained model is fed BGR input and the reversal is folded into the graph |
+| Normalization | none (raw 0–255 as `f32`) | `mean_values = input[127.5,127.5,127.5]` and `scale_values = input[127.5]` in the same metadata are implemented as `Multiply`/`Add` nodes immediately after the input layer; the graph normalizes, so the guest must not normalize twice |
 | Output width | 1001 (1000 ImageNet classes + background at index 0) | output layer's `<dim>1001</dim>`; the TF-Slim/Google Inception-family convention for this exact model family |
 
 The BGR/NCHW/no-normalization combination is also exactly what
 [second-state/WasmEdge-WASINN-examples' `openvino-mobilenet-image`
 sample](https://github.com/second-state/WasmEdge-WASINN-examples/blob/master/openvino-mobilenet-image/rust/src/main.rs)
 does against this identical `mobilenet.xml`/`mobilenet.bin` pair (mirrored
-in `intel/openvino-rs`'s own test fixtures) — independent confirmation from
+in `intel/openvino-rs`'s own test fixtures); independent confirmation from
 a different wasi-nn implementation targeting the same graph.
 
-`compute()`'s output comes back as index-named tensors — `("0", tensor)` —
+`compute()`'s output comes back as index-named tensors (`("0", tensor)`),
 not by the IR's own output port name
-(`MobilenetV2/Predictions/Reshape_1`). That is a documented backend
-limitation, not a bug on this crate's side: see the comment in wasmtime
-v50.0.0's `crates/wasi-nn/src/backend/openvino.rs` — *"Currently openvino
+(`MobilenetV2/Predictions/Reshape_1`). That is how the OpenVINO backend in
+wasmtime v50.0.0 behaves, documented in
+`crates/wasi-nn/src/backend/openvino.rs`: *"Currently openvino
 backend returns output index only, not output tensor name"*. `src/main.rs`
 takes the first (only) output tensor positionally rather than matching a
 name that cannot appear.
@@ -115,11 +115,11 @@ own bundled label table.
 
 ## Fixture image
 
-`fixtures/cargo.jpg` — *"MSC ASTRID Container Ship."* by Bernard Spragg,
+`fixtures/cargo.jpg`: *"MSC ASTRID Container Ship."* by Bernard Spragg,
 sourced via [Openverse](https://openverse.org) from
 <https://www.flickr.com/photos/88123769@N02/34201586040>, licensed
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain
-dedication — no attribution required, credited here anyway). 1024x585,
+dedication, no attribution required, credited here anyway). 1024x585,
 ~195 KB. ImageNet-1k class 510 is `container ship, containership, container
 vessel`; this is the top-1 label the fixture is expected to classify as,
 not a cropped or staged match for the model.
@@ -127,10 +127,10 @@ not a cropped or staged match for the model.
 ## Model
 
 `fetch-model.sh` downloads `mobilenet.xml` + `mobilenet.bin` from
-<https://download.01.org/openvinotoolkit/fixtures/mobilenet/> — the same
+<https://download.01.org/openvinotoolkit/fixtures/mobilenet/>, the same
 fixture wasmtime's own OpenVINO wasi-nn tests use
 (`crates/wasi-nn/tests/check/openvino.rs`,
-`are_artifacts_available`) — into `model/mobilenet/model.xml` and
+`are_artifacts_available`), into `model/mobilenet/model.xml` and
 `model/mobilenet/model.bin`. Model artifacts are gitignored; the script
 verifies both files against pinned sha256 hashes on every run (cached or
 fresh) and is idempotent:
@@ -168,20 +168,20 @@ Runs `cargo component build --release`, validates the component with
 `wasi:nn/graph@0.2.0-rc-2024-10-28` (plus `tensor`/`inference`/`errors` from
 the same package and the `wasi:cli`/`wasi:filesystem`/`wasi:clocks`/`wasi:io`
 imports cargo-component's command adapter adds), exports
-`wasi:cli/run@0.2.3`, and imports nothing outside the `wasi:*` namespace —
+`wasi:cli/run@0.2.3`, and imports nothing outside the `wasi:*` namespace:
 no `patterncatalyst:*`, confirming this crate classifies a photo rather than
 touching the booking/handling domain. Prints the component's sha256.
 
 `target/` is gitignored; `Cargo.lock` is committed for reproducible builds;
 `src/bindings.rs` is committed too, matching this book's convention for
 cargo-component-generated bindings (see
-`examples/part2-building-components/consumer-rust/src/bindings.rs`) —
+`examples/part2-building-components/consumer-rust/src/bindings.rs`);
 regenerate it by re-running `./build.sh` after any `wit/` change, never hand-edit it.
 
 ## Running it live (the user's path)
 
 This is the part `build.sh` cannot do. wasi-nn needs a host that implements
-it — `wasmtime --features wasi-nn` — and that feature's OpenVINO backend
+it (`wasmtime --features wasi-nn`), and that feature's OpenVINO backend
 needs a real OpenVINO installation on the machine building wasmtime, because
 the `openvino` crate (v0.11.0) it links against is a binding over the actual
 OpenVINO shared libraries, not a pure-Rust reimplementation.
@@ -190,7 +190,7 @@ OpenVINO shared libraries, not a pure-Rust reimplementation.
    your platform (APT/YUM repo or the generic archive), then confirm
    `ldconfig -p | grep openvino` resolves the runtime libraries.
 
-2. **Build wasmtime v50.0.0 from source** with the `wasi-nn` feature — the
+2. **Build wasmtime v50.0.0 from source** with the `wasi-nn` feature: the
    GitHub release binaries do not ship it, because it would otherwise force
    every `wasmtime` download to carry an OpenVINO dependency:
 
@@ -250,6 +250,6 @@ wasm-tools component wit target/wasm32-wasip1/release/cargo-wasi-nn.wasm | grep 
 ```
 
 This confirms the component is well-formed and its ABI surface is exactly
-what chapter 27 claims. It does not — cannot — confirm the classification is
+what chapter 27 claims. It does not, and cannot, confirm the classification is
 correct; that needs the live OpenVINO run above, which is this book's
 reader's step, not this script's.

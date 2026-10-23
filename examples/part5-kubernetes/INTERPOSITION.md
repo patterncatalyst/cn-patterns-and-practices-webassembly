@@ -1,21 +1,21 @@
-# Part 5 — ch20/ch21 interposition (filter, adapter, ambassador)
+# Part 5: ch20/ch21 interposition (filter, adapter, ambassador)
 
-Three interposition patterns composed over the SAME Part 2 provider and Part 3
+Three interposition patterns composed over the same Part 2 provider and Part 3
 HTTP front door used by the plain `app.wasm`, expressed on minikube as
 **compile-time `wac plug` interposition** (the raw shim hosts one component per
 container behind a fixed `:8080` hyper server, so an interposer is spliced into
 the component graph at build time, not added as a pod sidecar). The repository
 contract under `contracts/wit/` stays byte-for-byte pristine: every new component
-declares its OWN local `wit/world.wit` and references `patterncatalyst:cargo` as a
+declares its own local `wit/world.wit` and references `patterncatalyst:cargo` as a
 path dependency.
 
 ## Components
 
 | Dir | World package | Shape | What it does |
 | --- | --- | --- | --- |
-| `sidecar-filter/` (ch20) | `patterncatalyst:cargo-filter` | imports + exports the canonical cargo interfaces (interposer) | Destination-embargo POLICY + per-call stderr logging. An embargoed destination -> `cargo-error::invalid-location` (front door maps to 400); a normal destination passes through unchanged. |
-| `adapter/` (ch21) | `patterncatalyst:cargo-adapter` | imports + exports canonical cargo AND exports its own `legacy` interface | Shape translation. `book-cargo` round-trips each request canonical -> legacy -> canonical before calling the provider; the round-trip is lossless, so the exact cargo JSON still comes back. The `legacy` interface (flat codes, renamed fields, a `service-level` enum with no canonical counterpart) lets a legacy-shaped caller drive the modern provider. |
-| `ambassador/` (ch21) | reuses `part3-interfaces/sockets-rust` | outbound command component | Resilient OUTBOUND calls: retry with exponential backoff + jitter behind a capability-scoped network grant. Minikube evidence is a LOCAL `wasmtime run -S inherit-network` smoke (the shim exposes no outbound-network knob); the cluster-live, lattice-linked form is the wasmCloud/CRC path. |
+| `sidecar-filter/` (ch20) | `patterncatalyst:cargo-filter` | imports + exports the canonical cargo interfaces (interposer) | Destination-embargo policy + per-call stderr logging. An embargoed destination -> `cargo-error::invalid-location` (front door maps to 400); a normal destination passes through unchanged. |
+| `adapter/` (ch21) | `patterncatalyst:cargo-adapter` | imports + exports canonical cargo and exports its own `legacy` interface | Shape translation. `book-cargo` round-trips each request canonical -> legacy -> canonical before calling the provider; the round-trip is lossless, so the exact cargo JSON still comes back. The `legacy` interface (flat codes, renamed fields, a `service-level` enum with no canonical counterpart) lets a legacy-shaped caller drive the modern provider. |
+| `ambassador/` (ch21) | reuses `part3-interfaces/sockets-rust` | outbound command component | Resilient outbound calls: retry with exponential backoff + jitter behind a capability-scoped network grant. Minikube evidence is a local `wasmtime run -S inherit-network` smoke (the shim exposes no outbound-network knob); the cluster-live, lattice-linked form is the wasmCloud/CRC path. |
 
 ## wac plug chains
 
@@ -56,7 +56,7 @@ RuntimeClass are reused (not duplicated) from `k8s/base` + `install-shim.sh`.
 
 ## CRC hand-off (next executor)
 
-The CRC expression is the RUNTIME-LINK form: deploy the three canonical components
+The CRC expression is the runtime-link form: deploy the three canonical components
 (provider, interposer, http front door) as a wasmCloud lattice and wire the links
 at runtime instead of composing one `.wasm`. Link graph: the http front door's
 `patterncatalyst:cargo/{types,booking,handling}` imports link to the interposer's
