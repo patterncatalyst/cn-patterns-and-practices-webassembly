@@ -41,6 +41,6 @@
 <text x="815.0" y="455.0" font-size="11.5" fill="#555555" text-anchor="middle">built into the platform</text>
 <rect x="300" y="510" width="680" height="90" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="640.0" y="553.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 5 adds a THIRD, orthogonal axis: Kubernetes schedules</text>
-<text x="640.0" y="570.0" font-size="11.5" fill="#555555" text-anchor="middle">either runtime as a pod — same choice, one layer up</text>
+<text x="640.0" y="570.0" font-size="11.5" fill="#555555" text-anchor="middle">either runtime as a pod: same choice, one layer up</text>
 <text x="520" y="625" font-size="12" fill="#555555" text-anchor="middle">Neither column is the default: pick the row that matches what this deployment needs to own.</text>
 </svg>

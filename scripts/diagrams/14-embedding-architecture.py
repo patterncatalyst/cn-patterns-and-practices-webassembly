@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure for Chapter 14 — wasmtime: embedding architecture.
+"""Figure for Chapter 14: wasmtime: embedding architecture.
 
 14-embedding-architecture : the native host (host/src/main.rs) building an
                              Engine/Store/Linker, wiring WASI and the
@@ -15,14 +15,14 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 14.1 — host Engine/Store/Linker wiring a host-provided import, then
+# Figure 14.1: host Engine/Store/Linker wiring a host-provided import, then
 # instantiating and calling the guest component.
 # ---------------------------------------------------------------------------
 gd.emit(
     "14-embedding-architecture", 1080, 620,
     bands=[
         {"x":20,"y":16,"w":500,"h":560,"label":"host-demo-host (native Rust, wasmtime crate)","fill":"#f1f5f9"},
-        {"x":560,"y":16,"w":500,"h":560,"label":"host_demo_guest.wasm — imports host-caps, exports run","fill":"#fff3e0"},
+        {"x":560,"y":16,"w":500,"h":560,"label":"host_demo_guest.wasm: imports host-caps, exports run","fill":"#fff3e0"},
     ],
     nodes=[
         {"x":50,"y":56,"w":440,"h":56,"lines":["Engine::new(&Config::new())"],"style":"box"},
@@ -33,7 +33,7 @@ gd.emit(
         {"x":50,"y":444,"w":440,"h":56,"lines":["bindings.call_run(&mut store, \"clean\", 10_000)"],"style":"box"},
         {"x":50,"y":516,"w":440,"h":48,"lines":["impl host_caps::Host for HostState {","  fn host_quote(&mut self, id) -> String { .. }","  fn host_now(&mut self) -> u64 { .. } }"],"style":"ink"},
 
-        {"x":600,"y":128,"w":420,"h":56,"lines":["Component — wit world host-demo"],"style":"box"},
+        {"x":600,"y":128,"w":420,"h":56,"lines":["Component: wit world host-demo"],"style":"box"},
         {"x":600,"y":372,"w":420,"h":56,"lines":["export run(mode, iterations) -> string"],"style":"box"},
         {"x":600,"y":444,"w":420,"h":70,"lines":["import host-caps::host-quote(id)","import host-caps::host-now()"],"style":"accent"},
     ],

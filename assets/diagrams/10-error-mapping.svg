@@ -20,7 +20,7 @@
 <text x="540.0" y="186.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">result&lt;booking, cargo-error&gt;</text>
 <text x="540.0" y="203.0" font-size="11.5" fill="#555555" text-anchor="middle">(bindgen lowers/lifts both sides)</text>
 <rect x="400" y="300" width="280" height="64" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
-<text x="540.0" y="330.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">NO WIT shape for a trap —</text>
+<text x="540.0" y="330.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">NO WIT shape for a trap;</text>
 <text x="540.0" y="347.0" font-size="11.5" fill="#555555" text-anchor="middle">it bypasses the result entirely</text>
 <rect x="755" y="56" width="280" height="64" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="895.0" y="86.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cm.Result[..., Booking, CargoError]</text>
@@ -39,11 +39,11 @@
 <text x="723.5" y="78.0" font-size="11" fill="#555" text-anchor="middle">lowers to</text>
 <path d="M755,110 L680,188" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M325,332 L400,332" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="368.5" y="326.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">no lowering — unwinds to a trap</text>
-<text x="368.5" y="326.0" font-size="11" fill="#555" text-anchor="middle">no lowering — unwinds to a trap</text>
+<text x="368.5" y="326.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">no lowering: unwinds to a trap</text>
+<text x="368.5" y="326.0" font-size="11" fill="#555" text-anchor="middle">no lowering: unwinds to a trap</text>
 <path d="M680,332 L755,332" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="723.5" y="326.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">no lowering — unwinds to a trap</text>
-<text x="723.5" y="326.0" font-size="11" fill="#555" text-anchor="middle">no lowering — unwinds to a trap</text>
-<text x="540" y="430" font-size="12" fill="#555555" text-anchor="middle">host/src/main.rs observes the left/right paths identically: Ok(Err(cargo-error::...)) for a result, an Err from the CALL itself for a trap — regardless of which language produced it.</text>
+<text x="723.5" y="326.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">no lowering: unwinds to a trap</text>
+<text x="723.5" y="326.0" font-size="11" fill="#555" text-anchor="middle">no lowering: unwinds to a trap</text>
+<text x="540" y="430" font-size="12" fill="#555555" text-anchor="middle">host/src/main.rs observes the left/right paths identically: Ok(Err(cargo-error::...)) for a result, an Err from the CALL itself for a trap; regardless of which language produced it.</text>
 <text x="540" y="460" font-size="12" fill="#555555" text-anchor="middle">Rust Result&lt;T, CargoError&gt; &lt;-&gt; WIT result&lt;t, cargo-error&gt; &lt;-&gt; Go cm.Result[...]; Rust panic! and Go panic() both become the SAME trap at the boundary.</text>
 </svg>

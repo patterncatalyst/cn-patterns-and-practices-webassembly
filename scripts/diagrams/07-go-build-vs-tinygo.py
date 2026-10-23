@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Figure for Chapter 7 — First Component in Go.
+"""Figure for Chapter 7: First Component in Go.
 
 07-go-build-vs-tinygo : the same main.go and the same generated bindings fed
-                         to two compilers — standard `go build` rejects the
+                         to two compilers: standard `go build` rejects the
                          pointerful result/parameter types wit-bindgen-go
                          emits via its `//go:wasmexport` check, while TinyGo,
                          targeting wasm32 natively, accepts the identical
@@ -16,7 +16,7 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 7.2 — go build (rejects) vs TinyGo (accepts), same source either way
+# Figure 7.2: go build (rejects) vs TinyGo (accepts), same source either way
 # ---------------------------------------------------------------------------
 gd.emit(
     "07-go-build-vs-tinygo", 1100, 460,
@@ -29,7 +29,7 @@ gd.emit(
 
         {"x":50,"y":120,"w":440,"h":56,"lines":["go1.26.9, GOARCH=wasm = 64-bit pointers"],"style":"box"},
         {"x":50,"y":188,"w":440,"h":70,"lines":["//go:wasmexport checks every exported","result and parameter type"],"style":"box"},
-        {"x":50,"y":270,"w":440,"h":110,"lines":["rejects: *cm.Result[...], *cm.List[...],","*string, *types.Leg","— pointerful types forbidden"],"style":"ink"},
+        {"x":50,"y":270,"w":440,"h":110,"lines":["rejects: *cm.Result[...], *cm.List[...],","*string, *types.Leg;","pointerful types forbidden"],"style":"ink"},
         {"x":50,"y":392,"w":440,"h":36,"lines":["✗ compile fails, no core.wasm"],"style":"box"},
 
         {"x":610,"y":120,"w":440,"h":56,"lines":["TinyGo 0.43, wasm32 target natively"],"style":"box"},

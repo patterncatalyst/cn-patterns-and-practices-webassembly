@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 11.1 — Ch11: one HTTP request's path through `wasmtime serve` into a
+"""Figure 11.1: Ch11: one HTTP request's path through `wasmtime serve` into a
 composed wasi-http component. `wasmtime serve -S cli` terminates the TCP
 connection and HTTP framing itself; the composed component's two halves
 (the http-rust/http-go adapter, wac-plugged to the Part 2 cargo provider)
@@ -29,7 +29,7 @@ nodes = [
     # Outer frame for the composed component, drawn first so the two inner
     # boxes paint on top of it.
     {"x": 600, "y": 40, "w": 420, "h": 390,
-     "lines": ["composed.wasm — wac plug output", "", ""],
+     "lines": ["composed.wasm: wac plug output", "", ""],
      "style": "box"},
 
     {"x": 630, "y": 90, "w": 360, "h": 120,
@@ -39,7 +39,7 @@ nodes = [
 
     {"x": 630, "y": 250, "w": 360, "h": 140,
      "lines": ["part2 cargo provider (Rust or Go)", "exports booking + handling",
-               "fresh instance per request — in-memory state",
+               "fresh instance per request: in-memory state",
                "book-cargo then get-cargo, one request"],
      "style": "user"},
 ]

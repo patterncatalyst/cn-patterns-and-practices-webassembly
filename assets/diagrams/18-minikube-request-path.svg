@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="170" width="1140" height="350" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="190" font-size="12" font-weight="700" fill="#1d1d1d">minikube profile &#x27;part5&#x27; — docker driver, containerd runtime, Kubernetes v1.37.1</text>
+<text x="32" y="190" font-size="12" font-weight="700" fill="#1d1d1d">minikube profile &#x27;part5&#x27;: docker driver, containerd runtime, Kubernetes v1.37.1</text>
 <rect x="40" y="20" width="320" height="90" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="200.0" y="55.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">curl</text>
 <text x="200.0" y="72.5" font-size="11.5" fill="#555555" text-anchor="middle">http://cargo.192.168.49.2.nip.io</text>
@@ -29,7 +29,7 @@
 <text x="890.0" y="377.5" font-size="11.5" fill="#555555" text-anchor="middle">hyper server on 0.0.0.0:8080</text>
 <text x="890.0" y="392.5" font-size="11.5" fill="#555555" text-anchor="middle">(same behavior as wasmtime serve)</text>
 <rect x="690" y="430" width="400" height="50" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
-<text x="890.0" y="453.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">app.wasm — exports wasi:http/incoming-handler</text>
+<text x="890.0" y="453.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">app.wasm: exports wasi:http/incoming-handler</text>
 <text x="890.0" y="470.0" font-size="11.5" fill="#555555" text-anchor="middle">sha256 eff7f5ee… (same bytes as Ch14/Ch15)</text>
 <path d="M360,65 L430,65" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="401.0" y="59.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">resolves</text>
@@ -47,5 +47,5 @@
 <path d="M890,410 L890,430" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="896.0" y="414.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">incoming-handler.handle</text>
 <text x="896.0" y="414.0" font-size="11" fill="#b8650a" text-anchor="middle">incoming-handler.handle</text>
-<text x="590" y="540" font-size="12" fill="#555555" text-anchor="middle">No port-forward, no NodePort, no `minikube service` anywhere in this path — only the real ingress-nginx edge.</text>
+<text x="590" y="540" font-size="12" fill="#555555" text-anchor="middle">No port-forward, no NodePort, no `minikube service` anywhere in this path: only the real ingress-nginx edge.</text>
 </svg>

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 5 — The Shared Cargo Domain as Components.
+"""Figures for Chapter 5: The Shared Cargo Domain as Components.
 
-05-cargo-domain : the domain's entities and how they relate — a route-spec
+05-cargo-domain : the domain's entities and how they relate: a route-spec
                   and a cargo feed a booking, a booking produces an
                   itinerary made of legs, a handling-event is recorded
                   against a cargo, and a cargo-tracker resource follows
-                  that history — with location and money as shared value
+                  that history, with location and money as shared value
                   types several entities reference.
 """
 import sys, os
@@ -16,7 +16,7 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 5.1 — cargo domain model: entities and relationships
+# Figure 5.1: cargo domain model: entities and relationships
 # ---------------------------------------------------------------------------
 gd.emit(
     "05-cargo-domain", 1000, 560,

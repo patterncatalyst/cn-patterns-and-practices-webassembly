@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 22.2 — Ch22: cold-start scaling math.
+"""Figure 22.2, Ch22: cold-start scaling math.
 
 A Wasm replica becomes ready in single-digit to low-hundreds of milliseconds
 (instantiation, not a boot sequence). A container or JVM workload needs
@@ -46,7 +46,7 @@ nodes = [
      "lines": ["HPA's default syncPeriod / readiness-probe cadence and scale-up",
                "stabilizationWindowSeconds are tuned for container-class startup.",
                "A wasm replica can be ready and serving before the next HPA sync",
-               "tick even fires — shorten probe intervals and the scale-up window",
+               "tick even fires; shorten probe intervals and the scale-up window",
                "for wasm Deployments, or the autoscaler reacts a full cycle late."],
      "style": "ink"},
 ]

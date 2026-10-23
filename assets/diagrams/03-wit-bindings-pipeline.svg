@@ -30,5 +30,5 @@
 <path d="M600,215 L600,265" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M280,330 L350,350" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M540,330 L480,350" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
-<text x="410" y="390" font-size="12" fill="#555555" text-anchor="middle">Same WIT, two independent toolchains, each handing its own code the generated trait/interface to implement — no shared runtime step.</text>
+<text x="410" y="390" font-size="12" fill="#555555" text-anchor="middle">Same WIT, two independent toolchains, each handing its own code the generated trait/interface to implement; no shared runtime step.</text>
 </svg>

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Figure 28.1 — Ch28: the assembled final-project request path on minikube.
+"""Figure 28.1, Ch28: the assembled final-project request path on minikube.
 
 A client resolves cargo.<minikube-ip>.nip.io through the nip.io Ingress and
 reaches the Istio ingress gateway's Envoy, where the Ch25 proxy-wasm filter
 runs first: it rejects any request missing x-cargo-tenant with a 403, and
 injects x-cargo-filtered-by on the way back out. Two Pods sit behind the
-gateway on RuntimeClass: wasmtime (containerd-shim-wasmtime) — cargo-rust
+gateway on RuntimeClass: wasmtime (containerd-shim-wasmtime): cargo-rust
 (http-rust plugged with the Rust cargo provider) and cargo-go (http-go/TinyGo
-plugged with the Go cargo provider) — both exporting
+plugged with the Go cargo provider), both exporting
 wasi:http/incoming-handler and both returning the same cargo JSON. The shim
 hosting each Pod emits an OTel span per invocation into otel-lgtm (Tempo):
 shim-OTel traces under the workload, same pipeline as Ch24.
@@ -23,10 +23,10 @@ W, H = 1400, 1100
 
 bands = [
     {"x": 20, "y": 110, "w": 1360, "h": 580,
-     "label": "minikube — Istio ingress gateway + two app substrates, RuntimeClass: wasmtime",
+     "label": "minikube: Istio ingress gateway + two app substrates, RuntimeClass: wasmtime",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 720, "w": 1360, "h": 260,
-     "label": "OTel pipeline — shim lifecycle spans into otel-lgtm (Tempo)",
+     "label": "OTel pipeline: shim lifecycle spans into otel-lgtm (Tempo)",
      "fill": "#f1f5f9"},
 ]
 
@@ -56,17 +56,17 @@ nodes = [
      "style": "box"},
 
     {"x": 100, "y": 760, "w": 380, "h": 80,
-     "lines": ["containerd-shim-wasmtime (cargo-rust)", "emits OTel span — shim lifecycle"],
+     "lines": ["containerd-shim-wasmtime (cargo-rust)", "emits OTel span: shim lifecycle"],
      "style": "box"},
     {"x": 920, "y": 760, "w": 380, "h": 80,
-     "lines": ["containerd-shim-wasmtime (cargo-go)", "emits OTel span — shim lifecycle"],
+     "lines": ["containerd-shim-wasmtime (cargo-go)", "emits OTel span: shim lifecycle"],
      "style": "box"},
     {"x": 560, "y": 880, "w": 280, "h": 80,
-     "lines": ["otel-lgtm", "Tempo — shim traces under load"],
+     "lines": ["otel-lgtm", "Tempo: shim traces under load"],
      "style": "user"},
 
     {"x": 20, "y": 1000, "w": 1360, "h": 60,
-     "lines": ["Same contract, two languages, one substrate — the gateway filter and the trace span each cover both halves."],
+     "lines": ["Same contract, two languages, one substrate; the gateway filter and the trace span each cover both halves."],
      "style": "ink"},
 ]
 

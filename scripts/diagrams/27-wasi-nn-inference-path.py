@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 27.1 — Ch27: the wasi-nn inference path for one classification call.
+"""Figure 27.1, Ch27: the wasi-nn inference path for one classification call.
 
 One call through cargo-wasi-nn (the classify-cli component): decode and
 preprocess the cargo fixture image entirely in the guest, cross the wasi:nn
@@ -7,7 +7,7 @@ import boundary with three host calls (load-by-name, init-execution-context,
 compute), let the host's wasmtime-wasi-nn crate drive the OpenVINO backend
 against the CPU, then return the output tensor to the guest for top-5
 ranking. The component band and the host band are the two trust/execution
-domains this figure contrasts — everything inside the top band is portable
+domains this figure contrasts: everything inside the top band is portable
 Wasm; everything inside the bottom band is native code picked by the host,
 not the component.
 """
@@ -22,10 +22,10 @@ W, H = 1500, 950
 
 bands = [
     {"x": 20, "y": 100, "w": 1460, "h": 240,
-     "label": "Wasm component — cargo-wasi-nn (classify-cli), sandboxed guest",
+     "label": "Wasm component: cargo-wasi-nn (classify-cli), sandboxed guest",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 410, "w": 1460, "h": 240,
-     "label": "Host process — wasmtime, --features wasi-nn",
+     "label": "Host process: wasmtime, --features wasi-nn",
      "fill": "#f1f5f9"},
 ]
 
@@ -34,7 +34,7 @@ nodes = [
     {"x": 60, "y": 20, "w": 230, "h": 60,
      "lines": ["fixtures/cargo.jpg"], "style": "sub"},
 
-    # component band — preprocessing and the wasi:nn call sites
+    # component band: preprocessing and the wasi:nn call sites
     {"x": 60, "y": 150, "w": 250, "h": 160,
      "lines": ["cargo-wasi-nn", "decode → resize 224×224",
                "→ BGR/NCHW f32 tensor"],
@@ -44,7 +44,7 @@ nodes = [
                "init-execution-context", "compute(named-tensor)"],
      "style": "accent"},
 
-    # component band — post-inference, right side
+    # component band: post-inference, right side
     {"x": 1000, "y": 150, "w": 210, "h": 160,
      "lines": ["output tensor", "1001-way softmax"],
      "style": "box"},
@@ -69,7 +69,7 @@ nodes = [
     {"x": 20, "y": 700, "w": 1460, "h": 100,
      "lines": [
          "mobilenet.xml + mobilenet.bin (OpenVINO IR) are loaded by name from a host-preloaded directory",
-         "(-S nn-graph=openvino::<dir>) — the model ships with the host, not inside the component.",
+         "(-S nn-graph=openvino::<dir>); the model ships with the host, not inside the component.",
      ],
      "style": "ink"},
 ]
@@ -93,7 +93,7 @@ edges = [
 
 notes = [
     {"x": 750, "y": 930, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Only load-by-name, init-execution-context, and compute cross the wasi:nn boundary — decode, resize, and ranking stay in the guest."},
+     "text": "Only load-by-name, init-execution-context, and compute cross the wasi:nn boundary; decode, resize, and ranking stay in the guest."},
 ]
 
 gd.emit("27-wasi-nn-inference-path", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

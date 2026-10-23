@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 6 — First Component in Rust.
+"""Figures for Chapter 6: First Component in Rust.
 
 06-host-exercises-component : the native wasmtime host (host/src/main.rs)
                                instantiating cargo_rust.wasm against world
@@ -15,13 +15,13 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 6.2 — host/src/main.rs instantiating and calling cargo_rust.wasm
+# Figure 6.2: host/src/main.rs instantiating and calling cargo_rust.wasm
 # ---------------------------------------------------------------------------
 gd.emit(
     "06-host-exercises-component", 1080, 560,
     bands=[
-        {"x":20,"y":16,"w":500,"h":500,"label":"host/src/main.rs — native Rust, wasmtime::component","fill":"#f1f5f9"},
-        {"x":560,"y":16,"w":500,"h":500,"label":"cargo_rust.wasm — exports world cargo","fill":"#fff3e0"},
+        {"x":20,"y":16,"w":500,"h":500,"label":"host/src/main.rs: native Rust, wasmtime::component","fill":"#f1f5f9"},
+        {"x":560,"y":16,"w":500,"h":500,"label":"cargo_rust.wasm: exports world cargo","fill":"#fff3e0"},
     ],
     nodes=[
         {"x":50,"y":56,"w":440,"h":56,"lines":["bindgen!({ path: contracts/wit, world: \"cargo\" })"],"style":"box"},
@@ -43,6 +43,6 @@ gd.emit(
         {"x1":490,"y1":456,"x2":600,"y2":456,"label":"constructor + 3 methods"},
     ],
     notes=[
-        {"x":540,"y":540,"text":"Same host binary, same scenario, same assertions run again in Chapter 7 against cargo-go.wasm — the point is that both sides satisfy identical calls.","size":12,"color":"#555555","anchor":"middle"},
+        {"x":540,"y":540,"text":"Same host binary, same scenario, same assertions run again in Chapter 7 against cargo-go.wasm; the point is that both sides satisfy identical calls.","size":12,"color":"#555555","anchor":"middle"},
     ],
 )

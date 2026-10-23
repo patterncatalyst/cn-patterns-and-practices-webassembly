@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Figure 12.3 — Ch12: Protobuf-the-encoding vs gRPC-the-transport.
+"""Figure 12.3: Ch12: Protobuf-the-encoding vs gRPC-the-transport.
 
 The chapter's central split: Protobuf (varints, length-delimited fields,
 fixed64 doubles) is pure computation and runs fine inside a component.
 gRPC adds HTTP/2 framing, trailers, and bidirectional streaming on top of
-that encoding — a transport layer no component exposes a server side of
+that encoding: a transport layer no component exposes a server side of
 today. Two different concerns, two different verdicts.
 """
 import sys, os
@@ -17,8 +17,8 @@ os.makedirs(gd.OUT, exist_ok=True)
 W, H = 1080, 420
 
 bands = [
-    {"x": 20, "y": 16, "w": 500, "h": 384, "label": "PROTOBUF — the encoding", "fill": "#f1f5f9"},
-    {"x": 560, "y": 16, "w": 500, "h": 384, "label": "gRPC — the transport", "fill": "#fff3e0"},
+    {"x": 20, "y": 16, "w": 500, "h": 384, "label": "PROTOBUF: the encoding", "fill": "#f1f5f9"},
+    {"x": 560, "y": 16, "w": 500, "h": 384, "label": "gRPC: the transport", "fill": "#fff3e0"},
 ]
 
 nodes = [
@@ -26,13 +26,13 @@ nodes = [
      "lines": ["varints, length-delimited fields,", "fixed64 doubles"],
      "style": "box"},
     {"x": 50, "y": 150, "w": 440, "h": 60,
-     "lines": ["pure computation — decode bytes,", "build a struct, encode bytes"],
+     "lines": ["pure computation: decode bytes,", "build a struct, encode bytes"],
      "style": "box"},
     {"x": 50, "y": 230, "w": 440, "h": 70,
      "lines": ["runs fully INSIDE the sandbox", "prost (Rust) or a reflection-free codec (TinyGo)"],
      "style": "ink"},
     {"x": 50, "y": 320, "w": 440, "h": 60,
-     "lines": ["needs nothing the component model denies —", "no network, no server socket"],
+     "lines": ["needs nothing the component model denies:", "no network, no server socket"],
      "style": "box"},
 
     {"x": 600, "y": 70, "w": 420, "h": 60,

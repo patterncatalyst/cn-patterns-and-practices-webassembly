@@ -27,6 +27,6 @@
 <path d="M690,330 L830,265" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="766.0" y="291.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">list&lt;u8&gt;</text>
 <text x="766.0" y="291.5" font-size="11" fill="#b8650a" text-anchor="middle">list&lt;u8&gt;</text>
-<text x="540" y="40" font-size="13" fill="#1d1d1d" text-anchor="middle" font-weight="700">INSIDE THE WASM SANDBOX — no network, no gRPC transport, just bytes in and bytes out</text>
-<text x="540" y="495" font-size="12" fill="#555555" text-anchor="middle">Protobuf is varints, length-delimited fields, fixed64 doubles — pure computation, so it runs in a component with no transport capability at all.</text>
+<text x="540" y="40" font-size="13" fill="#1d1d1d" text-anchor="middle" font-weight="700">INSIDE THE WASM SANDBOX: no network, no gRPC transport, just bytes in and bytes out</text>
+<text x="540" y="495" font-size="12" fill="#555555" text-anchor="middle">Protobuf is varints, length-delimited fields, fixed64 doubles: pure computation, so it runs in a component with no transport capability at all.</text>
 </svg>

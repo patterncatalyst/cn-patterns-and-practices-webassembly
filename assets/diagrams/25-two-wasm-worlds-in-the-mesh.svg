@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 760" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="90" width="560" height="380" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="110" font-size="12" font-weight="700" fill="#1d1d1d">Pod: istio-ingress-gateway — normal Envoy, no runtimeClassName</text>
+<text x="32" y="110" font-size="12" font-weight="700" fill="#1d1d1d">Pod: istio-ingress-gateway, normal Envoy, no runtimeClassName</text>
 <rect x="600" y="90" width="560" height="380" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="612" y="110" font-size="12" font-weight="700" fill="#1d1d1d">Pod: cargo-http — runtimeClassName: wasmtime, NO sidecar</text>
+<text x="612" y="110" font-size="12" font-weight="700" fill="#1d1d1d">Pod: cargo-http, runtimeClassName: wasmtime, NO sidecar</text>
 <rect x="480" y="20" width="220" height="50" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
 <text x="590.0" y="43.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">client request</text>
 <text x="590.0" y="60.0" font-size="11.5" fill="#555555" text-anchor="middle">GET /cargo/{id}</text>
 <rect x="60" y="150" width="480" height="300" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="300.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Envoy — istio-ingress-gateway</text>
+<text x="300.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Envoy: istio-ingress-gateway</text>
 <text x="300.0" y="315.0" font-size="11.5" fill="#555555" text-anchor="middle">Istio-managed, ordinary pod</text>
 <rect x="640" y="150" width="480" height="300" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="880.0" y="298.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-http Pod</text>

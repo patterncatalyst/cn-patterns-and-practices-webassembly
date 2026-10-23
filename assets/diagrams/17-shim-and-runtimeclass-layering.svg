@@ -43,5 +43,5 @@
 <path d="M890,476 L890,492" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M290,476 L400,620" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M890,572 L780,620" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
-<text x="590" y="110" font-size="12" fill="#555555" text-anchor="middle">Installing the shim restarts containerd on the node — bounces every running Pod, do it before other addons.</text>
+<text x="590" y="110" font-size="12" fill="#555555" text-anchor="middle">Installing the shim restarts containerd on the node: bounces every running Pod, do it before other addons.</text>
 </svg>

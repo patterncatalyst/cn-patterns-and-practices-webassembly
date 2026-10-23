@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Figure 16.1 — Ch16: ONE component artifact, app.wasm, built once by
+"""Figure 16.1, Ch16: ONE component artifact, app.wasm, built once by
 examples/part4-runtimes/wasmcloud/build.sh (the Part 2 Rust cargo provider
 wac-plugged under the Part 3 http-rust front door), fans into two independent
 runtimes: wasmtime serve -S cli (ch14) on the left and the wasmCloud lattice's
 httpserver provider, linked to the component via wadm (ch15), on the right.
 Both serve the identical cargo JSON for a known tracking ID and the identical
-404 for an unknown one. sha256sum agrees on both sides — same bytes, two
+404 for an unknown one. sha256sum agrees on both sides: same bytes, two
 runtimes, no rebuild between them."""
 import sys, os
 sys.path.insert(0, "scripts")
@@ -23,7 +23,7 @@ bands = [
 
 nodes = [
     {"x": 340, "y": 16, "w": 500, "h": 70,
-     "lines": ["app.wasm — built ONCE by build.sh", "sha256 eff7f5ee81db5f9f...4c9909b3"],
+     "lines": ["app.wasm: built ONCE by build.sh", "sha256 eff7f5ee81db5f9f...4c9909b3"],
      "style": "accent"},
 
     {"x": 50, "y": 160, "w": 480, "h": 56,
@@ -76,7 +76,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 610, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Caveat: wasmCloud ignores EXPORTED component resources (our cargo-tracker) — a WARN at start, harmless here"},
+     "text": "Caveat: wasmCloud ignores EXPORTED component resources (our cargo-tracker), a WARN at start, harmless here"},
     {"x": 590, "y": 628, "size": 12, "color": "#555555", "anchor": "middle",
      "text": "because the HTTP path only uses booking. wasmtime serve runs the component as-is, resource and all."},
 ]

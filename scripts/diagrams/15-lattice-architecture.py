@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Figure 15.1 — Ch15: the wasmCloud lattice for the cargo-http app.
+"""Figure 15.1, Ch15: the wasmCloud lattice for the cargo-http app.
 
 One `wash up -d` process starts three things in the lattice: a NATS message
 bus, a wasmcloud host (1.9.1), and wadm (0.21.1) reconciling the OAM manifest.
-`wash app deploy wadm.yaml` starts two things ON that host — the httpserver
+`wash app deploy wadm.yaml` starts two things ON that host: the httpserver
 capability provider (0.27.0) and the cargo-http component (the SAME app.wasm
-Chapter 14 runs under wasmtime serve) — and establishes the link between them
+Chapter 14 runs under wasmtime serve), and establishes the link between them
 on wasi:http/incoming-handler, carrying the listen address as source config.
 A curl against 127.0.0.1:8000 flows in through the provider's open socket,
 across the link, into the component, and the cargo JSON comes back out.
@@ -20,7 +20,7 @@ os.makedirs(gd.OUT, exist_ok=True)
 W, H = 1180, 660
 
 bands = [
-    {"x": 20, "y": 60, "w": 1140, "h": 560, "label": "lattice — everything `wash up -d` starts", "fill": "#f1f5f9"},
+    {"x": 20, "y": 60, "w": 1140, "h": 560, "label": "lattice: everything `wash up -d` starts", "fill": "#f1f5f9"},
     {"x": 330, "y": 150, "w": 790, "h": 440, "label": "wasmcloud host 1.9.1  (sparkling-sunset-0738)", "fill": "#fff3e0"},
 ]
 
@@ -30,7 +30,7 @@ nodes = [
      "style": "box"},
 
     {"x": 60, "y": 110, "w": 220, "h": 70,
-     "lines": ["NATS 2.11.3", "lattice message bus — wash, wadm,", "and the host all talk over it"],
+     "lines": ["NATS 2.11.3", "lattice message bus: wash, wadm,", "and the host all talk over it"],
      "style": "box"},
 
     {"x": 60, "y": 210, "w": 220, "h": 70,
@@ -71,7 +71,7 @@ notes = [
     {"x": 590, "y": 630, "size": 12, "color": "#555555", "anchor": "middle",
      "text": "One `wash up -d` starts NATS + wadm + the host; `wash app deploy wadm.yaml` starts the provider + component and establishes the link."},
     {"x": 590, "y": 648, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "The provider owns the socket; the component only ever sees a WIT call — it never parses raw HTTP."},
+     "text": "The provider owns the socket; the component only ever sees a WIT call. It never parses raw HTTP."},
 ]
 
 gd.emit("15-lattice-architecture", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

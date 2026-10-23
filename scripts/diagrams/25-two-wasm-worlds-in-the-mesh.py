@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Figure 25.1 — Ch25: two Wasm worlds, across the mesh.
+"""Figure 25.1, Ch25: two Wasm worlds, across the mesh.
 
 A runtimeClassName: wasmtime pod runs one container runtime for every
 container, so an Istio sidecar cannot live beside the Wasm app; the mesh
 filter runs in the ingress gateway's Envoy instead. The gateway Pod is a
-normal Envoy running the proxy-wasm filter (cargo-wasmfilter) — a core-module
+normal Envoy running the proxy-wasm filter (cargo-wasmfilter), a core-module
 artifact built with the proxy-wasm crate, loaded by the gateway's WasmPlugin
-CR — which checks the x-cargo-tenant header (403 if missing) and injects
+CR, which checks the x-cargo-tenant header (403 if missing) and injects
 x-cargo-filtered-by. The request then reaches the separate cargo-http Pod,
 a pure Wasm pod (runtimeClassName: wasmtime, no sidecar) running the Part 5
 Component-Model app under containerd-shim-wasmtime. Two pods, two hosts, two
@@ -23,10 +23,10 @@ W, H = 1180, 760
 
 bands = [
     {"x": 20, "y": 90, "w": 560, "h": 380,
-     "label": "Pod: istio-ingress-gateway — normal Envoy, no runtimeClassName",
+     "label": "Pod: istio-ingress-gateway, normal Envoy, no runtimeClassName",
      "fill": "#f1f5f9"},
     {"x": 600, "y": 90, "w": 560, "h": 380,
-     "label": "Pod: cargo-http — runtimeClassName: wasmtime, NO sidecar",
+     "label": "Pod: cargo-http, runtimeClassName: wasmtime, NO sidecar",
      "fill": "#f1f5f9"},
 ]
 
@@ -36,7 +36,7 @@ nodes = [
      "style": "sub"},
 
     {"x": 60, "y": 150, "w": 480, "h": 300,
-     "lines": ["Envoy — istio-ingress-gateway", "Istio-managed, ordinary pod"],
+     "lines": ["Envoy: istio-ingress-gateway", "Istio-managed, ordinary pod"],
      "style": "box"},
     {"x": 640, "y": 150, "w": 480, "h": 300,
      "lines": ["cargo-http Pod", "Part 5 Wasm substrate, unchanged"],

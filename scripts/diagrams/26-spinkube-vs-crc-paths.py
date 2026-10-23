@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Figure 26.2 — Ch26: SpinKube vs. CRC deploy paths for the same Spin app.
+"""Figure 26.2, Ch26: SpinKube vs. CRC deploy paths for the same Spin app.
 
 One Spin app, cargo-spin.wasm (exports wasi:http/handler@0.3.0), deployed
 two ways: on minikube under full SpinKube (spin-operator, SpinApp CRD,
 containerd-shim-spin on RuntimeClass wasmtime-spin-v2), and on CRC as an
-ordinary restricted-v2 container running the Spin CLI directly — no shim,
+ordinary restricted-v2 container running the Spin CLI directly: no shim,
 no operator, no CRD, because the shim needs a privileged node install
 that restricted-v2 does not allow. Both paths reach the app only through
 an Ingress or Route; neither uses port-forward.
@@ -20,10 +20,10 @@ W, H = 1180, 900
 
 bands = [
     {"x": 20, "y": 120, "w": 560, "h": 580,
-     "label": "minikube — full SpinKube",
+     "label": "minikube: full SpinKube",
      "fill": "#f1f5f9"},
     {"x": 600, "y": 120, "w": 560, "h": 580,
-     "label": "CRC — restricted-v2 container (no shim/operator/CRD)",
+     "label": "CRC: restricted-v2 container (no shim/operator/CRD)",
      "fill": "#f1f5f9"},
 ]
 
@@ -47,12 +47,12 @@ nodes = [
     {"x": 660, "y": 380, "w": 440, "h": 70, "lines": ["Service: cargo-spin"], "style": "box"},
     {"x": 660, "y": 490, "w": 440, "h": 170,
      "lines": ["Deployment pod", "ordinary container, no shim/operator/CRD",
-               "spin up — Spin CLI 4.2.4"],
+               "spin up: Spin CLI 4.2.4"],
      "style": "user"},
 
     {"x": 20, "y": 720, "w": 1140, "h": 140,
      "lines": [
-         "Same Spin app, same wasi:http/handler@0.3.0 export — the host differs, not the app.",
+         "Same Spin app, same wasi:http/handler@0.3.0 export; the host differs, not the app.",
          "containerd-shim-spin needs a privileged node install; restricted-v2 does not allow it, so CRC runs the Spin CLI in an ordinary container instead.",
      ],
      "style": "ink"},
