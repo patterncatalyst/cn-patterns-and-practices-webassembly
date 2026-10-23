@@ -1,5 +1,5 @@
 """
-diagrams.py — NEW companion-deck diagrams for "Server-Side WebAssembly in Rust" (201).
+diagrams.py: NEW companion-deck diagrams for "Server-Side WebAssembly in Rust" (201).
 
 Red Hat-aligned Scene diagrams for figures that do not already exist in the
 book's assets/diagrams/ library. Author here, then run build_diagrams.py
@@ -10,7 +10,7 @@ data=purple (stores/state), platform=teal (infra/platform), govern=amber
 (policy/coordination), danger=deep-red (anti-pattern/failure), neutral=grey,
 muted=caption grey.
 
-No new diagrams are authored in this unit — the 201-rust deck reuses the
+No new diagrams are authored in this unit; the 201-rust deck reuses the
 book's figure library (rendered into png/ by build_diagrams.py). Add Scene
 functions here, and list them in SCENES, when a per-deck unit needs one.
 """

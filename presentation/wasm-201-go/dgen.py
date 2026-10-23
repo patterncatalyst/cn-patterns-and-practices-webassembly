@@ -1,5 +1,5 @@
 """
-dgen.py — Diagram generation engine for the REST deck.
+dgen.py: Diagram generation engine for the REST deck.
 
 Emits matched SVG + Excalidraw + PNG triples in a Red Hat-aligned visual style.
 Used for diagrams unique to the REST deck (HATEOAS state machines, JSON Patch shapes,
@@ -21,7 +21,7 @@ Visual conventions (matched to existing Python deck diagrams):
       grid   #D2D2D2
   - Fonts: Overpass / Red Hat Text for labels; Red Hat Mono for monospace tokens.
   - Stroke: 1.5px default; rounded corners r=8.
-  - All shapes get a tiny drop-shadow-free flat look — matches the existing SVGs.
+  - All shapes get a tiny drop-shadow-free flat look that matches the existing SVGs.
 
 Each scene produces:
   diagrams/<name>.svg
