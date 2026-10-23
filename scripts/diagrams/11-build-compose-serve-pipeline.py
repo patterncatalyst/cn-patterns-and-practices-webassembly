@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 11.2 — Ch11: the build/compose/serve pipeline for both language
+"""Figure 11.2: Ch11: the build/compose/serve pipeline for both language
 front doors. `http-rust` builds with `cargo-component`; `http-go` builds with
 the TinyGo wasip1-reactor + wasm-tools pipeline from Chapter 7. Either
 artifact is `wac plug`-composed with the matching Part 2 provider (one source
@@ -53,7 +53,7 @@ edges = [
 
 notes = [
     {"x": 520, "y": 455, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Two toolchains, one WIT world (cargo-http), one wac recipe, one serve command — Rust and Go produce byte-identical responses under wasmtime serve."},
+     "text": "Two toolchains, one WIT world (cargo-http), one wac recipe, one serve command; Rust and Go produce byte-identical responses under wasmtime serve."},
 ]
 
 gd.emit("11-build-compose-serve-pipeline", W, H, nodes=nodes, edges=edges, notes=notes)

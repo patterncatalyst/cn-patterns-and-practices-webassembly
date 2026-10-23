@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure for Chapter 9 — Debugging WebAssembly.
+"""Figure for Chapter 9: Debugging WebAssembly.
 
 09-symptom-to-tool : six debugging symptoms against the Part 2 cargo
                       components, the cheapest tool that taps each one, and
@@ -24,7 +24,7 @@ rows = [
      ["prints the world + interfaces", "embedded in the binary"]),
     (["Need to see the ABI glue", "(canon lift / canon lower)"],
      ["wasm-tools print", "<file>.wasm   (WAT)"],
-     ["tens of thousands of lines —", "grep for the export name"]),
+     ["tens of thousands of lines;", "grep for the export name"]),
     (["Is DWARF even present", "in this artifact?"],
      ["wasm-tools objdump", "<file>.wasm"],
      ["per-section sizes; look for", ".debug_info under each module"]),
@@ -36,7 +36,7 @@ rows = [
      ["panic/log lines land on", "the host process's own stderr"]),
     (["Need to pause and", "step through source"],
      ["wasmtime run", "-g/--gdbstub <PORT>   (LLDB)"],
-     ["native/core level only — no", "WIT-aware source view yet"]),
+     ["native/core level only;", "no WIT-aware source view yet"]),
 ]
 
 nodes = []
@@ -61,6 +61,6 @@ gd.emit(
     nodes=nodes,
     edges=edges,
     notes=[
-        {"x": 600, "y": height - 18, "text": "All six run against the SAME Part 2 artifacts (rust/target/.../cargo_rust.wasm, go/cargo-go.wasm) — none of them require rebuilding or instrumenting the component first.", "size": 12, "color": "#555555", "anchor": "middle"},
+        {"x": 600, "y": height - 18, "text": "All six run against the SAME Part 2 artifacts (rust/target/.../cargo_rust.wasm, go/cargo-go.wasm); none of them require rebuilding or instrumenting the component first.", "size": 12, "color": "#555555", "anchor": "middle"},
     ],
 )

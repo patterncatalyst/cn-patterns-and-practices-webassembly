@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Figure 28.2 — Ch28: the thread map. One WIT contract, two language builds,
+"""Figure 28.2, Ch28: the thread map. One WIT contract, two language builds,
 one set of shared deploy targets the final project assembles.
 
-contracts/wit (patterncatalyst:cargo) is implemented twice — once by the Part
-2 Rust provider, once by the Part 2 Go provider — and each is plugged into
+contracts/wit (patterncatalyst:cargo) is implemented twice: once by the Part
+2 Rust provider, once by the Part 2 Go provider, and each is plugged into
 its Part 3 HTTP component (http-rust, http-go/TinyGo) with wac plug to
 produce cargo-rust.wasm and cargo-go.wasm. Both composed components then feed
 the same four deploy targets built in earlier parts: the containerd shim
@@ -21,7 +21,7 @@ W, H = 1400, 1020
 
 bands = [
     {"x": 20, "y": 620, "w": 1360, "h": 240,
-     "label": "Shared deploy targets — where the final project assembles",
+     "label": "Shared deploy targets: where the final project assembles",
      "fill": "#f1f5f9"},
 ]
 
@@ -32,10 +32,10 @@ nodes = [
 
     # Rust column
     {"x": 100, "y": 150, "w": 400, "h": 80,
-     "lines": ["Part 2 — Rust cargo provider", "implements contracts/wit"],
+     "lines": ["Part 2: Rust cargo provider", "implements contracts/wit"],
      "style": "box"},
     {"x": 100, "y": 270, "w": 400, "h": 80,
-     "lines": ["Part 3 — http-rust component", "wasi:http/incoming-handler"],
+     "lines": ["Part 3: http-rust component", "wasi:http/incoming-handler"],
      "style": "box"},
     {"x": 100, "y": 390, "w": 400, "h": 60,
      "lines": ["wac plug --plug provider http-rust"],
@@ -46,10 +46,10 @@ nodes = [
 
     # Go column
     {"x": 900, "y": 150, "w": 400, "h": 80,
-     "lines": ["Part 2 — Go cargo provider", "implements contracts/wit"],
+     "lines": ["Part 2: Go cargo provider", "implements contracts/wit"],
      "style": "box"},
     {"x": 900, "y": 270, "w": 400, "h": 80,
-     "lines": ["Part 3 — http-go component (TinyGo)", "wasi:http/incoming-handler"],
+     "lines": ["Part 3: http-go component (TinyGo)", "wasi:http/incoming-handler"],
      "style": "box"},
     {"x": 900, "y": 390, "w": 400, "h": 60,
      "lines": ["wac plug --plug provider http-go"],
@@ -59,16 +59,16 @@ nodes = [
      "style": "accent"},
 
     {"x": 55, "y": 670, "w": 310, "h": 110,
-     "lines": ["containerd-shim-wasmtime", "Part 5 — RuntimeClass: wasmtime"],
+     "lines": ["containerd-shim-wasmtime", "Part 5: RuntimeClass: wasmtime"],
      "style": "box"},
     {"x": 385, "y": 670, "w": 310, "h": 110,
-     "lines": ["Istio gateway filter", "Part 6, Ch25 — proxy-wasm"],
+     "lines": ["Istio gateway filter", "Part 6, Ch25: proxy-wasm"],
      "style": "box"},
     {"x": 715, "y": 670, "w": 310, "h": 110,
-     "lines": ["shim OTel → otel-lgtm", "Ch24 — Tempo traces"],
+     "lines": ["shim OTel → otel-lgtm", "Ch24: Tempo traces"],
      "style": "box"},
     {"x": 1045, "y": 670, "w": 310, "h": 110,
-     "lines": ["wasmCloud operator", "Ch19 — CRC"],
+     "lines": ["wasmCloud operator", "Ch19: CRC"],
      "style": "box"},
 
     {"x": 20, "y": 890, "w": 1360, "h": 70,
@@ -94,7 +94,7 @@ edges = [
 
 notes = [
     {"x": 700, "y": 1010, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Two languages, four targets, one contract — nothing here is new infrastructure, only assembly."},
+     "text": "Two languages, four targets, one contract: nothing here is new infrastructure, only assembly."},
 ]
 
 gd.emit("28-one-contract-two-languages", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

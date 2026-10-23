@@ -23,7 +23,7 @@
 <text x="520.0" y="251.0" font-size="11.5" fill="#555555" text-anchor="middle">spin-operator</text>
 <rect x="760" y="196" width="400" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="960.0" y="234.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Spin applications specifically,</text>
-<text x="960.0" y="251.0" font-size="11.5" fill="#555555" text-anchor="middle">not arbitrary components — Part 6</text>
+<text x="960.0" y="251.0" font-size="11.5" fill="#555555" text-anchor="middle">not arbitrary components: Part 6</text>
 <rect x="20" y="296" width="260" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="150.0" y="341.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud operator</text>
 <rect x="300" y="296" width="440" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
@@ -38,7 +38,7 @@
 <text x="520.0" y="434.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">kubelet-replacement (virtual kubelet)</text>
 <text x="520.0" y="451.0" font-size="11.5" fill="#555555" text-anchor="middle">running wasmtime/WAGI providers</text>
 <rect x="760" y="396" width="400" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="960.0" y="434.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ARCHIVED — superseded by the</text>
+<text x="960.0" y="434.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ARCHIVED: superseded by the</text>
 <text x="960.0" y="451.0" font-size="11.5" fill="#555555" text-anchor="middle">containerd-shim approach above</text>
 <rect x="20" y="510" width="1140" height="80" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5"/>
 <text x="590.0" y="548.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">None of these four compete head-on: pick by what you&#x27;re deploying</text>

@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="16" width="900" height="180" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Node A — container pod</text>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Node A: container pod</text>
 <rect x="20" y="216" width="900" height="184" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="236" font-size="12" font-weight="700" fill="#1d1d1d">Node B — wasmtime host running Wasm components</text>
+<text x="32" y="236" font-size="12" font-weight="700" fill="#1d1d1d">Node B: wasmtime host running Wasm components</text>
 <rect x="40" y="180" width="180" height="44" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="130.0" y="207.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Ingress / Service</text>
 <rect x="260" y="56" width="220" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>

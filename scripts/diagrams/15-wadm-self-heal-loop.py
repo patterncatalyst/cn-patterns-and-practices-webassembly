@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 15.2 — Ch15: wadm's reconcile loop self-healing the component.
+"""Figure 15.2, Ch15: wadm's reconcile loop self-healing the component.
 
 The real captured sequence from evidence/2026-10-21/05-resilience.txt:
 service healthy (200) -> `wash scale component ... --max-instances 0` removes
@@ -27,7 +27,7 @@ nodes = [
      "style": "ink"},
 
     {"x": 540, "y": 60, "w": 220, "h": 80,
-     "lines": ["3. traffic fails", "GET /cargo/... -> 500", "\"failed to invoke wrpc:http/", "incoming-handler\" — no component"],
+     "lines": ["3. traffic fails", "GET /cargo/... -> 500", "\"failed to invoke wrpc:http/", "incoming-handler\": no component"],
      "style": "ghost"},
 
     {"x": 800, "y": 60, "w": 180, "h": 80,
@@ -42,7 +42,7 @@ nodes = [
      "lines": ["wadm's continuous reconcile loop (the point of a declarative OAM manifest)",
                "desired state = wadm.yaml's spreadscaler: instances: 1, always",
                "actual state = what the lattice reports right now",
-               "every drift between desired and actual gets corrected automatically —",
+               "every drift between desired and actual gets corrected automatically:",
                "no human ran `wash start component` to bring it back"],
      "style": "box"},
 ]
@@ -57,9 +57,9 @@ edges = [
 
 notes = [
     {"x": 590, "y": 20, "size": 13, "color": "#1d1d1d", "anchor": "middle", "bold": True,
-     "text": "Real transcript: evidence/2026-10-21/05-resilience.txt — fail_observed=1 recovered=1, recovered after 2s"},
+     "text": "Real transcript: evidence/2026-10-21/05-resilience.txt; fail_observed=1 recovered=1, recovered after 2s"},
     {"x": 590, "y": 440, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "`wash app status: deployed` means the desired state was accepted at step 2 already — it does not mean step 3's 500s aren't happening."},
+     "text": "`wash app status: deployed` means the desired state was accepted at step 2 already; it does not mean step 3's 500s aren't happening."},
 ]
 
 gd.emit("15-wadm-self-heal-loop", W, H, nodes=nodes, edges=edges, notes=notes)

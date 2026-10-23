@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 26.1 — Ch26: server-side Wasm backend landscape.
+"""Figure 26.1, Ch26: server-side Wasm backend landscape.
 
 A decision aid, not a ranking, comparing the four backend options this
 book covers for running server-side Wasm on Kubernetes: the raw
@@ -31,7 +31,7 @@ COL_STYLE = ["box", "user", "accent", "kernel"]
 
 bands = [
     {"x": 20, "y": 40, "w": 1140, "h": 580,
-     "label": "Server-side Wasm backends — compare by operations model, app model, and cluster support",
+     "label": "Server-side Wasm backends: compare by operations model, app model, and cluster support",
      "fill": "#f1f5f9"},
 ]
 
@@ -80,7 +80,7 @@ for i, x in enumerate(COL_XS):
 nodes.append({
     "x": 20, "y": 650, "w": 1140, "h": 140,
     "lines": [
-        "Four backend options for server-side Wasm — a decision aid, not a ranking.",
+        "Four backend options for server-side Wasm: a decision aid, not a ranking.",
         "Pick by operations model and app model: SpinKube trades portability for built-in HTTP/Redis/key-value triggers.",
     ],
     "style": "ink",
@@ -90,7 +90,7 @@ edges = []
 
 notes = [
     {"x": 590, "y": 812, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "WasmEdge / other runwasi shims shown for completeness — not exercised as a runnable example in this book."},
+     "text": "WasmEdge / other runwasi shims shown for completeness; not exercised as a runnable example in this book."},
 ]
 
 gd.emit("26-wasm-backend-landscape", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 23.1 — Ch23: two trigger types, one owner.
+"""Figure 23.1, Ch23: two trigger types, one owner.
 
 Both halves of this chapter are the same shape: a keda.sh ScaledObject reads
 a metric and patches a plain Kubernetes Deployment's replica count directly,
@@ -9,7 +9,7 @@ Deployment 0 -> 1, and the interceptor replays the request once the new Pod
 is ready. Right band (Kafka): a kafka ScaledObject reads real consumer-group
 lag on cargo-handling-events and scales the cargo-kafka-host Deployment
 0 -> N; the host embeds wasmtime and calls the Wasm handler per message, then
-commits the offset. Only the trigger type differs — request concurrency on
+commits the offset. Only the trigger type differs: request concurrency on
 the left, consumer-group lag on the right. KEDA owns the replica count in
 both.
 """
@@ -24,10 +24,10 @@ W, H = 1180, 560
 
 bands = [
     {"x": 20, "y": 40, "w": 540, "h": 480,
-     "label": "KEDA DRIVES — HTTP request-rate (minikube, cargo-http)",
+     "label": "KEDA DRIVES: HTTP request-rate (minikube, cargo-http)",
      "fill": "#f1f5f9"},
     {"x": 620, "y": 40, "w": 540, "h": 480,
-     "label": "KEDA DRIVES — Kafka consumer-group lag (minikube, cargo-kafka-host)",
+     "label": "KEDA DRIVES: Kafka consumer-group lag (minikube, cargo-kafka-host)",
      "fill": "#f1f5f9"},
 ]
 

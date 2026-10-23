@@ -12,7 +12,7 @@
 <text x="650.0" y="83.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">3. traffic fails</text>
 <text x="650.0" y="100.0" font-size="11.5" fill="#555555" text-anchor="middle">GET /cargo/... -&gt; 500</text>
 <text x="650.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">&quot;failed to invoke wrpc:http/</text>
-<text x="650.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">incoming-handler&quot; — no component</text>
+<text x="650.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">incoming-handler&quot;: no component</text>
 <rect x="800" y="60" width="180" height="80" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
 <text x="890.0" y="90.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">4. wadm reconciles</text>
 <text x="890.0" y="107.5" font-size="11.5" fill="#555555" text-anchor="middle">SpreadScaler sees</text>
@@ -25,7 +25,7 @@
 <text x="650.0" y="280.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wadm&#x27;s continuous reconcile loop (the point of a declarative OAM manifest)</text>
 <text x="650.0" y="297.5" font-size="11.5" fill="#555555" text-anchor="middle">desired state = wadm.yaml&#x27;s spreadscaler: instances: 1, always</text>
 <text x="650.0" y="312.5" font-size="11.5" fill="#555555" text-anchor="middle">actual state = what the lattice reports right now</text>
-<text x="650.0" y="327.5" font-size="11.5" fill="#555555" text-anchor="middle">every drift between desired and actual gets corrected automatically —</text>
+<text x="650.0" y="327.5" font-size="11.5" fill="#555555" text-anchor="middle">every drift between desired and actual gets corrected automatically:</text>
 <text x="650.0" y="342.5" font-size="11.5" fill="#555555" text-anchor="middle">no human ran `wash start component` to bring it back</text>
 <path d="M240,100 L280,100" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M500,100 L540,100" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
@@ -34,6 +34,6 @@
 <path d="M910,140 L650,230" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <text x="786.0" y="179.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">reconcile fires here</text>
 <text x="786.0" y="179.0" font-size="11" fill="#555" text-anchor="middle">reconcile fires here</text>
-<text x="590" y="20" font-size="13" fill="#1d1d1d" text-anchor="middle" font-weight="700">Real transcript: evidence/2026-10-21/05-resilience.txt — fail_observed=1 recovered=1, recovered after 2s</text>
-<text x="590" y="440" font-size="12" fill="#555555" text-anchor="middle">`wash app status: deployed` means the desired state was accepted at step 2 already — it does not mean step 3&#x27;s 500s aren&#x27;t happening.</text>
+<text x="590" y="20" font-size="13" fill="#1d1d1d" text-anchor="middle" font-weight="700">Real transcript: evidence/2026-10-21/05-resilience.txt; fail_observed=1 recovered=1, recovered after 2s</text>
+<text x="590" y="440" font-size="12" fill="#555555" text-anchor="middle">`wash app status: deployed` means the desired state was accepted at step 2 already; it does not mean step 3&#x27;s 500s aren&#x27;t happening.</text>
 </svg>

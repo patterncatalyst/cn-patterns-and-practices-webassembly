@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Figure 24.1 — Ch24: two emitters, two in-cluster backends.
+"""Figure 24.1, Ch24: two emitters, two in-cluster backends.
 
 minikube (top band): the generic containerd-shim-wasmtime v0.6.1 is the
-telemetry source. It emits shim-level OTel traces — one span per invocation,
-attributed to the shim boundary, not the guest component — straight into an
+telemetry source. It emits shim-level OTel traces (one span per invocation,
+attributed to the shim boundary, not the guest component) straight into an
 in-cluster otel-lgtm stack (Grafana/Tempo/Loki/Prometheus).
 
 CRC (bottom band): the wasmCloud host 1.9.1 is the telemetry source instead.
-It emits a fuller native signal set — traces, metrics, and logs — into a
+It emits a fuller native signal set (traces, metrics, and logs) into a
 rootless, restricted-v2 OTel Collector whose debug + file exporters are the
 evidence sink, read via `oc logs` / `oc exec`. No otel-lgtm on CRC (Decision
 B holds restricted-v2 with no SCC exception; the dev image cannot run there).
@@ -23,10 +23,10 @@ W, H = 1180, 460
 
 bands = [
     {"x": 20, "y": 40, "w": 1140, "h": 180,
-     "label": "minikube — shim-level traces only (wasmtime does not natively instrument metrics/logs)",
+     "label": "minikube: shim-level traces only (wasmtime does not natively instrument metrics/logs)",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 260, "w": 1140, "h": 180,
-     "label": "CRC — wasmCloud host native traces + metrics + logs, via a rootless Collector",
+     "label": "CRC: wasmCloud host native traces + metrics + logs, via a rootless Collector",
      "fill": "#f1f5f9"},
 ]
 

@@ -4,7 +4,7 @@
  "source": "https://excalidraw.com",
  "elements": [
   {
-   "id": "r194369857",
+   "id": "r651731871",
    "type": "rectangle",
    "x": 60,
    "y": 110,
@@ -23,8 +23,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 239519697,
-   "versionNonce": 1146526251,
+   "seed": 855716274,
+   "versionNonce": 123658645,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -32,7 +32,7 @@
    "locked": false
   },
   {
-   "id": "t1631824038",
+   "id": "t892348436",
    "type": "text",
    "x": 70,
    "y": 118,
@@ -49,8 +49,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1347994533,
-   "versionNonce": 1164468551,
+   "seed": 1662471305,
+   "versionNonce": 1672051987,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -67,7 +67,7 @@
    "baseline": 14
   },
   {
-   "id": "t384919895",
+   "id": "t1294995483",
    "type": "text",
    "x": 70,
    "y": 138,
@@ -84,8 +84,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 123931715,
-   "versionNonce": 374845677,
+   "seed": 204873129,
+   "versionNonce": 886189407,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -102,7 +102,7 @@
    "baseline": 11
   },
   {
-   "id": "t4995687",
+   "id": "t267101318",
    "type": "text",
    "x": 70,
    "y": 153,
@@ -119,8 +119,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1821254822,
-   "versionNonce": 48764597,
+   "seed": 727789394,
+   "versionNonce": 101469879,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -137,7 +137,7 @@
    "baseline": 11
   },
   {
-   "id": "t1765642802",
+   "id": "t1154629475",
    "type": "text",
    "x": 70,
    "y": 168,
@@ -154,8 +154,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1344458980,
-   "versionNonce": 1702536287,
+   "seed": 703709073,
+   "versionNonce": 1339310480,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -172,7 +172,7 @@
    "baseline": 11
   },
   {
-   "id": "r1835324091",
+   "id": "r1610324440",
    "type": "rectangle",
    "x": 470,
    "y": 110,
@@ -191,8 +191,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1685151134,
-   "versionNonce": 825209546,
+   "seed": 76281469,
+   "versionNonce": 525101452,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -200,7 +200,7 @@
    "locked": false
   },
   {
-   "id": "t800072899",
+   "id": "t1772340815",
    "type": "text",
    "x": 480,
    "y": 118,
@@ -217,8 +217,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1298791120,
-   "versionNonce": 1794458822,
+   "seed": 262572294,
+   "versionNonce": 331017752,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -235,7 +235,7 @@
    "baseline": 14
   },
   {
-   "id": "t1726734390",
+   "id": "t1390261684",
    "type": "text",
    "x": 480,
    "y": 138,
@@ -252,8 +252,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 268400733,
-   "versionNonce": 1027844905,
+   "seed": 846491164,
+   "versionNonce": 1820595649,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -270,7 +270,7 @@
    "baseline": 11
   },
   {
-   "id": "t391469219",
+   "id": "t132871522",
    "type": "text",
    "x": 480,
    "y": 153,
@@ -287,8 +287,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1262351375,
-   "versionNonce": 274599958,
+   "seed": 1019968128,
+   "versionNonce": 542716063,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -305,7 +305,7 @@
    "baseline": 11
   },
   {
-   "id": "t790632807",
+   "id": "t1568011817",
    "type": "text",
    "x": 480,
    "y": 168,
@@ -322,8 +322,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 94597784,
-   "versionNonce": 1649564858,
+   "seed": 654328211,
+   "versionNonce": 990657081,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -340,7 +340,7 @@
    "baseline": 11
   },
   {
-   "id": "r1235234775",
+   "id": "r984558949",
    "type": "rectangle",
    "x": 280,
    "y": 15,
@@ -359,8 +359,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1679237733,
-   "versionNonce": 1489172742,
+   "seed": 420973762,
+   "versionNonce": 981387968,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -368,7 +368,7 @@
    "locked": false
   },
   {
-   "id": "t1608595943",
+   "id": "t1172166651",
    "type": "text",
    "x": 290,
    "y": 23,
@@ -385,8 +385,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1039440606,
-   "versionNonce": 1195400579,
+   "seed": 1365445573,
+   "versionNonce": 259004384,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -403,7 +403,7 @@
    "baseline": 14
   },
   {
-   "id": "t637026149",
+   "id": "t1174757592",
    "type": "text",
    "x": 290,
    "y": 43,
@@ -420,8 +420,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 874632055,
-   "versionNonce": 456191970,
+   "seed": 1434249683,
+   "versionNonce": 590522057,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -438,7 +438,7 @@
    "baseline": 11
   },
   {
-   "id": "a1392302820",
+   "id": "a68186516",
    "type": "arrow",
    "x": 350,
    "y": 150,
@@ -457,8 +457,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 1201101908,
-   "versionNonce": 1507514584,
+   "seed": 866198077,
+   "versionNonce": 1935080373,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -481,7 +481,7 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "t1312707526",
+   "id": "t1642153310",
    "type": "text",
    "x": 410.0,
    "y": 136.0,
@@ -498,8 +498,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1535126663,
-   "versionNonce": 914295197,
+   "seed": 478804747,
+   "versionNonce": 1159874652,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -516,7 +516,7 @@
    "baseline": 11
   },
   {
-   "id": "a1265781157",
+   "id": "a248956224",
    "type": "arrow",
    "x": 360,
    "y": 75,
@@ -535,8 +535,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 84773896,
-   "versionNonce": 336589320,
+   "seed": 872131326,
+   "versionNonce": 362817573,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -559,7 +559,7 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "a1011055544",
+   "id": "a1110506768",
    "type": "arrow",
    "x": 460,
    "y": 75,
@@ -578,8 +578,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 1742516532,
-   "versionNonce": 1895428901,
+   "seed": 891522198,
+   "versionNonce": 1377546943,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -602,11 +602,11 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "t579241988",
+   "id": "t1776471140",
    "type": "text",
    "x": 410,
    "y": 290,
-   "width": 891.0000000000001,
+   "width": 884.4000000000001,
    "height": 15.0,
    "angle": 0,
    "strokeColor": "#555555",
@@ -619,20 +619,20 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 571794738,
-   "versionNonce": 1892538471,
+   "seed": 858804427,
+   "versionNonce": 1069531254,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "Composition links an export to an import by interface identifier, not by language \u2014 a Go gateway can import a Rust-built cargo-service.",
+   "text": "Composition links an export to an import by interface identifier, not by language: a Go gateway can import a Rust-built cargo-service.",
    "fontSize": 12,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "Composition links an export to an import by interface identifier, not by language \u2014 a Go gateway can import a Rust-built cargo-service.",
+   "originalText": "Composition links an export to an import by interface identifier, not by language: a Go gateway can import a Rust-built cargo-service.",
    "lineHeight": 1.25,
    "baseline": 12
   }

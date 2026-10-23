@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Figure for Chapter 13 — Networking, Reconnect, and Resilience.
+"""Figure for Chapter 13: Networking, Reconnect, and Resilience.
 
 13-reconnect-backoff-timeline : the real `wasmtime run -S inherit-network`
                                  transcript (sockets-rust, base 100ms) as a
-                                 timeline — four connection-refused attempts
+                                 timeline: four connection-refused attempts
                                  against growing backoff-with-jitter delays,
                                  then a delayed listener binds and attempt 5
                                  connects.
@@ -15,7 +15,7 @@ import generate_diagram as gd
 gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
-# (attempt label, backoff-before-next label, node width — widening with the backoff)
+# (attempt label, backoff-before-next label, node width: widening with the backoff)
 attempts = [
     ("attempt 1", "connection-refused", "backing off 131ms", 150),
     ("attempt 2", "connection-refused", "backing off 269ms", 170),
@@ -55,11 +55,11 @@ height = 320
 gd.emit(
     "13-reconnect-backoff-timeline", width, height,
     bands=[
-        {"x": 10, "y": 10, "w": width - 20, "h": height - 60, "label": "wasmtime run -S inherit-network  —  sockets-rust <wasm> PORT 20 100 (base 100ms)", "fill": "#f1f5f9"},
+        {"x": 10, "y": 10, "w": width - 20, "h": height - 60, "label": "wasmtime run -S inherit-network: sockets-rust <wasm> PORT 20 100 (base 100ms)", "fill": "#f1f5f9"},
     ],
     nodes=nodes,
     edges=edges,
     notes=[
-        {"x": width / 2, "y": height - 16, "text": "delay = base * 2^min(attempt-1, 5) + random jitter up to 50% (wasi:random) — jitter de-synchronizes retrying clients instead of making them all retry in lockstep.", "size": 12, "color": "#555555", "anchor": "middle"},
+        {"x": width / 2, "y": height - 16, "text": "delay = base * 2^min(attempt-1, 5) + random jitter up to 50% (wasi:random); jitter de-synchronizes retrying clients instead of making them all retry in lockstep.", "size": 12, "color": "#555555", "anchor": "middle"},
     ],
 )

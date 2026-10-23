@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Figure 17.1 — Ch17: how a Pod spec reaches either runc or the Wasm shim.
+"""Figure 17.1, Ch17: how a Pod spec reaches either runc or the Wasm shim.
 kubelet hands every Pod to containerd, which looks up the runtime by name.
 With no runtimeClassName (or the default runc class), containerd shells out
 to runc and a normal Linux container starts. With runtimeClassName: wasmtime
 on the Pod spec, containerd instead resolves runtime_type
 io.containerd.wasmtime.v1 to the containerd-shim-wasmtime-v1 binary on its
 PATH; that shim detects app.wasm exports wasi:http/incoming-handler and runs
-it behind its own built-in hyper server on 0.0.0.0:8080 — no Linux userland,
+it behind its own built-in hyper server on 0.0.0.0:8080; no Linux userland,
 no language runtime, just the component. Same kubelet, same containerd, same
 Pod API; the handler name is what forks the path."""
 import sys, os
@@ -82,7 +82,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 110, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Installing the shim restarts containerd on the node — bounces every running Pod, do it before other addons."},
+     "text": "Installing the shim restarts containerd on the node: bounces every running Pod, do it before other addons."},
 ]
 
 gd.emit("17-shim-and-runtimeclass-layering", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

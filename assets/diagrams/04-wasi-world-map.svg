@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="16" width="920" height="180" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">WASI 0.2.x base interfaces — Foundations, covered this chapter</text>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">WASI 0.2.x base interfaces: Foundations, covered this chapter</text>
 <rect x="20" y="212" width="920" height="150" rx="12" fill="#fff3e0" stroke="#ddd"/>
-<text x="32" y="232" font-size="12" font-weight="700" fill="#1d1d1d">WASI 0.2.x interfaces — covered in later chapters</text>
+<text x="32" y="232" font-size="12" font-weight="700" fill="#1d1d1d">WASI 0.2.x interfaces: covered in later chapters</text>
 <rect x="48" y="58" width="160" height="62" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="128.0" y="87.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasi:io</text>
 <text x="128.0" y="104.0" font-size="11.5" fill="#555555" text-anchor="middle">streams, pollable</text>

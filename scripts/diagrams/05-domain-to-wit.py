@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 5 — The Shared Cargo Domain as Components.
+"""Figures for Chapter 5: The Shared Cargo Domain as Components.
 
-05-domain-to-wit : the domain-to-WIT mapping — which domain concept lands
+05-domain-to-wit : the domain-to-WIT mapping: which domain concept lands
                     in which interface of package patterncatalyst:cargo,
                     and which world (cargo vs cargo-consumer) a Rust or Go
                     component targets depending on whether it implements
@@ -15,15 +15,15 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 5.2 — domain concepts mapped onto the three WIT interfaces, and the
+# Figure 5.2: domain concepts mapped onto the three WIT interfaces, and the
 # two worlds built over them
 # ---------------------------------------------------------------------------
 gd.emit(
     "05-domain-to-wit", 1040, 640,
     bands=[
-        {"x":20,"y":16,"w":1000,"h":104,"label":"interface types — records + enums + cargo-error, no functions","fill":"#f1f5f9"},
-        {"x":20,"y":132,"w":1000,"h":92,"label":"interface booking — book-cargo, request-possible-routes, assign-route, get-cargo","fill":"#fafafa"},
-        {"x":20,"y":236,"w":1000,"h":92,"label":"interface handling — register-handling-event, list-handling-events, resource cargo-tracker","fill":"#fafafa"},
+        {"x":20,"y":16,"w":1000,"h":104,"label":"interface types: records + enums + cargo-error, no functions","fill":"#f1f5f9"},
+        {"x":20,"y":132,"w":1000,"h":92,"label":"interface booking: book-cargo, request-possible-routes, assign-route, get-cargo","fill":"#fafafa"},
+        {"x":20,"y":236,"w":1000,"h":92,"label":"interface handling: register-handling-event, list-handling-events, resource cargo-tracker","fill":"#fafafa"},
         {"x":20,"y":344,"w":1000,"h":110,"label":"world cargo (export types, booking, handling) / world cargo-consumer (import types, booking, handling)","fill":"#fff3e0"},
     ],
     nodes=[

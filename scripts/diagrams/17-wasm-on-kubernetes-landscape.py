@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Figure 17.2 — Ch17: the Wasm-on-Kubernetes landscape as of this book's
+"""Figure 17.2, Ch17: the Wasm-on-Kubernetes landscape as of this book's
 2026-10-21 verified run. Four rows, each naming what gets scheduled and what
 it will and won't run: runwasi/containerd-shim-wasmtime (this book's
-mechanism — any wasi:http/proxy or wasi:cli component, via a generic
+mechanism: any wasi:http/proxy or wasi:cli component, via a generic
 containerd shim + RuntimeClass); SpinKube/containerd-shim-spin (a sibling
 containerd-shim project scoped to Spin applications specifically, not
 arbitrary components, via a SpinApp CRD); the wasmCloud operator (schedules
 a wasmCloud host itself as a Pod, then a wadm application deploys onto that
-in-cluster lattice — the fallback path if the raw shim had hit a feature
+in-cluster lattice: the fallback path if the raw shim had hit a feature
 gap, and what the CRC appendix uses); Krustlet (the original kubelet-
 replacement approach, archived by its maintainers, history only)."""
 import sys, os
@@ -36,7 +36,7 @@ nodes = [
     {"x": 300, "y": 196, "w": 440, "h": 80,
      "lines": ["containerd shim + SpinApp CRD +", "spin-operator"], "style": "box"},
     {"x": 760, "y": 196, "w": 400, "h": 80,
-     "lines": ["Spin applications specifically,", "not arbitrary components — Part 6"], "style": "box"},
+     "lines": ["Spin applications specifically,", "not arbitrary components: Part 6"], "style": "box"},
 
     {"x": 20, "y": 296, "w": 260, "h": 80,
      "lines": ["wasmCloud operator"], "style": "box"},
@@ -50,7 +50,7 @@ nodes = [
     {"x": 300, "y": 396, "w": 440, "h": 80,
      "lines": ["kubelet-replacement (virtual kubelet)", "running wasmtime/WAGI providers"], "style": "ghost"},
     {"x": 760, "y": 396, "w": 400, "h": 80,
-     "lines": ["ARCHIVED — superseded by the", "containerd-shim approach above"], "style": "ghost"},
+     "lines": ["ARCHIVED: superseded by the", "containerd-shim approach above"], "style": "ghost"},
 
     {"x": 20, "y": 510, "w": 1140, "h": 80,
      "lines": ["None of these four compete head-on: pick by what you're deploying",

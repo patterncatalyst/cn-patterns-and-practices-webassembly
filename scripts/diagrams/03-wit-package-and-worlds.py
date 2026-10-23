@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fig 3.1/3.2 — Ch3: the patterncatalyst:cargo@0.1.0 package as it appears
+"""Fig 3.1/3.2: Ch3: the patterncatalyst:cargo@0.1.0 package as it appears
 in contracts/wit/ (types -> booking/handling by `use`), and the same three
 interfaces re-read through the two worlds that bind them to a direction
 (cargo exports, cargo-consumer imports)."""
@@ -11,7 +11,7 @@ import os
 os.makedirs(generate_diagram.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 3.1 — the cargo package: one shared interface, two behavior interfaces
+# Figure 3.1: the cargo package: one shared interface, two behavior interfaces
 # ---------------------------------------------------------------------------
 W1, H1 = 820, 400
 
@@ -56,7 +56,7 @@ notes_1 = [
 generate_diagram.emit("03-wit-package-structure", W1, H1, nodes=nodes_1, edges=edges_1, notes=notes_1)
 
 # ---------------------------------------------------------------------------
-# Figure 3.2 — a world is a direction over the same interfaces
+# Figure 3.2: a world is a direction over the same interfaces
 # ---------------------------------------------------------------------------
 W2, H2 = 820, 380
 
@@ -88,7 +88,7 @@ edges_2 = [
 
 notes_2 = [
     {"x": 410, "y": 355, "size": 12, "color": "#b8650a", "anchor": "middle", "bold": True,
-     "text": "A world names no new types — it only declares which direction each interface faces."},
+     "text": "A world names no new types; it only declares which direction each interface faces."},
 ]
 
 generate_diagram.emit("03-world-imports-vs-exports", W2, H2, nodes=nodes_2, edges=edges_2, notes=notes_2)
