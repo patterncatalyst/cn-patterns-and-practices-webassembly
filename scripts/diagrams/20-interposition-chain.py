@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 20.1 — Ch20: the same embargo+logging interposer, two substrate
+"""Figure 20.1, Ch20: the same embargo+logging interposer, two substrate
 expressions.
 
 minikube (top band): compile-time `wac plug` composition. The Part 2 provider,
@@ -24,10 +24,10 @@ W, H = 1180, 620
 
 bands = [
     {"x": 20, "y": 40, "w": 1140, "h": 230,
-     "label": "minikube — compile-time composition (wac plug): ONE Pod, ONE component instance",
+     "label": "minikube: compile-time composition (wac plug): ONE Pod, ONE component instance",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 320, "w": 1140, "h": 280,
-     "label": "CRC — runtime-link composition (wadm links): THREE components, THREE independent lifecycles",
+     "label": "CRC: runtime-link composition (wadm links): THREE components, THREE independent lifecycles",
      "fill": "#f1f5f9"},
 ]
 
@@ -47,7 +47,7 @@ nodes = [
      "style": "user"},
     {"x": 330, "y": 190, "w": 500, "h": 60,
      "lines": ["one in-process instance serves book-cargo AND get-cargo",
-               "for a single HTTP request — HashMap state is shared"],
+               "for a single HTTP request: HashMap state is shared"],
      "style": "ink"},
 
     # --- CRC band ---
@@ -65,7 +65,7 @@ nodes = [
      "style": "user"},
     {"x": 60, "y": 470, "w": 500, "h": 90,
      "lines": ["book-cargo and get-cargo are TWO separate wRPC calls",
-               "each gets a fresh instance + reset linear memory —",
+               "each gets a fresh instance + reset linear memory;",
                "the provider's in-memory HashMap does not survive the link"],
      "style": "ink"},
 ]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 8.2 — Ch8: the 2x2 polyglot composition matrix. Two consumers
+"""Figure 8.2: Ch8: the 2x2 polyglot composition matrix. Two consumers
 (Rust, Go) x two providers (Rust, Go) = four `wac plug` compositions, matched
 purely by WIT identifier. All four, including the two cross-language pairs,
 print the byte-identical normalized summary line under `wasmtime run`."""
@@ -13,15 +13,15 @@ os.makedirs(gd.OUT, exist_ok=True)
 W, H = 1040, 560
 
 nodes = [
-    # column headers — providers
+    # column headers: providers
     {"x": 300, "y": 20, "w": 280, "h": 70,
-     "lines": ["provider: rust/", "cargo-component — exports cargo/*"],
+     "lines": ["provider: rust/", "cargo-component: exports cargo/*"],
      "style": "accent"},
     {"x": 620, "y": 20, "w": 280, "h": 70,
-     "lines": ["provider: go/", "TinyGo + wasm-tools — exports cargo/*"],
+     "lines": ["provider: go/", "TinyGo + wasm-tools: exports cargo/*"],
      "style": "accent"},
 
-    # row headers — consumers
+    # row headers: consumers
     {"x": 20, "y": 140, "w": 240, "h": 70,
      "lines": ["consumer: consumer-rust/", "imports cargo/*, exports wasi:cli/run"],
      "style": "user"},

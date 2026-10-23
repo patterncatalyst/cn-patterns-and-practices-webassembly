@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Figure 21.2 — Ch21: the AMBASSADOR's outbound call is reached only through a
-GRANT, never a default — shown on both clusters in the way each can actually
+"""Figure 21.2, Ch21: the AMBASSADOR's outbound call is reached only through a
+GRANT, never a default; shown on both clusters in the way each can actually
 express it.
 
 CRC (top band): the ambassador's defining property runs live. The front door's
@@ -29,10 +29,10 @@ W, H = 1180, 680
 
 bands = [
     {"x": 20, "y": 40, "w": 1140, "h": 300,
-     "label": "CRC — runtime-granted lattice link: egress is a grant (cluster-live)",
+     "label": "CRC: runtime-granted lattice link: egress is a grant (cluster-live)",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 360, "w": 1140, "h": 300,
-     "label": "minikube — LOCAL wasmtime smoke only (shim has no outbound-network knob)",
+     "label": "minikube: LOCAL wasmtime smoke only (shim has no outbound-network knob)",
      "fill": "#f1f5f9"},
 ]
 
@@ -73,7 +73,7 @@ nodes = [
      "lines": ["-S inherit-network", "live listener"],
      "style": "box"},
     {"x": 700, "y": 390, "w": 420, "h": 60,
-     "lines": ["access-denied on attempt 1 — fails fast, no retry"],
+     "lines": ["access-denied on attempt 1: fails fast, no retry"],
      "style": "ink"},
     {"x": 700, "y": 470, "w": 420, "h": 60,
      "lines": ["4x connection-refused, growing jittered backoff, then exit 1"],

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="20" width="1140" height="560" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">wasmcloud-platform chart 0.1.2 — project wasmcloud, restricted-v2</text>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">wasmcloud-platform chart 0.1.2: project wasmcloud, restricted-v2</text>
 <rect x="60" y="70" width="300" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="210.0" y="95.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">install-operator.sh</text>
 <text x="210.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">helm upgrade --install (--dependency-update)</text>
@@ -36,7 +36,7 @@
 <rect x="780" y="440" width="320" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="940.0" y="463.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">operator auto-creates</text>
 <text x="940.0" y="480.0" font-size="11.5" fill="#555555" text-anchor="middle">Service cargo-http:8000</text>
-<text x="940.0" y="495.0" font-size="11.5" fill="#555555" text-anchor="middle">(ONLY because of the daemonscaler —</text>
+<text x="940.0" y="495.0" font-size="11.5" fill="#555555" text-anchor="middle">(ONLY because of the daemonscaler:</text>
 <text x="940.0" y="510.0" font-size="11.5" fill="#555555" text-anchor="middle">spreadscaler Service-creation is unsupported)</text>
 <path d="M360,95 L420,90" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="396.0" y="86.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">installs</text>
@@ -61,6 +61,6 @@
 <path d="M720,480 L780,480" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="756.0" y="474.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">daemonscaler -&gt; Service</text>
 <text x="756.0" y="474.0" font-size="11" fill="#b8650a" text-anchor="middle">daemonscaler -&gt; Service</text>
-<text x="590" y="560" font-size="12" fill="#555555" text-anchor="middle">deploy.sh then puts an edge-TLS Route in front of the operator-created Service — Figure 19.1 traces that live request.</text>
+<text x="590" y="560" font-size="12" fill="#555555" text-anchor="middle">deploy.sh then puts an edge-TLS Route in front of the operator-created Service; Figure 19.1 traces that live request.</text>
 <text x="590" y="578" font-size="12" fill="#555555" text-anchor="middle">Verified live 2026-10-21 (CRC 2.64.0 / OCP 4.22.14 / wasmcloud host 1.9.1).</text>
 </svg>

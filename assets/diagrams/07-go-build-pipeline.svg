@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="16" width="1140" height="180" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Generation — standard Go, nothing TinyGo-specific yet</text>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">Generation: standard Go, nothing TinyGo-specific yet</text>
 <rect x="20" y="216" width="1140" height="120" rx="12" fill="#fff3e0" stroke="#ddd"/>
-<text x="32" y="236" font-size="12" font-weight="700" fill="#1d1d1d">Compilation — the one step that must be TinyGo</text>
+<text x="32" y="236" font-size="12" font-weight="700" fill="#1d1d1d">Compilation: the one step that must be TinyGo</text>
 <rect x="20" y="356" width="1140" height="148" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="32" y="376" font-size="12" font-weight="700" fill="#1d1d1d">Componentization — wasm-tools, same for any language</text>
+<text x="32" y="376" font-size="12" font-weight="700" fill="#1d1d1d">Componentization: wasm-tools, same for any language</text>
 <rect x="50" y="62" width="210" height="90" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="155.0" y="105.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">contracts/wit/</text>
 <text x="155.0" y="122.0" font-size="11.5" fill="#555555" text-anchor="middle">patterncatalyst:cargo@0.1.0</text>

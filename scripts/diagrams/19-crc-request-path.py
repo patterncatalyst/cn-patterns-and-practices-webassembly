@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Figure 19.1 — Ch19: the live CRC request path for the cargo-http app under
+"""Figure 19.1, Ch19: the live CRC request path for the cargo-http app under
 the wasmCloud operator on OpenShift Local.
 
 A CA-verified `curl` (combined system trust store + the cluster's own ingress
 CA; never -k, never port-forward, never NodePort) hits the edge-TLS Route
 cargo-http-wasmcloud.apps-crc.testing. The router forwards to the Service
 cargo-http:8000, which the operator built with SELECTOR <none> and routes by
-hand-writing an EndpointSlice pointing at the wasmCloud host pod's IP — the
+hand-writing an EndpointSlice pointing at the wasmCloud host pod's IP, the
 thing that needed the endpoints(slices)/restricted RBAC grant. Inside the host
 pod the httpserver provider (0.27.0) listens on 0.0.0.0:8000 and calls the
 cargo-http component over wrpc on wasi:http/incoming-handler. Every pod in this
@@ -23,7 +23,7 @@ os.makedirs(gd.OUT, exist_ok=True)
 W, H = 1180, 560
 
 bands = [
-    {"x": 20, "y": 90, "w": 1140, "h": 440, "label": "project wasmcloud — a normal OpenShift project, governed by restricted-v2", "fill": "#f1f5f9"},
+    {"x": 20, "y": 90, "w": 1140, "h": 440, "label": "project wasmcloud: a normal OpenShift project, governed by restricted-v2", "fill": "#f1f5f9"},
 ]
 
 nodes = [
@@ -75,7 +75,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 530, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Readiness here means a real HTTP 200 through the Route, not the host Deployment reporting Ready — the router rewires its backend a beat later."},
+     "text": "Readiness here means a real HTTP 200 through the Route, not the host Deployment reporting Ready; the router rewires its backend a beat later."},
     {"x": 590, "y": 548, "size": 12, "color": "#555555", "anchor": "middle",
      "text": "Verified live 2026-10-21 (CRC 2.64.0 / OCP 4.22.14 / wasmcloud host 1.9.1)."},
 ]

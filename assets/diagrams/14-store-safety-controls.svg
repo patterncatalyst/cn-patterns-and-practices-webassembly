@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="16" width="1040" height="60" rx="12" fill="#fff3e0" stroke="#ddd"/>
-<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">guest: run(&quot;spin&quot;, N) or run(&quot;grow&quot;, N) — same component, three Stores</text>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">guest: run(&quot;spin&quot;, N) or run(&quot;grow&quot;, N): same component, three Stores</text>
 <rect x="20" y="92" width="330" height="520" rx="12" fill="#f1f5f9" stroke="#ddd"/>
 <text x="32" y="112" font-size="12" font-weight="700" fill="#1d1d1d">Fuel</text>
 <rect x="375" y="92" width="330" height="520" rx="12" fill="#f1f5f9" stroke="#ddd"/>

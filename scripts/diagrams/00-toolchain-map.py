@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 0 — Setup.
+"""Figures for Chapter 0: Setup.
 
 00-toolchain-map : the two language toolchains converging on one shared
-                    WIT contract and one shared host runtime — what's
+                    WIT contract and one shared host runtime: what's
                     Rust-only, what's Go-only, and what's common to both.
 """
 import sys, os
@@ -13,20 +13,20 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 0.1 — the build toolchain, two languages converging on one contract
+# Figure 0.1: the build toolchain, two languages converging on one contract
 # and one host runtime
 # ---------------------------------------------------------------------------
 gd.emit(
     "00-toolchain-map", 1100, 620,
     bands=[
-        {"x":20,"y":16,"w":1060,"h":80,"label":"shared contract — read by every build below, modified by none of them","fill":"#fff3e0"},
+        {"x":20,"y":16,"w":1060,"h":80,"label":"shared contract: read by every build below, modified by none of them","fill":"#fff3e0"},
         {"x":20,"y":110,"w":510,"h":300,"label":"Rust toolchain","fill":"#f1f5f9"},
         {"x":570,"y":110,"w":510,"h":300,"label":"Go toolchain","fill":"#fafafa"},
-        {"x":20,"y":424,"w":1060,"h":90,"label":"shared pinned binaries — released by the Bytecode Alliance, SHA-256 verified","fill":"#f1f5f9"},
-        {"x":20,"y":528,"w":1060,"h":76,"label":"shared host runtime — wasmtime, driven by the native host in examples/part2-building-components/host","fill":"#fff3e0"},
+        {"x":20,"y":424,"w":1060,"h":90,"label":"shared pinned binaries: released by the Bytecode Alliance, SHA-256 verified","fill":"#f1f5f9"},
+        {"x":20,"y":528,"w":1060,"h":76,"label":"shared host runtime: wasmtime, driven by the native host in examples/part2-building-components/host","fill":"#fff3e0"},
     ],
     nodes=[
-        {"x":380,"y":40,"w":340,"h":44,"lines":["contracts/wit/ — package patterncatalyst:cargo@0.1.0"],"style":"accent"},
+        {"x":380,"y":40,"w":340,"h":44,"lines":["contracts/wit/: package patterncatalyst:cargo@0.1.0"],"style":"accent"},
 
         {"x":50,"y":150,"w":220,"h":60,"lines":["Rust 1.99.1 (stable)","+ rustup target add wasm32-wasip2"],"style":"box"},
         {"x":300,"y":150,"w":210,"h":60,"lines":["cargo-component 0.21.1","built from source (cargo install)"],"style":"box"},
@@ -38,10 +38,10 @@ gd.emit(
         {"x":600,"y":240,"w":450,"h":60,"lines":["TinyGo 0.43.0 compiles the component","go build cannot emit Component Model exports (Ch7)"],"style":"ink"},
         {"x":600,"y":330,"w":450,"h":56,"lines":["go/cargo-go.wasm, via wasm-tools embed + adapt","exports world cargo"],"style":"box"},
 
-        {"x":50,"y":450,"w":500,"h":46,"lines":["wasm-tools 1.262.0 — embed, adapt, inspect, validate"],"style":"accent"},
+        {"x":50,"y":450,"w":500,"h":46,"lines":["wasm-tools 1.262.0: embed, adapt, inspect, validate"],"style":"accent"},
         {"x":590,"y":450,"w":470,"h":46,"lines":["wasip1→p2 reactor adapter (from the wasmtime v50 release)"],"style":"accent"},
 
-        {"x":350,"y":546,"w":400,"h":44,"lines":["wasmtime 50.0.0 — runs both .wasm components"],"style":"accent"},
+        {"x":350,"y":546,"w":400,"h":44,"lines":["wasmtime 50.0.0: runs both .wasm components"],"style":"accent"},
     ],
     edges=[
         {"x1":470,"y1":84,"x2":270,"y2":150,"label":""},

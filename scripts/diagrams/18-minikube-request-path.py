@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Figure 18.1 — Ch18: the live request path through minikube, host to
+"""Figure 18.1, Ch18: the live request path through minikube, host to
 component, with no port-forward anywhere in the chain. curl's own authority
 (cargo.<minikube-ip>.nip.io) is a real, publicly resolvable DNS name that
 happens to also be the Ingress host rule's exact match. ingress-nginx proxies
 to the ClusterIP Service, the kubelet's CNI routes to the one Pod backing it,
 and that Pod's runtimeClassName (wasmtime) is what tells containerd to hand
-the request to the containerd-shim-wasmtime process instead of runc — the shim
+the request to the containerd-shim-wasmtime process instead of runc; the shim
 runs a built-in hyper server on 0.0.0.0:8080 and calls straight into
 app.wasm's wasi:http/incoming-handler export. Captured live 2026-10-21."""
 import sys, os
@@ -18,7 +18,7 @@ os.makedirs(gd.OUT, exist_ok=True)
 W, H = 1180, 560
 
 bands = [
-    {"x": 20, "y": 170, "w": 1140, "h": 350, "label": "minikube profile 'part5' — docker driver, containerd runtime, Kubernetes v1.37.1", "fill": "#f1f5f9"},
+    {"x": 20, "y": 170, "w": 1140, "h": 350, "label": "minikube profile 'part5': docker driver, containerd runtime, Kubernetes v1.37.1", "fill": "#f1f5f9"},
 ]
 
 nodes = [
@@ -51,7 +51,7 @@ nodes = [
      "style": "accent"},
 
     {"x": 690, "y": 430, "w": 400, "h": 50,
-     "lines": ["app.wasm — exports wasi:http/incoming-handler", "sha256 eff7f5ee… (same bytes as Ch14/Ch15)"],
+     "lines": ["app.wasm: exports wasi:http/incoming-handler", "sha256 eff7f5ee… (same bytes as Ch14/Ch15)"],
      "style": "user"},
 ]
 
@@ -66,7 +66,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 540, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "No port-forward, no NodePort, no `minikube service` anywhere in this path — only the real ingress-nginx edge."},
+     "text": "No port-forward, no NodePort, no `minikube service` anywhere in this path: only the real ingress-nginx edge."},
 ]
 
 gd.emit("18-minikube-request-path", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

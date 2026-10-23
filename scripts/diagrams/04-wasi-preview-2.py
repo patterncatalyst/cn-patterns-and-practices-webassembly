@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 4 — WASI Preview 2.
+"""Figures for Chapter 4: WASI Preview 2.
 
-04-capability-grant : the capability-grant model — a host holding resource
+04-capability-grant : the capability-grant model: a host holding resource
                        handles and handing specific ones to a guest instance,
                        with no ambient syscall path from guest to kernel.
 04-wasi-world-map   : a component's WIT world importing from the base WASI
@@ -16,13 +16,13 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 4.1 — capability-grant model: host grants handles, nothing ambient
+# Figure 4.1: capability-grant model: host grants handles, nothing ambient
 # ---------------------------------------------------------------------------
 gd.emit(
     "04-capability-grant", 940, 420,
     bands=[
-        {"x":20,"y":16,"w":420,"h":384,"label":"Host — holds resource handles","fill":"#fafafa"},
-        {"x":500,"y":16,"w":420,"h":384,"label":"Wasm guest instance — holds only what it's handed","fill":"#f1f5f9"},
+        {"x":20,"y":16,"w":420,"h":384,"label":"Host: holds resource handles","fill":"#fafafa"},
+        {"x":500,"y":16,"w":420,"h":384,"label":"Wasm guest instance: holds only what it's handed","fill":"#f1f5f9"},
     ],
     nodes=[
         {"x":50,"y":66,"w":340,"h":56,"lines":["Clock handle","wasi:clocks/monotonic-clock"],"style":"box"},
@@ -46,13 +46,13 @@ gd.emit(
 )
 
 # ---------------------------------------------------------------------------
-# Figure 4.2 — WASI Preview 2 world map: one component's imports
+# Figure 4.2: WASI Preview 2 world map: one component's imports
 # ---------------------------------------------------------------------------
 gd.emit(
     "04-wasi-world-map", 960, 460,
     bands=[
-        {"x":20,"y":16,"w":920,"h":180,"label":"WASI 0.2.x base interfaces — Foundations, covered this chapter","fill":"#f1f5f9"},
-        {"x":20,"y":212,"w":920,"h":150,"label":"WASI 0.2.x interfaces — covered in later chapters","fill":"#fff3e0"},
+        {"x":20,"y":16,"w":920,"h":180,"label":"WASI 0.2.x base interfaces: Foundations, covered this chapter","fill":"#f1f5f9"},
+        {"x":20,"y":212,"w":920,"h":150,"label":"WASI 0.2.x interfaces: covered in later chapters","fill":"#fff3e0"},
     ],
     nodes=[
         {"x":48,"y":58,"w":160,"h":62,"lines":["wasi:io","streams, pollable"],"style":"box"},

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fig 3.3/3.4 — Ch3: wiring one component's `cargo`-world export to
+"""Fig 3.3/3.4: Ch3: wiring one component's `cargo`-world export to
 another component's `cargo-consumer`-world import (composition), and the
 WIT-to-bindings-to-component pipeline each language toolchain runs to
 produce that first component."""
@@ -11,7 +11,7 @@ import os
 os.makedirs(generate_diagram.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 3.3 — composing two components against the same WIT package
+# Figure 3.3: composing two components against the same WIT package
 # ---------------------------------------------------------------------------
 W1, H1 = 820, 340
 
@@ -42,13 +42,13 @@ edges_1 = [
 
 notes_1 = [
     {"x": 410, "y": 300, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Composition links an export to an import by interface identifier, not by language — a Go gateway can import a Rust-built cargo-service."},
+     "text": "Composition links an export to an import by interface identifier, not by language: a Go gateway can import a Rust-built cargo-service."},
 ]
 
 generate_diagram.emit("03-component-composition", W1, H1, nodes=nodes_1, edges=edges_1, notes=notes_1)
 
 # ---------------------------------------------------------------------------
-# Figure 3.4 — WIT to bindings to component, one pipeline, two toolchains
+# Figure 3.4: WIT to bindings to component, one pipeline, two toolchains
 # ---------------------------------------------------------------------------
 W2, H2 = 820, 400
 
@@ -92,7 +92,7 @@ edges_2 = [
 
 notes_2 = [
     {"x": 410, "y": 390, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Same WIT, two independent toolchains, each handing its own code the generated trait/interface to implement — no shared runtime step."},
+     "text": "Same WIT, two independent toolchains, each handing its own code the generated trait/interface to implement; no shared runtime step."},
 ]
 
 generate_diagram.emit("03-wit-bindings-pipeline", W2, H2, nodes=nodes_2, edges=edges_2, notes=notes_2)

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Figure 12.1 — Ch12: Protobuf runs server-side INSIDE a Wasm component.
+"""Figure 12.1: Ch12: Protobuf runs server-side INSIDE a Wasm component.
 
 Request bytes cross the host->component boundary as a plain `list<u8>`. Inside
 the sandbox, a codec (prost in Rust, a reflection-free wire codec in TinyGo)
 decodes the protobuf message, dispatches to the cargo domain over WIT, encodes
-a protobuf response, and returns bytes. No gRPC transport is involved here —
+a protobuf response, and returns bytes. No gRPC transport is involved here;
 this is Protobuf-the-serialization, which is pure computation and needs
 nothing the sandbox denies it.
 """
@@ -52,9 +52,9 @@ edges = [
 
 notes = [
     {"x": 540, "y": 40, "size": 13, "color": "#1d1d1d", "anchor": "middle", "bold": True,
-     "text": "INSIDE THE WASM SANDBOX — no network, no gRPC transport, just bytes in and bytes out"},
+     "text": "INSIDE THE WASM SANDBOX: no network, no gRPC transport, just bytes in and bytes out"},
     {"x": 540, "y": 495, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Protobuf is varints, length-delimited fields, fixed64 doubles — pure computation, so it runs in a component with no transport capability at all."},
+     "text": "Protobuf is varints, length-delimited fields, fixed64 doubles: pure computation, so it runs in a component with no transport capability at all."},
 ]
 
 gd.emit("12-protobuf-in-component", W, H, nodes=nodes, edges=edges, notes=notes)

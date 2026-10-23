@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fig 2.1-2.4 — Ch2: the Wasm execution model. Module vs. instance,
+"""Fig 2.1-2.4: Ch2: the Wasm execution model. Module vs. instance,
 linear-memory bounds-checking, the sandbox boundary against a container's
 ambient OS access, and capability passing through the import table."""
 import sys
@@ -8,7 +8,7 @@ import generate_diagram
 generate_diagram.OUT = "assets/diagrams"
 
 # ---------------------------------------------------------------------------
-# Figure 2.1 — module (compile-time) vs. instance (runtime)
+# Figure 2.1: module (compile-time) vs. instance (runtime)
 # ---------------------------------------------------------------------------
 W1, H1 = 860, 440
 
@@ -44,7 +44,7 @@ notes_1 = [
 generate_diagram.emit("02-module-structure", W1, H1, nodes=nodes_1, edges=edges_1, notes=notes_1)
 
 # ---------------------------------------------------------------------------
-# Figure 2.2 — linear memory layout + bounds checking
+# Figure 2.2: linear memory layout + bounds checking
 # ---------------------------------------------------------------------------
 W2, H2 = 860, 340
 
@@ -75,7 +75,7 @@ notes_2 = [
 generate_diagram.emit("02-linear-memory", W2, H2, nodes=nodes_2, edges=edges_2, notes=notes_2)
 
 # ---------------------------------------------------------------------------
-# Figure 2.3 — sandbox boundary: container ambient access vs. Wasm's none-by-default
+# Figure 2.3: sandbox boundary: container ambient access vs. Wasm's none-by-default
 # ---------------------------------------------------------------------------
 W3, H3 = 860, 420
 
@@ -115,7 +115,7 @@ notes_3 = [
 generate_diagram.emit("02-sandbox-boundary", W3, H3, nodes=nodes_3, edges=edges_3, notes=notes_3)
 
 # ---------------------------------------------------------------------------
-# Figure 2.4 — capability passing through the import table
+# Figure 2.4: capability passing through the import table
 # ---------------------------------------------------------------------------
 W4, H4 = 860, 380
 

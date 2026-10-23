@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Figure 20.2 — Ch20: why the SAME request shape returns 200 on minikube and
+"""Figure 20.2, Ch20: why the SAME request shape returns 200 on minikube and
 404 on CRC for a valid tracking id.
 
 The Part 3 front door handles GET /cargo/CARGO-{ORIGIN}-{DEST} by calling
-book-cargo (seed a booking) and then get-cargo (read it back) — two calls, one
+book-cargo (seed a booking) and then get-cargo (read it back): two calls, one
 HTTP request. Under wac plug those two calls land in the SAME in-process
 component instance, so the thread_local HashMap the provider seeded in call 1
 is still there for call 2: 200 with the exact cargo JSON. Under a wasmCloud

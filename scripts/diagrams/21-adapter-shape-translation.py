@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 21.1 — Ch21: the shape-translation ADAPTER, two substrate expressions.
+"""Figure 21.1, Ch21: the shape-translation ADAPTER, two substrate expressions.
 
 minikube (top band): compile-time `wac plug` composition. The Part 3 http-rust
 front door, the cargo-adapter interposer, and the Part 2 cargo provider are
@@ -10,7 +10,7 @@ one in-process instance, so the exact cargo JSON comes back.
 CRC (bottom band): runtime-link composition. The same three logical pieces run
 as THREE SEPARATE wasmCloud components wired by wadm `link` traits over wRPC.
 The round-trip still runs and is still lossless, but a valid tracking id now
-returns the provider's own 404 — the same per-invocation statelessness finding
+returns the provider's own 404: the same per-invocation statelessness finding
 Chapter 20 documents for the filter, because book-cargo and get-cargo land on
 two different fresh instances across a runtime link.
 """
@@ -25,10 +25,10 @@ W, H = 1180, 660
 
 bands = [
     {"x": 20, "y": 40, "w": 1140, "h": 260,
-     "label": "minikube — compile-time composition (wac plug): ONE Pod, round-trip in ONE instance",
+     "label": "minikube: compile-time composition (wac plug): ONE Pod, round-trip in ONE instance",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 340, "w": 1140, "h": 300,
-     "label": "CRC — runtime-link composition (wadm links): THREE components, round-trip across links",
+     "label": "CRC: runtime-link composition (wadm links): THREE components, round-trip across links",
      "fill": "#f1f5f9"},
 ]
 
@@ -66,7 +66,7 @@ nodes = [
      "style": "user"},
     {"x": 60, "y": 500, "w": 790, "h": 90,
      "lines": ["round-trip still runs (lossless); but book-cargo and get-cargo are TWO wRPC calls",
-               "across TWO fresh provider instances — valid id -> provider's own 404, not 200",
+               "across TWO fresh provider instances: valid id -> provider's own 404, not 200",
                "(same per-invocation statelessness as Chapter 20's filter)"],
      "style": "ink"},
 ]

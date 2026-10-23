@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Figure 25.2 — Ch25: WasmPlugin distribution and the request path.
+"""Figure 25.2, Ch25: WasmPlugin distribution and the request path.
 
 Control plane (top band): the WasmPlugin CR (extensions.istio.io/v1alpha1)
-names an OCI reference — oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio
-— and istiod pulls that reference and pushes the compiled filter module's
+names an OCI reference (oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio)
+and istiod pulls that reference and pushes the compiled filter module's
 config out to the ingress gateway's Envoy.
 
 Data plane (bottom band): a client request reaches the Istio ingress
@@ -14,7 +14,7 @@ request proceeds to the component and the filter injects
 x-cargo-filtered-by on the way back out.
 
 TrafficExtension is noted as the newer unified API that supersedes
-WasmPlugin for new filter wiring — WasmPlugin itself stays supported.
+WasmPlugin for new filter wiring; WasmPlugin itself stays supported.
 """
 import sys, os
 sys.path.insert(0, "scripts")
@@ -27,10 +27,10 @@ W, H = 1180, 800
 
 bands = [
     {"x": 20, "y": 40, "w": 1140, "h": 200,
-     "label": "Control plane — the WasmPlugin CR distributes the filter module",
+     "label": "Control plane: the WasmPlugin CR distributes the filter module",
      "fill": "#f1f5f9"},
     {"x": 20, "y": 270, "w": 1140, "h": 340,
-     "label": "Data plane — request path through the gateway filter and the component",
+     "label": "Data plane: request path through the gateway filter and the component",
      "fill": "#f1f5f9"},
 ]
 
@@ -62,7 +62,7 @@ nodes = [
 
     {"x": 80, "y": 640, "w": 1020, "h": 100,
      "lines": ["TrafficExtension is the newer unified API and supersedes WasmPlugin for new filter config",
-               "WasmPlugin remains supported — existing filters keep working"],
+               "WasmPlugin remains supported; existing filters keep working"],
      "style": "ink"},
 ]
 

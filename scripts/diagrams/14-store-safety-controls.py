@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure for Chapter 14 — wasmtime: Store safety controls.
+"""Figure for Chapter 14: wasmtime: Store safety controls.
 
 14-store-safety-controls : the three host-side controls (fuel, epoch
                             interruption, ResourceLimiter) each gating the
@@ -14,13 +14,13 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 14.2 — fuel / epoch / ResourceLimiter, each gating the guest, each
+# Figure 14.2: fuel / epoch / ResourceLimiter, each gating the guest, each
 # contrasted with a clean run that succeeds.
 # ---------------------------------------------------------------------------
 gd.emit(
     "14-store-safety-controls", 1080, 640,
     bands=[
-        {"x":20,"y":16,"w":1040,"h":60,"label":"guest: run(\"spin\", N) or run(\"grow\", N) — same component, three Stores","fill":"#fff3e0"},
+        {"x":20,"y":16,"w":1040,"h":60,"label":"guest: run(\"spin\", N) or run(\"grow\", N): same component, three Stores","fill":"#fff3e0"},
         {"x":20,"y":92,"w":330,"h":520,"label":"Fuel","fill":"#f1f5f9"},
         {"x":375,"y":92,"w":330,"h":520,"label":"Epoch interruption","fill":"#f1f5f9"},
         {"x":730,"y":92,"w":330,"h":520,"label":"ResourceLimiter","fill":"#f1f5f9"},

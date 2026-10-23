@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Figure 27.2 — Ch27: one wasi:nn API, swappable backends.
+"""Figure 27.2, Ch27: one wasi:nn API, swappable backends.
 
 The same cargo-wasi-nn component sits above the model-agnostic wasi:nn API;
-the host wires that API to whichever inference backend it has installed —
+the host wires that API to whichever inference backend it has installed:
 OpenVINO (this chapter), ONNX Runtime, TensorFlow, TensorFlow Lite, PyTorch,
-or ggml, the graph-encoding values the wasi:nn WIT enumerates — without the
+or ggml, the graph-encoding values the wasi:nn WIT enumerates; without the
 component's WIT imports or its compiled bytes changing. The right-hand band
 contrasts the alternative most teams reach for instead: calling a separate
 model server over HTTP, which adds a network hop, a second deployment, and
@@ -22,10 +22,10 @@ W, H = 1500, 950
 
 bands = [
     {"x": 20, "y": 90, "w": 980, "h": 680,
-     "label": "wasi:nn — one API, swappable backends",
+     "label": "wasi:nn: one API, swappable backends",
      "fill": "#f1f5f9"},
     {"x": 1020, "y": 90, "w": 460, "h": 680,
-     "label": "Alternative — external model server over HTTP",
+     "label": "Alternative: external model server over HTTP",
      "fill": "#f1f5f9"},
 ]
 
@@ -64,7 +64,7 @@ nodes = [
 
     {"x": 20, "y": 800, "w": 1460, "h": 90,
      "lines": [
-         "One import surface; the host chooses the backend — the component does not change.",
+         "One import surface; the host chooses the backend. The component does not change.",
          "The HTTP alternative adds a network hop, a separate deployment, and serialization on every call.",
      ],
      "style": "ink"},
@@ -87,7 +87,7 @@ edges = [
 
 notes = [
     {"x": 750, "y": 930, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "These backends are interchangeable from the component's side — only the host's wasi:nn wiring picks one."},
+     "text": "These backends are interchangeable from the component's side; only the host's wasi:nn wiring picks one."},
 ]
 
 gd.emit("27-wasi-nn-portability-map", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

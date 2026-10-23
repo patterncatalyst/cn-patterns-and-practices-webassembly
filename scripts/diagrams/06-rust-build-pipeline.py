@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 6 — First Component in Rust.
+"""Figures for Chapter 6: First Component in Rust.
 
 06-rust-build-pipeline : contracts/wit feeding cargo-component's generated
                           bindings, src/lib.rs implementing the generated
@@ -15,7 +15,7 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 6.1 — contracts/wit to cargo_rust.wasm, via generated bindings and
+# Figure 6.1: contracts/wit to cargo_rust.wasm, via generated bindings and
 # the implemented Guest traits
 # ---------------------------------------------------------------------------
 gd.emit(
@@ -47,6 +47,6 @@ gd.emit(
         {"x1":490,"y1":432,"x2":540,"y2":432,"label":"internal, one step"},
     ],
     notes=[
-        {"x":540,"y":505,"text":"The artifact lands under wasm32-wasip1/, not wasm32-wasip2/ — cargo-component adapts a wasip1 core module into the component internally.","size":12,"color":"#555555","anchor":"middle"},
+        {"x":540,"y":505,"text":"The artifact lands under wasm32-wasip1/, not wasm32-wasip2/; cargo-component adapts a wasip1 core module into the component internally.","size":12,"color":"#555555","anchor":"middle"},
     ],
 )

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 10 — Error and Exception Handling.
+"""Figures for Chapter 10: Error and Exception Handling.
 
 10-two-failure-channels : the two distinct ways a call across the component
-                           boundary can fail — a recoverable result<_,
+                           boundary can fail: a recoverable result<_,
                            cargo-error> the host receives as Ok(Err(..)), and
                            an unrecoverable panic/trap the host receives as
                            Err on the wasmtime CALL itself, which poisons the
@@ -16,13 +16,13 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 10.1 — recoverable cargo-error vs. unrecoverable trap
+# Figure 10.1: recoverable cargo-error vs. unrecoverable trap
 # ---------------------------------------------------------------------------
 gd.emit(
     "10-two-failure-channels", 1080, 620,
     bands=[
-        {"x":20,"y":16,"w":500,"h":560,"label":"RECOVERABLE — result<_, cargo-error>","fill":"#f1f5f9"},
-        {"x":560,"y":16,"w":500,"h":560,"label":"UNRECOVERABLE — panic! / panic() -> trap","fill":"#fff3e0"},
+        {"x":20,"y":16,"w":500,"h":560,"label":"RECOVERABLE: result<_, cargo-error>","fill":"#f1f5f9"},
+        {"x":560,"y":16,"w":500,"h":560,"label":"UNRECOVERABLE: panic! / panic() -> trap","fill":"#fff3e0"},
     ],
     nodes=[
         {"x":50,"y":56,"w":440,"h":56,"lines":["get-cargo(\"NO-SUCH-CARGO\")"],"style":"box"},
@@ -35,9 +35,9 @@ gd.emit(
         {"x":600,"y":56,"w":420,"h":56,"lines":["get-cargo(\"__TRAP__\")"],"style":"box"},
         {"x":600,"y":128,"w":420,"h":64,"lines":["component code runs","panic!(...) / panic(...)"],"style":"box"},
         {"x":600,"y":208,"w":420,"h":56,"lines":["unwinds to a wasm TRAP"],"style":"box"},
-        {"x":600,"y":280,"w":420,"h":72,"lines":["wasmtime CALL ITSELF returns Err","no domain value at all — not Ok(Err(..))"],"style":"ink"},
+        {"x":600,"y":280,"w":420,"h":72,"lines":["wasmtime CALL ITSELF returns Err","no domain value at all; not Ok(Err(..))"],"style":"ink"},
         {"x":600,"y":368,"w":420,"h":56,"lines":["Store's instance is POISONED"],"style":"box"},
-        {"x":600,"y":440,"w":420,"h":64,"lines":["no further exports may be called","on this Store — it must be the LAST call"],"style":"box"},
+        {"x":600,"y":440,"w":420,"h":64,"lines":["no further exports may be called","on this Store; it must be the LAST call"],"style":"box"},
     ],
     edges=[
         {"x1":270,"y1":112,"x2":270,"y2":128},

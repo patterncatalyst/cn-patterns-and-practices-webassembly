@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 620" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="16" width="500" height="560" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">RECOVERABLE — result&lt;_, cargo-error&gt;</text>
+<text x="32" y="36" font-size="12" font-weight="700" fill="#1d1d1d">RECOVERABLE: result&lt;_, cargo-error&gt;</text>
 <rect x="560" y="16" width="500" height="560" rx="12" fill="#fff3e0" stroke="#ddd"/>
-<text x="572" y="36" font-size="12" font-weight="700" fill="#1d1d1d">UNRECOVERABLE — panic! / panic() -&gt; trap</text>
+<text x="572" y="36" font-size="12" font-weight="700" fill="#1d1d1d">UNRECOVERABLE: panic! / panic() -&gt; trap</text>
 <rect x="50" y="56" width="440" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="270.0" y="89.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">get-cargo(&quot;NO-SUCH-CARGO&quot;)</text>
 <rect x="50" y="128" width="440" height="64" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
@@ -28,12 +28,12 @@
 <text x="810.0" y="241.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">unwinds to a wasm TRAP</text>
 <rect x="600" y="280" width="420" height="72" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="810.0" y="314.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmtime CALL ITSELF returns Err</text>
-<text x="810.0" y="331.0" font-size="11.5" fill="#555555" text-anchor="middle">no domain value at all — not Ok(Err(..))</text>
+<text x="810.0" y="331.0" font-size="11.5" fill="#555555" text-anchor="middle">no domain value at all; not Ok(Err(..))</text>
 <rect x="600" y="368" width="420" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="810.0" y="401.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Store&#x27;s instance is POISONED</text>
 <rect x="600" y="440" width="420" height="64" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="810.0" y="470.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">no further exports may be called</text>
-<text x="810.0" y="487.0" font-size="11.5" fill="#555555" text-anchor="middle">on this Store — it must be the LAST call</text>
+<text x="810.0" y="487.0" font-size="11.5" fill="#555555" text-anchor="middle">on this Store; it must be the LAST call</text>
 <path d="M270,112 L270,128" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M270,192 L270,208" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M270,264 L270,280" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>

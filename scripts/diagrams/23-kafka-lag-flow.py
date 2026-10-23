@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 23.2 — Ch23: the Kafka lag flow, end to end, on minikube.
+"""Figure 23.2, Ch23: the Kafka lag flow, end to end, on minikube.
 
 One loop, one owner. A producer burst lands on a six-partition topic and
 raises real consumer-group lag. KEDA's kafka ScaledObject reads that lag and
@@ -21,7 +21,7 @@ W, H = 1220, 480
 
 bands = [
     {"x": 20, "y": 40, "w": 1180, "h": 400,
-     "label": "minikube — consumer-group lag drives KEDA, KEDA drives the Deployment directly",
+     "label": "minikube: consumer-group lag drives KEDA, KEDA drives the Deployment directly",
      "fill": "#f1f5f9"},
 ]
 

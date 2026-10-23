@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Figure 16.2 — Ch16: the decision matrix between wasmtime (single process)
+"""Figure 16.2, Ch16: the decision matrix between wasmtime (single process)
 and wasmCloud (distributed lattice) across four axes a reader actually has to
-weigh — control, operational surface, resilience, and scale — plus a closing
+weigh: control, operational surface, resilience, and scale, plus a closing
 row naming Part 5's Kubernetes as a third, orthogonal axis (scheduling either
 runtime as a pod is a separate decision from which runtime to pick)."""
 import sys, os
@@ -36,7 +36,7 @@ nodes = [
 
     {"x": 300, "y": 510, "w": 680, "h": 90,
      "lines": ["Part 5 adds a THIRD, orthogonal axis: Kubernetes schedules",
-               "either runtime as a pod — same choice, one layer up"],
+               "either runtime as a pod: same choice, one layer up"],
      "style": "ink"},
 ]
 

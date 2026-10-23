@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 800" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e8870c"/></marker></defs>
 <rect x="20" y="40" width="1140" height="200" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">Control plane — the WasmPlugin CR distributes the filter module</text>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">Control plane: the WasmPlugin CR distributes the filter module</text>
 <rect x="20" y="270" width="1140" height="340" rx="12" fill="#f1f5f9" stroke="#ddd"/>
-<text x="32" y="290" font-size="12" font-weight="700" fill="#1d1d1d">Data plane — request path through the gateway filter and the component</text>
+<text x="32" y="290" font-size="12" font-weight="700" fill="#1d1d1d">Data plane: request path through the gateway filter and the component</text>
 <rect x="60" y="90" width="280" height="100" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="200.0" y="138.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">oci://ghcr.io/patterncatalyst/</text>
 <text x="200.0" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-wasmfilter:istio</text>
@@ -28,7 +28,7 @@
 <text x="810.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">wasi:http</text>
 <rect x="80" y="640" width="1020" height="100" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="590.0" y="688.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">TrafficExtension is the newer unified API and supersedes WasmPlugin for new filter config</text>
-<text x="590.0" y="705.0" font-size="11.5" fill="#555555" text-anchor="middle">WasmPlugin remains supported — existing filters keep working</text>
+<text x="590.0" y="705.0" font-size="11.5" fill="#555555" text-anchor="middle">WasmPlugin remains supported; existing filters keep working</text>
 <path d="M340,140 L400,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="376.0" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">pulls module</text>
 <text x="376.0" y="134.0" font-size="11" fill="#555" text-anchor="middle">pulls module</text>

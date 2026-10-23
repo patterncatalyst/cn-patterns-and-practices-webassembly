@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Figure for Chapter 7 — First Component in Go.
+"""Figure for Chapter 7: First Component in Go.
 
 07-go-build-pipeline : the full build pipeline from the shared WIT contract
-                        to the finished cargo-go.wasm component — bindings
+                        to the finished cargo-go.wasm component: bindings
                         generation, standard Go source, the TinyGo compile
                         step (not `go build`), and the two wasm-tools steps
                         that turn a wasip1 core module into a component.
@@ -15,14 +15,14 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 7.1 — the Go build pipeline: contract to component
+# Figure 7.1: the Go build pipeline: contract to component
 # ---------------------------------------------------------------------------
 gd.emit(
     "07-go-build-pipeline", 1180, 520,
     bands=[
-        {"x":20,"y":16,"w":1140,"h":180,"label":"Generation — standard Go, nothing TinyGo-specific yet","fill":"#f1f5f9"},
-        {"x":20,"y":216,"w":1140,"h":120,"label":"Compilation — the one step that must be TinyGo","fill":"#fff3e0"},
-        {"x":20,"y":356,"w":1140,"h":148,"label":"Componentization — wasm-tools, same for any language","fill":"#fafafa"},
+        {"x":20,"y":16,"w":1140,"h":180,"label":"Generation: standard Go, nothing TinyGo-specific yet","fill":"#f1f5f9"},
+        {"x":20,"y":216,"w":1140,"h":120,"label":"Compilation: the one step that must be TinyGo","fill":"#fff3e0"},
+        {"x":20,"y":356,"w":1140,"h":148,"label":"Componentization: wasm-tools, same for any language","fill":"#fafafa"},
     ],
     nodes=[
         {"x":50,"y":62,"w":210,"h":90,"lines":["contracts/wit/","patterncatalyst:cargo@0.1.0"],"style":"box"},

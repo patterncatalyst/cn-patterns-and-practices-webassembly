@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figures for Chapter 1 — Why Server-Side WebAssembly.
+"""Figures for Chapter 1: Why Server-Side WebAssembly.
 
 01-isolation-spectrum : VM vs container vs Wasm component, compared on
                          isolation mechanism, image size, and cold-start time.
@@ -15,14 +15,14 @@ gd.OUT = "assets/diagrams"
 os.makedirs(gd.OUT, exist_ok=True)
 
 # ---------------------------------------------------------------------------
-# Figure 1.1 — isolation / startup spectrum: VM vs container vs Wasm component
+# Figure 1.1: isolation / startup spectrum: VM vs container vs Wasm component
 # ---------------------------------------------------------------------------
 gd.emit(
     "01-isolation-spectrum", 940, 460,
     bands=[
-        {"x":20,"y":16,"w":900,"h":130,"label":"Virtual machine — hardware-virtualized, own kernel","fill":"#fafafa"},
-        {"x":20,"y":164,"w":900,"h":130,"label":"Container — shared host kernel, namespace + cgroup isolation","fill":"#fff3e0"},
-        {"x":20,"y":312,"w":900,"h":132,"label":"Wasm component — sandboxed by the runtime, no syscalls by default","fill":"#f1f5f9"},
+        {"x":20,"y":16,"w":900,"h":130,"label":"Virtual machine: hardware-virtualized, own kernel","fill":"#fafafa"},
+        {"x":20,"y":164,"w":900,"h":130,"label":"Container: shared host kernel, namespace + cgroup isolation","fill":"#fff3e0"},
+        {"x":20,"y":312,"w":900,"h":132,"label":"Wasm component: sandboxed by the runtime, no syscalls by default","fill":"#f1f5f9"},
     ],
     nodes=[
         {"x":50,"y":50,"w":220,"h":80,"lines":["Guest kernel + OS","full hardware emulation"],"style":"box"},
@@ -44,14 +44,14 @@ gd.emit(
 )
 
 # ---------------------------------------------------------------------------
-# Figure 1.2 — request path to a Wasm component on a cluster, next to a
+# Figure 1.2: request path to a Wasm component on a cluster, next to a
 # container pod serving the same interface
 # ---------------------------------------------------------------------------
 gd.emit(
     "01-request-path", 940, 420,
     bands=[
-        {"x":20,"y":16,"w":900,"h":180,"label":"Node A — container pod","fill":"#fafafa"},
-        {"x":20,"y":216,"w":900,"h":184,"label":"Node B — wasmtime host running Wasm components","fill":"#f1f5f9"},
+        {"x":20,"y":16,"w":900,"h":180,"label":"Node A: container pod","fill":"#fafafa"},
+        {"x":20,"y":216,"w":900,"h":184,"label":"Node B: wasmtime host running Wasm components","fill":"#f1f5f9"},
     ],
     nodes=[
         {"x":40,"y":180,"w":180,"h":44,"lines":["Ingress / Service"],"style":"user"},

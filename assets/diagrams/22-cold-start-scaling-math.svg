@@ -19,7 +19,7 @@
 <text x="520.0" y="320.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">HPA&#x27;s default syncPeriod / readiness-probe cadence and scale-up</text>
 <text x="520.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">stabilizationWindowSeconds are tuned for container-class startup.</text>
 <text x="520.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">A wasm replica can be ready and serving before the next HPA sync</text>
-<text x="520.0" y="367.5" font-size="11.5" fill="#555555" text-anchor="middle">tick even fires — shorten probe intervals and the scale-up window</text>
+<text x="520.0" y="367.5" font-size="11.5" fill="#555555" text-anchor="middle">tick even fires; shorten probe intervals and the scale-up window</text>
 <text x="520.0" y="382.5" font-size="11.5" fill="#555555" text-anchor="middle">for wasm Deployments, or the autoscaler reacts a full cycle late.</text>
 <path d="M850,55 L850,225" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <text x="856.0" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">~15s typical HPA sync interval</text>

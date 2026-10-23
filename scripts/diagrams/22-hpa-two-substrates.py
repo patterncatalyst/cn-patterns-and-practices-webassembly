@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 22.1 — Ch22: per-substrate autoscaler asymmetry.
+"""Figure 22.1, Ch22: per-substrate autoscaler asymmetry.
 
 minikube (left band): the raw containerd-shim-wasmtime Pod exposes ordinary
 cgroup CPU usage. metrics-server aggregates it into the Kubernetes Metrics
@@ -7,7 +7,7 @@ API, and a stock autoscaling/v2 HPA drives the Deployment's replica count
 directly off that signal, the same as any container workload.
 
 CRC (right band): the app is operator-managed. Replica count is NOT a
-Kubernetes-native decision here — the wasmCloud operator's wadm spreadscaler
+Kubernetes-native decision here: the wasmCloud operator's wadm spreadscaler
 owns it, reconciling actual instances against the declared count in
 wadm.yaml. A Kubernetes HPA pointed at the same Deployment would write a
 competing replica count and fight the operator's own reconcile loop.
@@ -23,10 +23,10 @@ W, H = 1180, 560
 
 bands = [
     {"x": 20, "y": 40, "w": 540, "h": 480,
-     "label": "minikube — HPA drives replica count directly",
+     "label": "minikube: HPA drives replica count directly",
      "fill": "#f1f5f9"},
     {"x": 620, "y": 40, "w": 540, "h": 480,
-     "label": "CRC — wadm spreadscaler owns replica count",
+     "label": "CRC: wadm spreadscaler owns replica count",
      "fill": "#f1f5f9"},
 ]
 
@@ -64,7 +64,7 @@ nodes = [
     {"x": 660, "y": 360, "w": 250, "h": 140,
      "lines": ["A Kubernetes HPA targeting", "this Deployment would FIGHT",
                "the operator: two controllers", "writing replica count means",
-               "flapping — scale through the", "spreadscaler, not a second HPA"],
+               "flapping: scale through the", "spreadscaler, not a second HPA"],
      "style": "ink"},
 ]
 
