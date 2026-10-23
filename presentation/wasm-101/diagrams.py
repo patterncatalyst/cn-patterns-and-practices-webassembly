@@ -1,5 +1,5 @@
 """
-diagrams.py — NEW companion-deck diagrams for "Server-Side WebAssembly" (101).
+diagrams.py: NEW companion-deck diagrams for "Server-Side WebAssembly" (101).
 
 Red Hat-aligned Scene diagrams for figures that do not already exist in the
 book's assets/diagrams/ library. Author here, then run build_diagrams.py
@@ -14,7 +14,7 @@ from dgen import Scene, PALETTE
 
 
 # ---------------------------------------------------------------------------
-# wasm-deviation-stack — the three Part 6 deviations over the core stack
+# wasm-deviation-stack: the three Part 6 deviations over the core stack
 # ---------------------------------------------------------------------------
 def wasm_deviation_stack():
     s = Scene(
