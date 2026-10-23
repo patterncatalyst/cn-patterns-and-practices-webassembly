@@ -171,6 +171,6 @@ This chapter fixed two primitives: linear memory as the only address space a gue
 
 ## For deeper coverage
 
-- Chiarlone, A., *WebAssembly in Action* (Manning, 2022): modules, instances, and linear memory from the embedder's side, with worked examples in the Rust and C toolchains.
-- Jain, K., *Practical WebAssembly* (Apress, 2024): the stack machine, validation, and the capability-oriented security model this chapter builds from.
+- Chiarlone, *Server-Side WebAssembly* (Manning): the Wasm fundamentals, module and instance model, and toolchain this chapter's execution model underlies.
+- Jain, *WebAssembly for Cloud* (Apress): the Wasm memory model, module layout, and the capability-oriented sandboxing model this chapter builds from.
 - [WebAssembly Core Specification (W3C Recommendation)](https://www.w3.org/TR/wasm-core-2/): the primary source for module structure, linear memory semantics, the value types, validation, and the instruction set this chapter walks through.
