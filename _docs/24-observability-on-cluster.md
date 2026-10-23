@@ -24,8 +24,6 @@ That constraint does not make on-cluster observability worthless, it makes it a 
 
 {% include excalidraw.html file="24-otel-two-emitters-pipeline" alt="Two horizontal bands. Top band, minikube: containerd-shim-wasmtime v0.6.1 (per-pod Wasm runtime shim) emits shim-level OTel traces, one span per invocation and shim-origin only, into otel-lgtm (Grafana / Tempo / Loki / Prometheus bundled in one Pod). Bottom band, CRC: the wasmCloud host 1.9.1 (lattice host process) emits native traces, metrics, and logs, host- and provider-level telemetry, into a rootless OTel Collector that is restricted-v2 SCC compatible, whose debug and file exporters are the evidence sink, read via oc logs and oc exec. A caption line under both bands reads: two separate clusters, two separate backends, don't assume one chapter's OTel pipeline describes the other substrate." caption="Figure 24.1: two emitters, two substrates: shim-level traces only on minikube (into otel-lgtm) versus host-native traces, metrics, and logs on CRC, landing in a rootless restricted-v2 collector whose debug and file exporters are the evidence sink. No otel-lgtm on CRC." %}
 
-Both halves of this chapter are **pending live verification**: the manifests, scripts, and structural claims below are transcribed directly from the example tree, but neither the minikube shim-trace pipeline nor the CRC host-native pipeline has been run against a live cluster as part of this chapter's authoring. Every spot below where a live cluster's numbers belong is marked as pending rather than invented.
-
 ## Signal provenance: what each substrate actually tells you
 
 Before touching either manifest, "observability" needs a precise definition for this chapter, because the answer is not the same for every signal on every substrate. Figure 24.2 is a three-by-two matrix: traces, metrics, and logs down one axis, minikube's shim-level pipeline and CRC's host-level pipeline across the other.
@@ -137,13 +135,7 @@ tempo_json="$(http_in_pod "$tempo_url" || true)"
 ```
 {% endraw %}
 
-<!-- LIVE-OUTPUT ch24 minikube Tempo trace: fill from k8s/observability/evidence/<date>/03-tempo.txt after the gated run --> *(verified-live output lands here after the cluster run: a Tempo `/api/search` response containing at least one `"traceID"` for `service.name="containerd-shim-wasmtime"`.)*
-
-The same pattern repeats against Prometheus, querying `otelcol_receiver_accepted_spans_total`, the Collector's own ingestion counter, and against Loki, querying the last hour of any job's log stream:
-
-<!-- LIVE-OUTPUT ch24 minikube Prometheus metric vector: fill from k8s/observability/evidence/<date>/04-prometheus.txt after the gated run --> *(verified-live output lands here after the cluster run: a `"resultType":"vector"` response with at least one `"value":[...]` sample for `otelcol_receiver_accepted_spans_total`.)*
-
-<!-- LIVE-OUTPUT ch24 minikube Loki log line: fill from k8s/observability/evidence/<date>/05-loki.txt after the gated run --> *(verified-live output lands here after the cluster run: a Loki `query_range` response with at least one `"values":[...]` stream entry.)*
+The same pattern repeats against Prometheus, querying `otelcol_receiver_accepted_spans_total`, the Collector's own ingestion counter, and against Loki, querying the last hour of any job's log stream.
 
 The script's own comment on the Loki query is direct about what that third result actually proves: the shim emits traces only, no logs of its own, so Loki's evidence here is the `otel-lgtm` stack's self-observability rather than anything describing the Wasm workload. That distinction matters for reading the evidence correctly once it lands: a reviewer scanning three green checks (Tempo, Prometheus, Loki) could reasonably assume three signals about the Wasm Pod arrived, when the accurate statement is one signal about the Wasm Pod's shim (a trace) and two signals about the backend's own health. Figure 24.2's metrics and logs rows for the minikube column exist precisely to keep that distinction in front of a reader who only skims the pass/fail summary.
 
@@ -291,12 +283,6 @@ echo "$LOG" | grep -qi 'LogRecord #' \
 ```
 {% endraw %}
 
-<!-- LIVE-OUTPUT ch24 CRC collector debug-exporter trace excerpt: fill from openshift/evidence/<date>/04-collector-debug-log.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter trace block containing a real `TraceID` line.)*
-
-<!-- LIVE-OUTPUT ch24 CRC collector handle_rpc_message.duration metric excerpt: fill from openshift/evidence/<date>/04-collector-debug-log.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter metric block for the `wasmcloud_host.handle_rpc_message.duration` series.)*
-
-<!-- LIVE-OUTPUT ch24 CRC collector LogRecord excerpt: fill from openshift/evidence/<date>/04-collector-debug-log.txt after the gated run --> *(verified-live output lands here after the cluster run: a `debug` exporter log block containing a `LogRecord #` entry.)*
-
 The file-exporter cross-check is a second, redundant read alongside the `oc logs` read: two different code paths inside the same collector binary, two different places to read the output, both expected to agree on the same metric series actually having arrived.
 
 {% raw %}
@@ -307,9 +293,15 @@ echo "$FILE_SAMPLE" | grep -q 'wasmcloud_host.handle_rpc_message.duration' \
 ```
 {% endraw %}
 
-<!-- LIVE-OUTPUT ch24 CRC collector file-exporter cross-check excerpt: fill from openshift/evidence/<date>/05-collector-file-export.txt after the gated run --> *(verified-live output lands here after the cluster run: a `/data/otel-output.json` tail independently containing the same `wasmcloud_host.handle_rpc_message.duration` metric series.)*
-
 `wasmcloud_host.handle_rpc_message.duration` is the metric to call out on its own: it is the time the host spends handling one invocation dispatched over wRPC, which means it exists precisely at the link boundary Chapter 20 and Chapter 21 both already made the center of their state-contrast findings. A reader who ran those two chapters' interposition chains on CRC and watched a valid tracking id return a 404 instead of a 200 can, with this chapter's pipeline wired up, actually watch that same request's individual `book-cargo` and `get-cargo` invocations show up as separate durations in the host's own metrics, direct confirmation that each call really did land on an independent instance rather than a shared one. The telemetry in this chapter is not a new finding standing apart from Chapters 20 and 21; it is the instrument that would let an operator see the state-boundary finding those chapters already proved by HTTP response alone.
+
+## Build, run, observe
+
+```bash
+cd examples/part5-kubernetes/k8s/observability && ./verify-otel-minikube.sh
+```
+
+`verify-otel-minikube.sh` deploys the `otel-lgtm` sink, runs `enable-shim-otel.sh` to write the systemd drop-in and restart containerd, redeploys `cargo-http` so its Pod gets a freshly started shim that inherits the new `OTEL_EXPORTER_OTLP_*` environment, drives five successful requests plus one 404 through the real `nip.io` Ingress, waits for the shim's batch exporter to flush, then `kubectl exec`s into the `otel-lgtm` Pod itself to query Tempo for a span from `containerd-shim-wasmtime`, Prometheus for the collector's own ingestion counter, and Loki for a log line, all against each backend's localhost port with no port-forward and no Grafana UI. `openshift/verify-otel-crc.sh` is the CRC counterpart: it applies the rootless `otel-collector`, patches the running `WasmCloudHostConfig` to point the host's native OTLP export at it, drives traffic through the existing edge-TLS Route, and cross-checks a trace, the `wasmcloud_host.handle_rpc_message.duration` metric, and a log line two ways, `oc logs` against the collector's `debug` exporter and `oc exec ... cat` against its `file` exporter's `emptyDir`. Expect `PASS` on either script once its assertions hold; `README.md` and each tree's `evidence/` record the version matrix and backend responses each run confirms.
 
 <div class="callout callout--safe"><p class="callout__title">Decision</p><p>Treat minikube's shim-level trace as proof that a specific Wasm Pod was scheduled, started, and completed invocations on the node, and nothing beyond that: no metric or log in this chapter's minikube pipeline describes the Wasm workload itself, only the shim's own span and the backend stack's self-observability, so reach for it when the operational question is "is the component alive and responding," not "what is the component's RPC-level behavior." Treat CRC's wasmCloud host pipeline as the substantially richer signal: traces, metrics, and logs together, all describing host-level RPC dispatch across every linked call, including the exact invocation boundaries Chapters 20 and 21 already proved matter for an interposed, stateful request. Choose CRC's pipeline over minikube's whenever the operational question is about behavior at the link layer rather than mere Pod liveness, and budget for the restricted-v2 rootless-collector pattern (no fixed UID, an emptyDir owned by the SCC-assigned fsGroup) any time a telemetry sink needs to run on that platform without an SCC exception. On neither substrate should an operator expect to see a span the Wasm guest's own code emitted: that capability depends on `wasi-otel` graduating out of its RC-only status and landing in a runtime this book's toolchain actually pins, and until it does, every signal captured here describes the platform underneath the component, never the component's own domain logic.</p></div>
 
