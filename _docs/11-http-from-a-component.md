@@ -221,20 +221,7 @@ Go has no borrow checker to catch the ordering mistake at compile time the way R
 
 ## Composing and serving: `wac plug` plus `wasmtime serve -S cli`
 
-The full recipe for the Rust side, taken directly from `examples/part3-interfaces/README.md`, is four commands and two `curl` calls:
-
-```bash
-( cd http-rust && cargo component build --release )
-wac plug --plug <part2 rust provider cargo_rust.wasm> \
-         http-rust/target/wasm32-wasip1/release/cargo_http_rust.wasm \
-         -o composed-http-rust.wasm
-wasmtime serve -S cli composed-http-rust.wasm --addr 127.0.0.1:8080 &
-curl http://127.0.0.1:8080/cargo/CARGO-USNYC-DEHAM
-# {"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
-curl -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/cargo/NOPE   # 404
-```
-
-`wac plug --plug <PROVIDER> <CONSUMER> -o out.wasm` is the same orientation Chapter 8 established: the provider, which exports the three cargo interfaces, is the `--plug`; the HTTP adapter, which imports them, is the positional socket argument. Composing with the TinyGo side is identical with `http-go/cargo-http-go.wasm` standing in for the Rust artifact, run against the Go provider, and `verify.sh`'s own `serve_assert` helper runs both compositions against both providers in a loop, asserting the same expected JSON string against each:
+`wac plug --plug <PROVIDER> <CONSUMER> -o out.wasm` is the same orientation Chapter 8 established: the provider, which exports the three cargo interfaces, is the `--plug`; the HTTP adapter, which imports them, is the positional socket argument. Composed and served with `wasmtime serve -S cli composed.wasm --addr 127.0.0.1:8080`, `GET /cargo/CARGO-USNYC-DEHAM` returns the booked cargo as JSON and `GET /cargo/NOPE` returns 404. Composing with the TinyGo side is identical with `http-go/cargo-http-go.wasm` standing in for the Rust artifact, run against the Go provider, and `verify.sh`'s own `serve_assert` helper runs both compositions against both providers in a loop, asserting the same expected JSON string against each:
 
 ```bash
 EXPECTED_JSON='{"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}'
@@ -262,6 +249,14 @@ The handler's `book_cargo` followed immediately by `get_cargo` on the same track
 ## Consuming HTTP from a component
 
 The vendored `wasi:http` package under `wit/deps/http` in both `http-rust` and `http-go` includes `wasi:http/outgoing-handler` as part of the standard `wasi-http` dependency closure, and both languages' generated bindings expose it; neither this chapter's Rust handler nor its Go handler calls it. This chapter's examples are server-side only: a component that terminates inbound HTTP and answers from the cargo domain, never one that makes an outbound HTTP call of its own. `outgoing-handler` is the interface a component would use to act as an HTTP *client*, issuing a request and awaiting a response the same shape `incoming-handler` receives in reverse, and it is already present and resolvable in this example's dependency tree because `wasi:http` ships both directions of the contract as one package. A production front door that needs to call another service over HTTP from inside the sandbox would import `wasi:http/outgoing-handler` explicitly in its own world, the same way this chapter's world imports the three cargo interfaces; this book does not build and verify that example, so treat the interface as present and real, not as a gap in the `wasi:http` specification itself.
+
+## Build, run, observe
+
+```bash
+cd examples/part3-interfaces && ./verify.sh
+```
+
+`verify.sh` builds the Part 2 Rust and Go providers, then builds this chapter's Rust (`cargo-component`) and Go (TinyGo reactor) HTTP front doors, composes each with both providers via `wac plug`, and starts each composed artifact under `wasmtime serve -S cli`. For both the Rust and Go front doors it asserts that `GET /cargo/CARGO-USNYC-DEHAM` returns the exact expected JSON body and that `GET /cargo/NOPE` returns HTTP 404. Expect `PASS` once every assertion holds; see `examples/part3-interfaces/README.md` for the full walkthrough.
 
 <div class="callout callout--safe"><p class="callout__title">Decision</p><p>Let a component terminate HTTP directly against <code>wasmtime serve</code> when the entire request lifecycle, routing, response construction, and every service call it makes fit inside the <code>wasi:http/proxy</code> world's narrow import set, and when per-request process isolation (a fresh instance per request, no shared in-process state) is a feature rather than a limitation for the workload. That shape fits request/response work over a stable domain contract well, which is exactly this chapter's cargo front door, and it fits any handler where the proxy world's restricted imports (no raw sockets, no filesystem by default, `wasi:cli` only when a host opts a reader in with <code>-S cli</code>) are an acceptable, even desirable, ceiling on what the handler can reach. Put a gateway in front of a component instead when the workload needs state that must survive across requests without re-deriving it from a provider call each time, when it needs capabilities the proxy world does not include at all (long-lived connections, non-HTTP protocols, broad filesystem or process access), or when request-level concerns, TLS termination, authentication, rate limiting, protocol translation, belong at a layer that should not have to be recompiled and redeployed every time the domain logic one layer in changes. This chapter's own front door earns the direct-serve shape because its entire job, book then read one cargo record and return JSON, never leaves what <code>wasi:http/proxy</code> plus three domain imports can express; Part 5's sidecar and ambassador chapters are where a component sits behind something else instead, for reasons this callout's second half names.</p></div>
 

@@ -556,6 +556,14 @@ The tonic bridge is the shape this chapter builds and verifies, but it is not th
 | `protoc` (libprotoc) | `36.2` | Invoked by both `prost-build` and `tonic-prost-build` at compile time; must be on `PATH` for either build to succeed. |
 | `wasmtime` / `wasmtime-wasi` | `50` | Hosts both the protobuf-in-Wasm round trip and the gRPC bridge's per-RPC component instantiation. |
 
+## Build, run, observe
+
+```bash
+cd examples/part3-interfaces && ./verify.sh
+```
+
+`verify.sh` builds the `proto-rust` prost-in-Wasm component and the `proto-go` reflection-free wire codec component, composes each with the Part 2 Rust and Go providers, and drives both through the same native `proto-host` binary, asserting the decoded `GetCargoResponse` fields (tracking ID, both UN/LOCODEs, weight, price amount and currency) match what the provider booked. It then builds the `grpc-bridge` and runs `cargo test --release -- --nocapture`, which drives a real tonic gRPC client over HTTP/2 against the bridge and asserts the `GetCargo` and `BookCargo` RPC responses. Expect `PASS` once every assertion holds; see `examples/part3-interfaces/README.md` for the full walkthrough.
+
 <div class="callout callout--safe"><p class="callout__title">Decision</p><p>Reach for protobuf-in-Wasm alone (the <code>codec.get-cargo(list&lt;u8&gt;) -&gt; result&lt;list&lt;u8&gt;, string&gt;</code> shape this chapter builds) whenever the actual requirement is a stable, versioned, schema-driven binary message format, and the caller already owns its own transport: a message queue consumer decoding a protobuf-encoded event, a component embedded inside a larger pipeline that already moves bytes between stages some other way, or any case where the "service" is a function call that happens to use protobuf's encoding for its arguments. Reach for the tonic bridge (a native process terminating gRPC and dispatching into an otherwise-unchanged Wasm provider over WIT) the moment a client outside your control needs to speak actual gRPC: a generated client stub in another language, a service mesh's gRPC health-checking convention, or any consumer that will open an HTTP/2 connection and expect trailers back. Watch the component model's own HTTP/2 and streaming story as it develops: if a future <code>wasi:http</code> revision (or a sibling interface) ever exposes real bidirectional streaming with trailer support from inside a component, the bridge's <em>transport-termination</em> role could migrate into the sandbox the same way this chapter's protobuf codec already has, but that is a capability this toolchain does not have today, and this chapter builds against what runs now, not what might run later.</p></div>
 
 ## For deeper coverage
