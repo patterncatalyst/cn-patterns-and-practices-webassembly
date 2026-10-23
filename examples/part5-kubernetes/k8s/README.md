@@ -1,10 +1,10 @@
-# Part 5 — running the cargo component on Kubernetes (minikube)
+# Part 5: running the cargo component on Kubernetes (minikube)
 
 This example runs the **same** `wasi:http` component (`app.wasm`, sha256
 `eff7f5ee…`) that `wasmtime serve` runs in Part 3 and wasmCloud runs in Part 4,
 now as a **Pod on a real Kubernetes cluster** (minikube, docker driver +
 containerd runtime). There is no language runtime, no OS userland, and no
-sidecar in the image — just the ~290 KiB component in a `scratch` OCI image,
+sidecar in the image, just the ~290 KiB component in a `scratch` OCI image,
 scheduled onto the runwasi **`containerd-shim-wasmtime`** shim by a
 `RuntimeClass`.
 
@@ -17,7 +17,7 @@ part3 http-rust front door ─┘                          │
                                                         └─ containerd wasmtime shim + RuntimeClass  (Part 5, here)
 ```
 
-Everything reuses the Part 2/3 crates by *building* them — nothing is forked or
+Everything reuses the Part 2/3 crates by *building* them; nothing is forked or
 edited, and `contracts/wit` stays pristine.
 
 ## The deploy mechanism: generic runwasi shim + RuntimeClass
@@ -36,7 +36,7 @@ so it runs unmodified.
 - `base/deployment.yaml` sets `runtimeClassName: wasmtime` and
   `command: ["/app.wasm"]` (the module path inside the scratch rootfs).
 
-The **go/no-go test passed on the first run** — the raw shim served the
+The **go/no-go test passed on the first run**: the raw shim served the
 component with no feature-gap wall (runwasi #1004 did not bite), so this is the
 mechanism used; the wasmCloud-operator fallback was not needed.
 
@@ -52,7 +52,7 @@ curl http://cargo.<minikube-ip>.nip.io/cargo/CARGO-USNYC-DEHAM
 ```
 
 `nip.io` resolves `<anything>.<ip>.nip.io` to `<ip>`, so the URL's own authority
-IS the real DNS-resolvable Ingress host — no `/etc/hosts` edit, no
+is the real DNS-resolvable Ingress host, with no `/etc/hosts` edit, no
 `minikube tunnel`, no NodePort. The only thing crossing the cluster boundary is
 the curl, through the real ingress edge.
 
@@ -96,15 +96,15 @@ export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$HOME/go/bin:$HOME/.local/tinygo/
 | containerd (in node) | **v2.3.4** | minikube base image; config `version = 2` |
 | ingress-nginx (addon) | controller **v1.15.1** | minikube `ingress` addon |
 
-## Gotchas worth a chapter callout
+## Notes worth a chapter callout
 
-- **The shim binary is a containerd shim, not a CLI** — invoking it with
+- **The shim binary is a containerd shim, not a CLI**: invoking it with
   `--version` (or any flag it doesn't define) panics with
   `flag provided but not defined`. Confirm it is in place with `ls`, and let the
   running Pod be the proof. install-shim.sh does exactly this.
 - **`minikube ssh` allocates a PTY, so a heredoc piped to `sudo bash -s` never
   gets EOF and the session hangs** after the work is done. Copy the node script
-  in with `minikube cp` and run `sudo bash <file>` instead — install-shim.sh
+  in with `minikube cp` and run `sudo bash <file>` instead: install-shim.sh
   does this for the containerd config edit.
 - **Disable BuildKit provenance** (`docker build --provenance=false`). The
   default adds an attestation manifest + manifest list; a one-layer `scratch`
@@ -114,7 +114,7 @@ export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$HOME/go/bin:$HOME/.local/tinygo/
   reporting an address do not by themselves mean the component is answering, and
   ingress-nginx's default-backend 404 answers (exit 0) for an unmatched host
   while the controller is still reloading. The scripts gate on the
-  `part5-cargo-affinity` cookie (stamped only by OUR Ingress rule) and then on
+  `part5-cargo-affinity` cookie (stamped only by our Ingress rule) and then on
   an actual HTTP 200.
-- **`app.wasm` and the OCI image are gitignored** — `build.sh` regenerates them
-  deterministically. The `evidence/` text files ARE committed.
+- **`app.wasm` and the OCI image are gitignored**: `build.sh` regenerates them
+  deterministically. The `evidence/` text files are committed.
