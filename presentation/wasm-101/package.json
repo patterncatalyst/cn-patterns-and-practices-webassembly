@@ -1,0 +1,8 @@
+{
+  "name": "wasm-101",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Server-Side WebAssembly — companion deck (lgtm-presentation)",
+  "scripts": { "build": "node deck.js" },
+  "dependencies": { "pptxgenjs": "^3.12.0" }
+}
