@@ -1,8 +1,8 @@
-# ch26 — SpinKube (Spin on Kubernetes, via the full platform)
+# ch26: SpinKube (Spin on Kubernetes, via the full platform)
 
 Deploys the ch26 Spin app (`../spin`) onto minikube through the complete
-SpinKube stack — cert-manager, runtime-class-manager, the
-`containerd-shim-spin` node shim, and the spin-operator — rather than Part 5's
+SpinKube stack: cert-manager, runtime-class-manager, the
+`containerd-shim-spin` node shim, and the spin-operator, rather than Part 5's
 manual containerd-shim-wasmtime RuntimeClass or Part 4's wasmCloud host. Same
 minikube profile as Part 5 (`part5`, docker driver, containerd runtime); this
 is a second, independent workload layered onto it, the way ch25's Istio
@@ -11,7 +11,7 @@ deviation shares the profile instead of standing up a second cluster.
 ## Why a different shim
 
 The ch26 app (`../spin/cargo-spin.wasm`) is built with `spin-sdk = "=7.0.0"`
-and exports `wasi:http/handler@0.3.0` (wasip3) — a newer ABI than the
+and exports `wasi:http/handler@0.3.0` (wasip3), a newer ABI than the
 `wasi:http/incoming-handler@0.2.x` world Parts 2-5's Component Model app
 targets. `containerd-shim-spin` embeds Spin itself as its runtime, and only
 `v0.26.0` and later embed Spin `4.1.0`, which understands that ABI. An older
@@ -31,22 +31,22 @@ recognize the component's exports.
 cert-manager is a spin-operator webhook prerequisite: the operator chart
 provisions its webhook's serving certificate through a cert-manager
 `Certificate`. `install-spinkube.sh` installs v1.21.2 first and proves the
-webhook actually admits that `Certificate` with a throwaway self-signed smoke
-test (not just that the Pods report Ready); if that fails — an API skew
-between cert-manager and spin-operator v0.6.1's webhook — it falls back to
-v1.20.0 and reports on stdout which version is actually running.
+webhook admits that `Certificate` with a throwaway self-signed smoke
+test (not just that the Pods report Ready); if that fails (an API skew
+between cert-manager and spin-operator v0.6.1's webhook), it falls back to
+v1.20.0 and reports on stdout which version is running.
 
 ## Objects this creates
 
-- `RuntimeClass wasmtime-spin-v2` — provisioned by runtime-class-manager once
+- `RuntimeClass wasmtime-spin-v2`: provisioned by runtime-class-manager once
   `containerd-shim-spin` is installed on a node labeled `spin=true`.
-- `SpinAppExecutor containerd-shim-spin` — ships with
+- `SpinAppExecutor containerd-shim-spin`: ships with
   `spin-operator.shim-executor.yaml`; `SpinApp.spec.executor` references it by
   name.
-- `SpinApp cargo-spin` (namespace `part6-spin`) — the operator reconciles it
+- `SpinApp cargo-spin` (namespace `part6-spin`): the operator reconciles it
   into a `Deployment cargo-spin` and a `Service cargo-spin` (port 80), the same
   name/port pairing SpinKube's own quickstart documents.
-- `Ingress cargo-spin` — ingress-nginx, patched live to
+- `Ingress cargo-spin`: ingress-nginx, patched live to
   `cargo-spin.<minikube-ip>.nip.io`.
 
 ## Deploy + verify
@@ -70,8 +70,8 @@ kubectl kustomize overlays/minikube      # inspect the rendered manifests
 kubectl apply -k overlays/minikube
 ```
 
-The live proof goes through the real ingress edge — no port-forward, no
-NodePort, no `minikube service`:
+The live proof goes through the real ingress edge, with no port-forward, no
+NodePort, and no `minikube service`:
 
 ```
 curl -> cargo-spin.<minikube-ip>.nip.io  (ingress-nginx)

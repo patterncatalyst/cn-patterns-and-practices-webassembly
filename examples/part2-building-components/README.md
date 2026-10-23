@@ -1,7 +1,7 @@
-# Part 2 — Building Components (two languages, one contract)
+# Part 2: Building Components (two languages, one contract)
 
-Two WebAssembly components — one written in **Rust**, one in **Go** — that both
-implement the SAME cargo-shipping domain and both **export `world cargo`** from
+Two WebAssembly components (one written in **Rust**, one in **Go**) that both
+implement the same cargo-shipping domain and both **export `world cargo`** from
 the repository contract at [`contracts/wit/`](../../contracts/wit). A single
 native **host** instantiates each component in turn and drives an identical
 scenario across the component boundary, proving the two independently built
@@ -14,7 +14,7 @@ contracts/wit  ──►  rust/   (cargo-component)   ─┐
                               fixtures/scenario.json ─┘
 ```
 
-Two **consumer** components (`consumer-rust/`, `consumer-go/`) then IMPORT the
+Two **consumer** components (`consumer-rust/`, `consumer-go/`) then import the
 same interfaces and export `wasi:cli/run`; `wac plug` composes each consumer with
 each provider into four self-contained CLIs that `wasmtime run` executes with no
 native host. Nothing here modifies `contracts/wit/`; everything builds against it
@@ -24,14 +24,14 @@ as-is.
 
 | Path | What it is |
 |------|------------|
-| `rust/` | Rust PROVIDER, built with `cargo component` into a component that exports `world cargo`. |
-| `go/` | Go PROVIDER (`main.go` + `cabi_realloc.go`), bindings in `internal/cargo`, built with TinyGo + `wasm-tools`. |
+| `rust/` | Rust **provider**, built with `cargo component` into a component that exports `world cargo`. |
+| `go/` | Go **provider** (`main.go` + `cabi_realloc.go`), bindings in `internal/cargo`, built with TinyGo + `wasm-tools`. |
 | `go/adapters/` | Vendored wasip1→wasip2 **reactor** adapter (see SHA below). |
-| `consumer-rust/` | Rust CONSUMER — a `cargo component` **command** that imports the cargo interfaces and exports `wasi:cli/run`. |
-| `consumer-go/` | Go CONSUMER — a TinyGo **command** (`main.go` + bump-allocator `cabi_realloc.go`) that imports the cargo interfaces. |
+| `consumer-rust/` | Rust **consumer**: a `cargo component` **command** that imports the cargo interfaces and exports `wasi:cli/run`. |
+| `consumer-go/` | Go **consumer**: a TinyGo **command** (`main.go` + bump-allocator `cabi_realloc.go`) that imports the cargo interfaces. |
 | `consumer-go/adapters/` | Vendored wasip1→wasip2 **command** adapter (see SHA below). |
 | `host/` | Native Rust host (wasmtime `component::bindgen!`) that calls the provider exports and demonstrates the error-vs-trap taxonomy. |
-| `fixtures/scenario.json` | Shared input + expected results consumed by the host for BOTH components. |
+| `fixtures/scenario.json` | Shared input + expected results consumed by the host for both components. |
 | `verify.sh` | Builds everything, runs the host against both providers, composes all four consumer×provider combos, asserts equality + contract conformance. |
 
 ## Prerequisites (all on PATH)
@@ -41,7 +41,7 @@ export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$HOME/go/bin:$HOME/.local/tinygo/
 ```
 
 - Rust 1.99 with the `wasm32-wasip2` target, `cargo-component` 0.21
-- Go 1.26, `wit-bindgen-go` v0.7.0, **TinyGo 0.43** (see the Go gotcha below)
+- Go 1.26, `wit-bindgen-go` v0.7.0, **TinyGo 0.43** (see the Go toolchain note below)
 - `wasm-tools` 1.262, `wasmtime` 50 (the host pulls the `wasmtime` crate v50)
 
 ## Build and run
@@ -65,7 +65,7 @@ wasm-tools component wit target/wasm32-wasip1/release/cargo_rust.wasm   # shows 
 `Cargo.toml`'s `[package.metadata.component.target]` points `path` at
 `../../../contracts/wit` with `world = "cargo"`, so the crate generates its
 bindings from the shared contract (it does not copy the WIT). The output is at
-`target/wasm32-wasip1/release/cargo_rust.wasm` — cargo-component builds a
+`target/wasm32-wasip1/release/cargo_rust.wasm`: cargo-component builds a
 `wasm32-wasip1` core module and adapts it to a component internally, so the
 artifact lives under `wasm32-wasip1/`, not `wasm32-wasip2/`.
 
@@ -102,7 +102,7 @@ request-possible-routes → assign-route → register-handling-event ×3 →
 list-handling-events`, constructs a `cargo-tracker` resource and reads its
 `tracking-id` / `current-status` / `history`. It asserts every result against
 `fixtures/scenario.json` and prints a normalized JSON summary. `verify.sh` then
-diffs the Rust summary against the Go summary — they are byte-identical.
+diffs the Rust summary against the Go summary; they are byte-identical.
 
 ## The scenario
 
@@ -115,10 +115,10 @@ reports `in-transit` with a 3-event history.
 
 ## Consumers and composition (no native host)
 
-The host above calls the providers from NATIVE code. The two **consumer**
-components call them from INSIDE WebAssembly: each imports the cargo interfaces
+The host above calls the providers from native code. The two **consumer**
+components call them from inside WebAssembly: each imports the cargo interfaces
 and exports `wasi:cli/run`, so once it is *plugged* to a provider the composed
-component is a self-contained CLI that `wasmtime run` executes directly — no
+component is a self-contained CLI that `wasmtime run` executes directly, with no
 native host.
 
 ### Rust consumer (`cargo component` command)
@@ -166,7 +166,7 @@ cd consumer-go
 ```
 
 `build.sh` targets the contract's existing `cargo-consumer` world (imports the
-three interfaces — no contract change) and runs:
+three interfaces, no contract change) and runs:
 
 ```
 wit-bindgen-go generate -o internal/cargo -p example.com/cargo-consumer-go/internal/cargo --world cargo-consumer ../../../contracts/wit
@@ -184,7 +184,7 @@ the command adapter synthesizes `wasi:cli/run` from the core module's `_start`.
 is the `--plug`** (it provides `cargo`); the **consumer is the socket** (it
 imports `cargo`). Composed component bytes are non-deterministic
 ([wac#216](https://github.com/bytecodealliance/wac/issues/216)), so assert the
-RUNTIME output, never the artifact bytes.
+runtime output, never the artifact bytes.
 
 ```
 RUSTP=rust/target/wasm32-wasip1/release/cargo_rust.wasm
@@ -210,17 +210,17 @@ same-language pairs is the headline: the WIT contract is the only coupling.
 
 ## Error taxonomy: recoverable error vs. unrecoverable trap
 
-The contract's `cargo-error` variant models RECOVERABLE failures; a Rust
-`panic!` / Go `panic()` at the component boundary is an UNRECOVERABLE trap. The
-host (`host/src/main.rs`) demonstrates both against BOTH providers:
+The contract's `cargo-error` variant models recoverable failures; a Rust
+`panic!` / Go `panic()` at the component boundary is an unrecoverable trap. The
+host (`host/src/main.rs`) demonstrates both against both providers:
 
-- **Recoverable:** `get-cargo("NO-SUCH-CARGO")` returns `Ok(Err(cargo-error::not-found))`
-  — the wasmtime CALL succeeds, the domain result is an error, the instance
+- **Recoverable:** `get-cargo("NO-SUCH-CARGO")` returns `Ok(Err(cargo-error::not-found))`:
+  the wasmtime call succeeds, the domain result is an error, the instance
   lives on.
 - **Unrecoverable trap:** a documented sentinel tracking id, `__TRAP__`, makes
-  `get-cargo` panic. The wasmtime CALL itself returns `Err` (a trap) and the
-  instance is poisoned. The host asserts this is a trap, NOT an `Ok(Err(..))`.
-  The sentinel is kept in LOCKSTEP across `rust/src/lib.rs` and `go/main.go` and
+  `get-cargo` panic. The wasmtime call itself returns `Err` (a trap) and the
+  instance is poisoned. The host asserts this is a trap, not an `Ok(Err(..))`.
+  The sentinel is kept in lockstep across `rust/src/lib.rs` and `go/main.go` and
   is kept out of the main scenario, so the byte-identical
   cross-language summary is unaffected. Because a trap poisons the instance, the
   host runs the trap call LAST.
@@ -232,7 +232,7 @@ host (`host/src/main.rs`) demonstrates both against BOTH providers:
 - Source: <https://github.com/bytecodealliance/wasmtime/releases/download/v50.0.0/wasi_snapshot_preview1.reactor.wasm>
 - SHA-256: `73b01f85e42e99c890efbbf619cd765e04e5809da36d976b87fc64abd87f5812`
 
-The **reactor** adapter — the Go PROVIDER core module is a reactor (exports
+The **reactor** adapter: the Go **provider** core module is a reactor (exports
 `_initialize`, not `_start`).
 
 `consumer-go/adapters/wasi_snapshot_preview1.command.wasm`
@@ -240,24 +240,24 @@ The **reactor** adapter — the Go PROVIDER core module is a reactor (exports
 - Source: <https://github.com/bytecodealliance/wasmtime/releases/download/v50.0.0/wasi_snapshot_preview1.command.wasm>
 - SHA-256: `b3de00ac47528237211c6404b4a7e4235a67878665dc3e8853071908c3127a85`
 
-The **command** adapter — the Go CONSUMER core module is a command (exports
+The **command** adapter: the Go **consumer** core module is a command (exports
 `_start`). The command adapter synthesizes the `wasi:cli/run` export.
 
-## Gotchas worth a chapter callout
+## Notes worth a chapter callout
 
 1. **Go toolchain: TinyGo, not `go build`.** The installed Go 1.26 `GOOS=wasip1
    GOARCH=wasm` toolchain **cannot** compile the `wit-bindgen-go` output: its
    `//go:wasmexport` restriction forbids returning pointers to pointerful types
    (`*cm.Result[...]`, `*string`, `*types.Leg`), because Go uses 64-bit pointers
    on `GOARCH=wasm` while the host is 32-bit. The compiler itself says those are
-   "allowed on `GOARCH=wasm32`" — but `wasip1/wasm32` has no buildable buildmode
+   "allowed on `GOARCH=wasm32`"; but `wasip1/wasm32` has no buildable buildmode
    on this Go (`c-shared`/`c-archive`/`pie`/default all refused), and there is
    no `wasm32` GOEXPERIMENT. TinyGo targets 32-bit wasm natively and has no such
    restriction, so it is the working compiler for the standard-Go **source**
-   here. (This is a deviation from the "standard `go build`" recipe; the source,
+   here. (This differs from the "standard `go build`" recipe; the source,
    the `wit-bindgen-go` bindings and the `cm` module are all unchanged.)
 2. **`cm` version pin: v0.3.0.** `go.bytecodealliance.org/cm` only resolves to
-   **v0.3.0** — the `v0.4.0`…`v0.7.0` tags were cut on the monorepo *root*
+   **v0.3.0**: the `v0.4.0`…`v0.7.0` tags were cut on the monorepo *root*
    module (their `go.mod` declares `module go.bytecodealliance.org`), so Go
    rejects them for the `/cm` import path. Pin `cm v0.3.0`.
 3. **`cabi_realloc`.** `wasm-tools component new` fails with "module does not
@@ -271,17 +271,17 @@ The **command** adapter — the Go CONSUMER core module is a command (exports
    the first export call panics in `runtime.wasmExportCheckRun`.
 5. **Sandboxed paths.** `wit-bindgen-go` and `wasm-tools component embed` read
    the contract directory through a wasmtime filesystem sandbox that only
-   reaches paths relative to the current directory — pass a **relative** path
+   reaches paths relative to the current directory: pass a **relative** path
    (`../../../contracts/wit`), not an absolute one, or they fail with "failed to
    find a pre-opened file descriptor". (`wasm-tools component wit` tolerates
    absolute paths.)
 6. **cargo-component output path.** The Rust component lands under
-   `target/wasm32-wasip1/release/`, not `wasm32-wasip2/`. The Rust CONSUMER
+   `target/wasm32-wasip1/release/`, not `wasm32-wasip2/`. The Rust **consumer**
    command lands at `target/wasm32-wasip1/release/cargo-consumer-rust.wasm`.
 7. **Command adapter + heap `cabi_realloc` = trap at `args_sizes_get`.** The Go
-   CONSUMER is a command, so its `cabi_realloc` must differ from the provider's.
+   **consumer** is a command, so its `cabi_realloc` must differ from the provider's.
    The wasip1→wasip2 **command** adapter fetches the process arguments by calling
-   the module's exported `cabi_realloc` from INSIDE `_start`, while the TinyGo
+   the module's exported `cabi_realloc` from inside `_start`, while the TinyGo
    runtime is still coming up (`runtime.run` → `os.Args` → `args_sizes_get` →
    adapter → back into `cabi_realloc`). A Go-heap-backed realloc reenters
    `make([]...)` before the GC is ready and the adapter aborts with
@@ -289,22 +289,22 @@ The **command** adapter — the Go CONSUMER core module is a command (exports
    `consumer-go/cabi_realloc.go` is a **static bump-arena** `cabi_realloc` (a
    fixed `[1 MiB]byte` global, monotonic offset, no frees): it touches no Go
    heap, is safe during early init, and the non-moving GC keeps the arena in
-   place while the host reads lifted strings/lists. (A reactor never hits this —
-   `_initialize` finishes before any export runs — which is why `go/` can use a
+   place while the host reads lifted strings/lists. (A reactor never hits this:
+   `_initialize` finishes before any export runs, which is why `go/` can use a
    heap realloc.)
 8. **TinyGo's one-shot `-target=wasip2` WIT embedding is unusable here (0.43).**
    `tinygo build -target=wasip2 -wit-package ../../../contracts/wit -wit-world
    cargo-consumer` would skip the manual embed/adapter dance, but on TinyGo 0.43
    its bundled component step fails: `failed to resolve import
-   wasi:cli/environment@0.2.0` — its embedded adapter pins wasi `0.2.0` and does
+   wasi:cli/environment@0.2.0`: its embedded adapter pins wasi `0.2.0` and does
    not reconcile with the toolchain's `0.2.12` WASI imports. Use the explicit
    `tinygo build -target=wasip1` + `wasm-tools component embed` + `component new
    --adapt …=command.wasm` pipeline instead (what `consumer-go/build.sh` does).
 9. **`wac plug` orientation + non-deterministic bytes.** `wac plug --plug
-   <PROVIDER> <CONSUMER> -o composed.wasm`: the PROVIDER (exports `cargo`) is the
-   `--plug`; the CONSUMER (imports `cargo`) is the socket argument. Composed
+   <PROVIDER> <CONSUMER> -o composed.wasm`: the **provider** (exports `cargo`) is the
+   `--plug`; the **consumer** (imports `cargo`) is the socket argument. Composed
    bytes are non-deterministic ([wac#216](https://github.com/bytecodealliance/wac/issues/216)),
-   so verification asserts the RUNTIME stdout of `wasmtime run`, never the
+   so verification asserts the runtime stdout of `wasmtime run`, never the
    artifact bytes.
 10. **WASI minor-version skew composes fine.** The Rust provider imports WASI
     `0.2.3`, the Go components import `0.2.12`. `wac plug` leaves both as imports
@@ -312,6 +312,6 @@ The **command** adapter — the Go CONSUMER core module is a command (exports
     with its implementation via semver-compatible component linking, so
     cross-language compositions run without a version shim.
 11. **Trap poisons the instance.** In the host, the `__TRAP__` sentinel call must
-    be LAST: once a component panics/traps, its instance in that `Store` is
+    run last: once a component panics/traps, its instance in that `Store` is
     poisoned and no further export call will succeed. The recoverable
     `not-found` check runs before it.

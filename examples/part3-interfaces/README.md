@@ -1,8 +1,8 @@
-# Part 3 — Interfaces: HTTP and gRPC (and networking)
+# Part 3: Interfaces (HTTP, gRPC, and networking)
 
 Runnable examples for Part 3. Everything here **imports** the cargo domain from
 the Part 2 provider components (`examples/part2-building-components/{rust,go}`)
-by **composing** with them (`wac plug`) — the Part 2 tree and
+by **composing** with them (`wac plug`): the Part 2 tree and
 `contracts/wit/` are reused as-is, never edited.
 
 Run the whole thing:
@@ -22,7 +22,7 @@ Part 3 artifact, composes, serves/curls/round-trips, and asserts.
 | `http-go/` | ch11 | The same in TinyGo (wit-bindgen-go + reactor pipeline). |
 | `proto/cargo.proto` | ch12 | Shared protobuf contract (messages + `CargoService`). |
 | `proto-component/proto-rust/` | ch12 | Component that uses **prost inside the sandbox** to decode/encode protobuf (`codec.get-cargo(list<u8>) -> list<u8>`). |
-| `proto-component/proto-host/` | ch12 | Native host that drives the protobuf round trip and asserts the fields. Language-agnostic — drives both the Rust and the TinyGo codec. |
+| `proto-component/proto-host/` | ch12 | Native host that drives the protobuf round trip and asserts the fields. Language-agnostic: drives both the Rust and the TinyGo codec. |
 | `proto-go/` | ch12 | TinyGo codec component using a **reflection-free protobuf wire codec** (`wire.go`). |
 | `grpc-bridge/` | ch12 | Native **tonic** gRPC server that terminates gRPC and dispatches each RPC to the unchanged Part 2 Rust provider over WIT. |
 | `sockets-rust/` | ch13 | Rust `wasi:sockets` outbound TCP client with reconnect + exponential backoff with jitter; capability-scoped. |
@@ -40,7 +40,7 @@ same wasmtime v50 reactor adapter the Part 2 Go provider uses.
 
 ## Exact recipes
 
-### ch11 — wasi-http (`wasmtime serve`)
+### ch11: wasi-http (`wasmtime serve`)
 
 ```bash
 # Rust
@@ -72,7 +72,7 @@ request, so a cold `get-cargo` always misses. Any id that is not a
 `CARGO-{ORIGIN}-{DEST}` triple is never booked, so it maps to
 `cargo-error::not-found` → HTTP 404.
 
-### ch12 — protobuf-in-Wasm and the gRPC bridge
+### ch12: protobuf-in-Wasm and the gRPC bridge
 
 ```bash
 # prost inside the component (Rust), driven by the native host
@@ -107,7 +107,7 @@ The split ch12 makes: **gRPC-the-transport** needs the host bridge (there is no
 in-component gRPC server), but **Protobuf-the-serialization** runs fully
 server-side inside a component.
 
-### ch13 — wasi-sockets reconnect
+### ch13: wasi-sockets reconnect
 
 ```bash
 ( cd sockets-rust && cargo component build --release )
@@ -126,9 +126,9 @@ wasmtime run -S inherit-network "$W" 34601 20 100
 
 The component can only open a connection when the host **grants** network access
 (`-S inherit-network`). Without it, `wasi:sockets` returns `access-denied` at the
-capability boundary — the whole point of the demo.
+capability boundary: the whole point of the demo.
 
-## Gotchas worth a chapter callout
+## Notes worth a chapter callout
 
 1. **cargo-component does not auto-scan `wit/deps`.** Unlike `wasm-tools`, it only
    resolves WIT packages declared in `[package.metadata.component.target.dependencies]`.
@@ -138,20 +138,20 @@ capability boundary — the whole point of the demo.
 2. **`wasmtime serve` needs `-S cli`** for a Rust/Go component whose adapter+std
    (and the composed provider) import `wasi:cli/environment` and
    `wasi:filesystem`. The default proxy linker omits them.
-3. **TinyGo 0.43 CAN export `wasi:http/incoming-handler`** via the explicit
+3. **TinyGo 0.43 can export `wasi:http/incoming-handler`** via the explicit
    wasip1 reactor + `wasm-tools component embed` + `component new --adapt reactor`
    pipeline. No fallback was needed; the Go front door serves JSON byte-identical
    to the Rust one.
-4. **TinyGo + `google.golang.org/protobuf` COMPILES but TRAPS at runtime.** The
+4. **TinyGo + `google.golang.org/protobuf` compiles but traps at runtime.** The
    reflection-based library builds under TinyGo 0.43, but `proto.Marshal` reaches
    `reflect.Type.MethodByName` inside `impl.MessageInfo.makeStructInfo`, which
-   TinyGo's partial `reflect` does not implement — a `wasm unreachable` trap. The
+   TinyGo's partial `reflect` does not implement: a `wasm unreachable` trap. The
    working path is a **reflection-free** codec: `proto-go/wire.go` encodes/decodes
    the proto3 wire format directly (varints, length-delimited strings/messages,
    fixed64 doubles) and interoperates byte-for-byte with the Rust prost side
    (a vtprotobuf-generated marshaller is the production-grade reflection-free
    option; the hand-written codec keeps the example self-contained).
-5. **TinyGo 0.43 `wasi:sockets` — no clean runtime path (documented gap).** The
+5. **TinyGo 0.43 `wasi:sockets`: no clean runtime path (documented gap).** The
    `sockets-go` component builds and validates, but:
    - As a **command** (`wasmtime run`), it traps at `_start` with
      `assertion failed at adapter line 2404` in `random_get`: TinyGo's runtime
