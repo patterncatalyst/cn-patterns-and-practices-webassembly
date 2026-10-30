@@ -10,7 +10,7 @@ duration: "27 min read"
 
 By the end of this chapter you can:
 
-- Explain the difference between the `wasmtime` CLI (`wasmtime run`, `wasmtime serve -S cli`) this book has used since Chapter 8, and the embedded `wasmtime` crate `examples/part4-runtimes/wasmtime-host/host/` builds against directly.
+- Explain the difference between the `wasmtime` CLI (`wasmtime run`, `wasmtime serve -S cli`) this book has used throughout, and the embedded `wasmtime` crate `examples/part4-runtimes/wasmtime-host/host/` builds against directly.
 - Build an `Engine`, a `Linker<T>`, and a `Store<T>` by hand, wire WASI into the linker with `wasmtime_wasi::p2::add_to_linker_sync`, and satisfy a component's own custom import with a Rust closure via `bindgen!`'s generated `add_to_linker`.
 - Turn on fuel metering with `Config::consume_fuel(true)` and `Store::set_fuel`, and explain why a guest that exhausts its budget traps with `Trap::OutOfFuel` rather than returning an error.
 - Turn on epoch interruption with `Config::epoch_interruption(true)`, a ticker thread calling `Engine::increment_epoch()`, and `Store::set_epoch_deadline`, and say why this control needs a second thread where fuel does not.
@@ -27,7 +27,7 @@ Every host in Parts 2 and 3 of this book did the same three things: load a compo
 
 ## Two ways to run a component: the CLI and the embedded crate
 
-Chapter 8 ran a composed component with `wasmtime run composed.wasm`. Chapter 9 reached for `wasmtime run` again, with `WASMTIME_BACKTRACE_DETAILS=1` and `--gdbstub`, to debug a trap. Chapter 11 put a component on a socket with `wasmtime serve -S cli composed-http-rust.wasm --addr 127.0.0.1:8080`, and that `-S cli` flag is itself one of five flag families (`-O`/`--optimize`, `-C`/`--codegen`, `-D`/`--debug`, `-W`/`--wasm`, and `-S`/`--wasi`) the `wasmtime` binary exposes for tuning Cranelift codegen, debugging, Wasm semantics, and WASI proposals respectively, each with its own `-X help` listing and an equivalent `--config FILE` TOML form. Every one of those chapters used wasmtime as a **command**: a prebuilt binary that takes a `.wasm` file and some flags and runs it, with no Rust code of this book's own in the loop at all.
+Composing components together used `wasmtime run composed.wasm` to run a composed component. Debugging a trap reached for `wasmtime run` again, with `WASMTIME_BACKTRACE_DETAILS=1` and `--gdbstub`. Serving HTTP directly from a component put a component on a socket with `wasmtime serve -S cli composed-http-rust.wasm --addr 127.0.0.1:8080`, and that `-S cli` flag is itself one of five flag families (`-O`/`--optimize`, `-C`/`--codegen`, `-D`/`--debug`, `-W`/`--wasm`, and `-S`/`--wasi`) the `wasmtime` binary exposes for tuning Cranelift codegen, debugging, Wasm semantics, and WASI proposals respectively, each with its own `-X help` listing and an equivalent `--config FILE` TOML form. Every one of those used wasmtime as a **command**: a prebuilt binary that takes a `.wasm` file and some flags and runs it, with no Rust code of this book's own in the loop at all.
 
 This chapter's host is not that. `host/src/main.rs` depends on the `wasmtime` crate directly (`wasmtime = "50"` in `host/Cargo.toml`) and calls its Rust API (`Engine`, `Store`, `Linker`, `Config`), the same types the `wasmtime` CLI binary itself is built on top of. The two surfaces are not alternatives for the same job; they are different altitudes on the same runtime. The CLI's `-W` flag family exposes two of this chapter's three Store controls directly: running `wasmtime run -W help` on this book's pinned wasmtime 50 prints `-W fuel=N -- Enable execution fuel with N units fuel, trapping after running out of fuel` and `-W epoch-interruption[=y|n] -- Yield when a global epoch counter changes`, so a reader who only ever needs to cap a `.wasm` file's resource use from the outside can reach for `wasmtime run -W fuel=100000 guest.wasm` and never write a line of Rust. What the CLI does not expose, because there is no flag for it, is a **host-provided import**: nothing on the `wasmtime run` command line lets an external process hand a component a Rust closure to call. The moment a component imports something beyond WASI, a pricing service, a clock, any capability the host alone can supply, the CLI's job is done and an embedding is the only way forward. That is exactly the shape of the guest this chapter builds against, and it is why the host here is a crate dependency instead of a command-line invocation.
 
@@ -88,7 +88,7 @@ world host-demo {
 }
 ```
 
-`host-caps` is the **import** direction of the Component Model this book has not shown before: every previous chapter's components exported the cargo domain's `booking` and `handling` interfaces for a host (or another component, via `wac plug`) to call. Here the guest imports a capability only the native host can supply, a pricing quote and a clock reading, and has no other way to obtain either value. `guest/src/lib.rs`'s `clean` mode makes the call directly:
+`host-caps` is the **import** direction of the Component Model this book has not shown before: every other component built in this book exported the cargo domain's `booking` and `handling` interfaces for a host (or another component, via `wac plug`) to call. Here the guest imports a capability only the native host can supply, a pricing quote and a clock reading, and has no other way to obtain either value. `guest/src/lib.rs`'s `clean` mode makes the call directly:
 
 ```rust
 let quote = host_caps::host_quote("CARGO-USNYC-DEHAM");
@@ -161,7 +161,7 @@ let ticker = thread::spawn(move || {
 });
 ```
 
-`Engine::clone()` is cheap: it shares the same underlying compiled-code and epoch state as the original, so the ticker thread can hold its own handle without touching the `Store` the guest is running in at all; the two communicate only through the shared epoch counter inside the `Engine`. A `Store` with a far deadline (`set_epoch_deadline(1_000_000)`) never notices the ticker during a short `clean` run. A `Store` with `set_epoch_deadline(1)` racing against the same `spin` mode that defeated fuel gets interrupted on the very next tick:
+`Engine::clone()` is cheap: it shares the same underlying compiled-code and epoch state as the original, so the ticker thread can hold its own handle without touching the `Store` the guest is running in at all; the two communicate only through the shared epoch counter inside the `Engine`. A `Store` with a far deadline (`set_epoch_deadline(1_000_000)`) never notices the ticker during a short `clean` run. A `Store` with `set_epoch_deadline(1)` racing against the same `spin` mode that defeated fuel gets interrupted on the next tick:
 
 ```
 === 3. epoch interruption ===
@@ -193,7 +193,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
     same grow under 256 MiB cap succeeds: grow done blocks=64 bytes=67108864
 ```
 
-That `memory allocation of 1048576 bytes failed` line is the guest's own allocator writing to stderr before the abort instruction turns into the `UnreachableCodeReached` trap the host classifies. The specific trap code here is almost incidental: it is whatever trap a Rust allocator abort happens to compile down to, not a dedicated "memory capped" trap wasmtime defines, which is exactly why the host does not assert on that trap code the way it asserts `Trap::OutOfFuel` and `Trap::Interrupt` for the other two controls. What it asserts instead is the contrast: the identical `grow` run, same component, same 64-MiB request, succeeds cleanly under a 256 MiB cap (`grow done blocks=64 bytes=67108864`). A limiter that silently did nothing would let both runs through; a guest that simply crashed on large allocations regardless of any cap would fail both. Only a limiter that is enforcing an 8 MiB ceiling produces exactly this pair of outcomes, and that pairing, not the trap's name, is the host's real assertion.
+That `memory allocation of 1048576 bytes failed` line is the guest's own allocator writing to stderr before the abort instruction turns into the `UnreachableCodeReached` trap the host classifies. The specific trap code here is almost incidental: it is whatever trap a Rust allocator abort happens to compile down to, not a dedicated "memory capped" trap wasmtime defines, which is exactly why the host does not assert on that trap code the way it asserts `Trap::OutOfFuel` and `Trap::Interrupt` for the other two controls. What it asserts instead is the contrast: the identical `grow` run, same component, same 64-MiB request, succeeds cleanly under a 256 MiB cap (`grow done blocks=64 bytes=67108864`). A limiter that silently did nothing would let both runs through; a guest that crashed on large allocations regardless of any cap would fail both. Only a limiter that is enforcing an 8 MiB ceiling produces exactly this pair of outcomes, and that pairing, not the trap's name, is the host's real assertion.
 
 ## Classifying errors: wasmtime::Error is not anyhow
 
@@ -241,6 +241,6 @@ cd examples/part4-runtimes/wasmtime-host && ./build.sh
 
 - Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the Component Model's embedding story and the host/guest boundary this chapter's `Linker` and `Store` wiring builds on directly.
 - Shashank Jain, *WebAssembly for Cloud* (Apress): host-side resource governance and sandboxing trade-offs, the same ground this chapter's fuel/epoch/limiter trio covers for wasmtime specifically.
-- [Wasmtime's Rust embedding guide](https://docs.wasmtime.dev/examples-rust.html): `Engine`/`Store`/`Linker` fundamentals and the `wasmtime::component::bindgen!` macro this chapter's host and Chapter 6's host both depend on.
+- [Wasmtime's Rust embedding guide](https://docs.wasmtime.dev/examples-rust.html): `Engine`/`Store`/`Linker` fundamentals and the `wasmtime::component::bindgen!` macro this chapter's host and the Rust provider's host both depend on.
 - [Wasmtime CLI reference](https://docs.wasmtime.dev/cli-options.html): the `-O`/`-C`/`-D`/`-W`/`-S` flag families, including the `-W fuel=N` and `-W epoch-interruption` flags this chapter's Decision callout contrasts against the embedded API.
 - [WebAssembly Component Model documentation](https://component-model.bytecodealliance.org/): the canonical description of imports, the Linker's role in satisfying them, and the resource-handle semantics `ResourceTable` implements.
