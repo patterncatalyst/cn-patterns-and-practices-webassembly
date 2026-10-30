@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fig 3.3/3.4: Ch3: wiring one component's `cargo`-world export to
+"""Fig 3.3/3.4: wiring one component's `cargo`-world export to
 another component's `cargo-consumer`-world import (composition), and the
 WIT-to-bindings-to-component pipeline each language toolchain runs to
 produce that first component."""

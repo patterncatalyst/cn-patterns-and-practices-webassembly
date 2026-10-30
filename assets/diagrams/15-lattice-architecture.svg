@@ -31,8 +31,8 @@
 <text x="920.0" y="327.5" font-size="11.5" fill="#555555" text-anchor="middle">source_config: cargo-http-listen</text>
 <text x="920.0" y="342.5" font-size="11.5" fill="#555555" text-anchor="middle">address: 0.0.0.0:8000</text>
 <rect x="360" y="500" width="330" height="60" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="525.0" y="528.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">same app.wasm Chapter 14 runs</text>
-<text x="525.0" y="545.0" font-size="11.5" fill="#555555" text-anchor="middle">under wasmtime serve (Ch16)</text>
+<text x="525.0" y="528.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">same app.wasm that runs</text>
+<text x="525.0" y="545.0" font-size="11.5" fill="#555555" text-anchor="middle">under wasmtime serve, too</text>
 <path d="M590,70 L525,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="563.5" y="129.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">HTTP GET</text>
 <text x="563.5" y="129.0" font-size="11" fill="#555" text-anchor="middle">HTTP GET</text>

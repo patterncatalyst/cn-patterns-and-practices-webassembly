@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 25.2, Ch25: WasmPlugin distribution and the request path.
+"""Figure 25.2: WasmPlugin distribution and the request path.
 
 Control plane (top band): the WasmPlugin CR (extensions.istio.io/v1alpha1)
 names an OCI reference (oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio)

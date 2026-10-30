@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 18.2, Ch18: the build/package/load/deploy pipeline build.sh and
+"""Figure 18.2: the build/package/load/deploy pipeline build.sh and
 verify-minikube.sh run end to end. The SAME wac-plug recompose Part 3 used
 (Part 2 Rust cargo provider plugged under the Part 3 http-rust front door)
 produces app.wasm; docker build with --provenance=false wraps it in a single-
@@ -80,7 +80,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 500, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "The same app.wasm Ch14 runs under wasmtime serve and Ch15 deploys to wasmCloud; only the packaging and scheduling around it change."},
+     "text": "The same app.wasm that runs under wasmtime serve also deploys to wasmCloud; only the packaging and scheduling around it change."},
 ]
 
 gd.emit("18-build-package-load-deploy", W, H, nodes=nodes, edges=edges, notes=notes)

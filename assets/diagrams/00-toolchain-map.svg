@@ -32,7 +32,7 @@
 <text x="945.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">go.bytecodealliance.org/cm v0.3.0</text>
 <rect x="600" y="240" width="450" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="825.0" y="268.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">TinyGo 0.43.0 compiles the component</text>
-<text x="825.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">go build cannot emit Component Model exports (Ch7)</text>
+<text x="825.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">go build cannot emit Component Model exports</text>
 <rect x="600" y="330" width="450" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="825.0" y="356.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">go/cargo-go.wasm, via wasm-tools embed + adapt</text>
 <text x="825.0" y="373.0" font-size="11.5" fill="#555555" text-anchor="middle">exports world cargo</text>

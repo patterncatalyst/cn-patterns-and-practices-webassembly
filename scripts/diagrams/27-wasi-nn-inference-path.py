@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 27.1, Ch27: the wasi-nn inference path for one classification call.
+"""Figure 27.1: the wasi-nn inference path for one classification call.
 
 One call through cargo-wasi-nn (the classify-cli component): decode and
 preprocess the cargo fixture image entirely in the guest, cross the wasi:nn

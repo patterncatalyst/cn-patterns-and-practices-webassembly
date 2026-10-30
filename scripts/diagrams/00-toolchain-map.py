@@ -35,7 +35,7 @@ gd.emit(
 
         {"x":600,"y":150,"w":210,"h":60,"lines":["Go 1.26.9","standard toolchain, source + modules"],"style":"box"},
         {"x":840,"y":150,"w":210,"h":60,"lines":["wit-bindgen-go v0.7.0","go.bytecodealliance.org/cm v0.3.0"],"style":"box"},
-        {"x":600,"y":240,"w":450,"h":60,"lines":["TinyGo 0.43.0 compiles the component","go build cannot emit Component Model exports (Ch7)"],"style":"ink"},
+        {"x":600,"y":240,"w":450,"h":60,"lines":["TinyGo 0.43.0 compiles the component","go build cannot emit Component Model exports"],"style":"ink"},
         {"x":600,"y":330,"w":450,"h":56,"lines":["go/cargo-go.wasm, via wasm-tools embed + adapt","exports world cargo"],"style":"box"},
 
         {"x":50,"y":450,"w":500,"h":46,"lines":["wasm-tools 1.262.0: embed, adapt, inspect, validate"],"style":"accent"},

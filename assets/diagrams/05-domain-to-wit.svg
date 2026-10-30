@@ -39,7 +39,7 @@
 <text x="370.0" y="525.0" font-size="11.5" fill="#555555" text-anchor="middle">wasm-tools</text>
 <rect x="720" y="480" width="260" height="60" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="850.0" y="508.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Consumer component</text>
-<text x="850.0" y="525.0" font-size="11.5" fill="#555555" text-anchor="middle">HTTP/gRPC adapter, Ch11/12</text>
+<text x="850.0" y="525.0" font-size="11.5" fill="#555555" text-anchor="middle">HTTP/gRPC adapter</text>
 <path d="M150,480 L220,436" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="191.0" y="452.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">implements, exports</text>
 <text x="191.0" y="452.0" font-size="11" fill="#555" text-anchor="middle">implements, exports</text>
@@ -50,7 +50,7 @@
 <text x="816.0" y="452.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">imports, calls</text>
 <text x="816.0" y="452.0" font-size="11" fill="#555" text-anchor="middle">imports, calls</text>
 <path d="M490,406 L550,406" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<text x="526.0" y="400.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">composed together, Ch8</text>
-<text x="526.0" y="400.0" font-size="11" fill="#555" text-anchor="middle">composed together, Ch8</text>
+<text x="526.0" y="400.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">composed together</text>
+<text x="526.0" y="400.0" font-size="11" fill="#555" text-anchor="middle">composed together</text>
 <text x="520" y="620" font-size="12" fill="#555555" text-anchor="middle">types carries no behavior; booking and handling add functions over it. Both worlds import or export all three interfaces together.</text>
 </svg>

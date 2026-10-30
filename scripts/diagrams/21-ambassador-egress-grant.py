@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 21.2, Ch21: the AMBASSADOR's outbound call is reached only through a
+"""Figure 21.2: the AMBASSADOR's outbound call is reached only through a
 GRANT, never a default; shown on both clusters in the way each can actually
 express it.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 18.1, Ch18: the live request path through minikube, host to
+"""Figure 18.1: the live request path through minikube, host to
 component, with no port-forward anywhere in the chain. curl's own authority
 (cargo.<minikube-ip>.nip.io) is a real, publicly resolvable DNS name that
 happens to also be the Ingress host rule's exact match. ingress-nginx proxies
@@ -51,7 +51,7 @@ nodes = [
      "style": "accent"},
 
     {"x": 690, "y": 430, "w": 400, "h": 50,
-     "lines": ["app.wasm: exports wasi:http/incoming-handler", "sha256 eff7f5ee… (same bytes as Ch14/Ch15)"],
+     "lines": ["app.wasm: exports wasi:http/incoming-handler", "sha256 eff7f5ee… (same bytes everywhere)"],
      "style": "user"},
 ]
 

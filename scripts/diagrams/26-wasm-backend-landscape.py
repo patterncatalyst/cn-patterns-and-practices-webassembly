@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 26.1, Ch26: server-side Wasm backend landscape.
+"""Figure 26.1: server-side Wasm backend landscape.
 
 A decision aid, not a ranking, comparing the four backend options this
 book covers for running server-side Wasm on Kubernetes: the raw
