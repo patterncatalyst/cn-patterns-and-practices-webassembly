@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 19.2, Ch19: the operator/lattice topology on OpenShift Local.
+"""Figure 19.2: the operator/lattice topology on OpenShift Local.
 
 install-operator.sh installs the pinned wasmcloud-platform chart (0.1.2),
 which brings up NATS (standalone, cluster.enabled: false), wadm, and the

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 16.2, Ch16: the decision matrix between wasmtime (single process)
+"""Figure 16.2: the decision matrix between wasmtime (single process)
 and wasmCloud (distributed lattice) across four axes a reader actually has to
 weigh: control, operational surface, resilience, and scale, plus a closing
 row naming Part 5's Kubernetes as a third, orthogonal axis (scheduling either

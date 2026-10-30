@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fig 3.1/3.2: Ch3: the patterncatalyst:cargo@0.1.0 package as it appears
+"""Fig 3.1/3.2: the patterncatalyst:cargo@0.1.0 package as it appears
 in contracts/wit/ (types -> booking/handling by `use`), and the same three
 interfaces re-read through the two worlds that bind them to a direction
 (cargo exports, cargo-consumer imports)."""

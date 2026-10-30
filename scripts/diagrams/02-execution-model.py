@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fig 2.1-2.4: Ch2: the Wasm execution model. Module vs. instance,
+"""Fig 2.1-2.4: the Wasm execution model. Module vs. instance,
 linear-memory bounds-checking, the sandbox boundary against a container's
 ambient OS access, and capability passing through the import table."""
 import sys

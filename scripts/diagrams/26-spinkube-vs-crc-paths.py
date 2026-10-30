@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 26.2, Ch26: SpinKube vs. CRC deploy paths for the same Spin app.
+"""Figure 26.2: SpinKube vs. CRC deploy paths for the same Spin app.
 
 One Spin app, cargo-spin.wasm (exports wasi:http/handler@0.3.0), deployed
 two ways: on minikube under full SpinKube (spin-operator, SpinApp CRD,

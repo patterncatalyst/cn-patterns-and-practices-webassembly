@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 23.1, Ch23: two trigger types, one owner.
+"""Figure 23.1: two trigger types, one owner.
 
 Both halves of this chapter are the same shape: a keda.sh ScaledObject reads
 a metric and patches a plain Kubernetes Deployment's replica count directly,

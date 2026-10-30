@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 20.1, Ch20: the same embargo+logging interposer, two substrate
+"""Figure 20.1: the same embargo+logging interposer, two substrate
 expressions.
 
 minikube (top band): compile-time `wac plug` composition. The Part 2 provider,

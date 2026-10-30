@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 19.1, Ch19: the live CRC request path for the cargo-http app under
+"""Figure 19.1: the live CRC request path for the cargo-http app under
 the wasmCloud operator on OpenShift Local.
 
 A CA-verified `curl` (combined system trust store + the cluster's own ingress

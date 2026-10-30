@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 21.1, Ch21: the shape-translation ADAPTER, two substrate expressions.
+"""Figure 21.1: the shape-translation ADAPTER, two substrate expressions.
 
 minikube (top band): compile-time `wac plug` composition. The Part 3 http-rust
 front door, the cargo-adapter interposer, and the Part 2 cargo provider are

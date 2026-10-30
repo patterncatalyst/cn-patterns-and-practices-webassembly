@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 8.1: Ch8: the `wac plug` socket/plug model. A consumer component
+"""Figure 8.1: the `wac plug` socket/plug model. A consumer component
 (the socket: it IMPORTS the cargo interfaces) is plugged by a provider
 component (the plug: it EXPORTS them) into one composed, self-contained
 component. WASI imports are left untouched by wac; wasmtime's own WASI

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 25.1, Ch25: two Wasm worlds, across the mesh.
+"""Figure 25.1: two Wasm worlds, across the mesh.
 
 A runtimeClassName: wasmtime pod runs one container runtime for every
 container, so an Istio sidecar cannot live beside the Wasm app; the mesh

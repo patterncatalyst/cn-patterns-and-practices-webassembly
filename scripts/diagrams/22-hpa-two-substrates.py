@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 22.1, Ch22: per-substrate autoscaler asymmetry.
+"""Figure 22.1: per-substrate autoscaler asymmetry.
 
 minikube (left band): the raw containerd-shim-wasmtime Pod exposes ordinary
 cgroup CPU usage. metrics-server aggregates it into the Kubernetes Metrics

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 8.2: Ch8: the 2x2 polyglot composition matrix. Two consumers
+"""Figure 8.2: the 2x2 polyglot composition matrix. Two consumers
 (Rust, Go) x two providers (Rust, Go) = four `wac plug` compositions, matched
 purely by WIT identifier. All four, including the two cross-language pairs,
 print the byte-identical normalized summary line under `wasmtime run`."""

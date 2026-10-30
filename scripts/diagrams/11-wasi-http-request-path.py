@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 11.1: Ch11: one HTTP request's path through `wasmtime serve` into a
+"""Figure 11.1: one HTTP request's path through `wasmtime serve` into a
 composed wasi-http component. `wasmtime serve -S cli` terminates the TCP
 connection and HTTP framing itself; the composed component's two halves
 (the http-rust/http-go adapter, wac-plugged to the Part 2 cargo provider)

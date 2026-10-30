@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 16.1, Ch16: ONE component artifact, app.wasm, built once by
+"""Figure 16.1: ONE component artifact, app.wasm, built once by
 examples/part4-runtimes/wasmcloud/build.sh (the Part 2 Rust cargo provider
 wac-plugged under the Part 3 http-rust front door), fans into two independent
 runtimes: wasmtime serve -S cli (ch14) on the left and the wasmCloud lattice's

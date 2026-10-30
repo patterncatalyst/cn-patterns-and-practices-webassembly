@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 24.1, Ch24: two emitters, two in-cluster backends.
+"""Figure 24.1: two emitters, two in-cluster backends.
 
 minikube (top band): the generic containerd-shim-wasmtime v0.6.1 is the
 telemetry source. It emits shim-level OTel traces (one span per invocation,

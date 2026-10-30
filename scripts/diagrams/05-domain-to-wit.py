@@ -43,13 +43,13 @@ gd.emit(
 
         {"x":50,"y":480,"w":200,"h":60,"lines":["Rust component","cargo-component"],"style":"box"},
         {"x":270,"y":480,"w":200,"h":60,"lines":["Go component","wasm-tools"],"style":"box"},
-        {"x":720,"y":480,"w":260,"h":60,"lines":["Consumer component","HTTP/gRPC adapter, Ch11/12"],"style":"box"},
+        {"x":720,"y":480,"w":260,"h":60,"lines":["Consumer component","HTTP/gRPC adapter"],"style":"box"},
     ],
     edges=[
         {"x1":150,"y1":480,"x2":220,"y2":436,"label":"implements, exports"},
         {"x1":370,"y1":480,"x2":280,"y2":436,"label":"implements, exports"},
         {"x1":850,"y1":480,"x2":770,"y2":436,"label":"imports, calls"},
-        {"x1":490,"y1":406,"x2":550,"y2":406,"label":"composed together, Ch8","dashed":True},
+        {"x1":490,"y1":406,"x2":550,"y2":406,"label":"composed together","dashed":True},
     ],
     notes=[
         {"x":520,"y":620,"text":"types carries no behavior; booking and handling add functions over it. Both worlds import or export all three interfaces together.","size":12,"color":"#555555","anchor":"middle"},

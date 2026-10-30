@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 17.1, Ch17: how a Pod spec reaches either runc or the Wasm shim.
+"""Figure 17.1: how a Pod spec reaches either runc or the Wasm shim.
 kubelet hands every Pod to containerd, which looks up the runtime by name.
 With no runtimeClassName (or the default runc class), containerd shells out
 to runc and a normal Linux container starts. With runtimeClassName: wasmtime

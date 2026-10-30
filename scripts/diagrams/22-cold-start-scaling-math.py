@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 22.2, Ch22: cold-start scaling math.
+"""Figure 22.2: cold-start scaling math.
 
 A Wasm replica becomes ready in single-digit to low-hundreds of milliseconds
 (instantiation, not a boot sequence). A container or JVM workload needs

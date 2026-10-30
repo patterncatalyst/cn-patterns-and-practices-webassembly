@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Figure 28.1, Ch28: the assembled final-project request path on minikube.
+"""Figure 28.1: the assembled final-project request path on minikube.
 
 A client resolves cargo.<minikube-ip>.nip.io through the nip.io Ingress and
-reaches the Istio ingress gateway's Envoy, where the Ch25 proxy-wasm filter
+reaches the Istio ingress gateway's Envoy, where the proxy-wasm filter
 runs first: it rejects any request missing x-cargo-tenant with a 403, and
 injects x-cargo-filtered-by on the way back out. Two Pods sit behind the
 gateway on RuntimeClass: wasmtime (containerd-shim-wasmtime): cargo-rust
@@ -10,7 +10,7 @@ gateway on RuntimeClass: wasmtime (containerd-shim-wasmtime): cargo-rust
 plugged with the Go cargo provider), both exporting
 wasi:http/incoming-handler and both returning the same cargo JSON. The shim
 hosting each Pod emits an OTel span per invocation into otel-lgtm (Tempo):
-shim-OTel traces under the workload, same pipeline as Ch24.
+shim-OTel traces under the workload, the same pipeline used elsewhere.
 """
 import sys, os
 sys.path.insert(0, "scripts")

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Figure 15.1, Ch15: the wasmCloud lattice for the cargo-http app.
+"""Figure 15.1: the wasmCloud lattice for the cargo-http app.
 
 One `wash up -d` process starts three things in the lattice: a NATS message
 bus, a wasmcloud host (1.9.1), and wadm (0.21.1) reconciling the OAM manifest.
 `wash app deploy wadm.yaml` starts two things ON that host: the httpserver
 capability provider (0.27.0) and the cargo-http component (the SAME app.wasm
-Chapter 14 runs under wasmtime serve), and establishes the link between them
+that also runs under wasmtime serve), and establishes the link between them
 on wasi:http/incoming-handler, carrying the listen address as source config.
 A curl against 127.0.0.1:8000 flows in through the provider's open socket,
 across the link, into the component, and the cargo JSON comes back out.
@@ -53,7 +53,7 @@ nodes = [
      "style": "ink"},
 
     {"x": 360, "y": 500, "w": 330, "h": 60,
-     "lines": ["same app.wasm Chapter 14 runs", "under wasmtime serve (Ch16)"],
+     "lines": ["same app.wasm that runs", "under wasmtime serve, too"],
      "style": "ghost"},
 ]
 
