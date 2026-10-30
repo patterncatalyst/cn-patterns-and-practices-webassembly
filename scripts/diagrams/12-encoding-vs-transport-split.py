@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 12.3: Ch12: Protobuf-the-encoding vs gRPC-the-transport.
+"""Figure 12.3: Protobuf-the-encoding vs gRPC-the-transport.
 
 The chapter's central split: Protobuf (varints, length-delimited fields,
 fixed64 doubles) is pure computation and runs fine inside a component.

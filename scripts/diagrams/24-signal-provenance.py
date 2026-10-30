@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 24.2, Ch24: signal provenance: which layer emits what.
+"""Figure 24.2: signal provenance: which layer emits what.
 
 Guest-side instrumentation (wasi-otel) is RC-only at the time of writing and
 is NOT used anywhere in this book. Every signal described in Chapter 24 is

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 17.2, Ch17: the Wasm-on-Kubernetes landscape as of this book's
+"""Figure 17.2: the Wasm-on-Kubernetes landscape as of this book's
 2026-10-21 verified run. Four rows, each naming what gets scheduled and what
 it will and won't run: runwasi/containerd-shim-wasmtime (this book's
 mechanism: any wasi:http/proxy or wasi:cli component, via a generic

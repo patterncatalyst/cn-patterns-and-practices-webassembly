@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 12.1: Ch12: Protobuf runs server-side INSIDE a Wasm component.
+"""Figure 12.1: Protobuf runs server-side INSIDE a Wasm component.
 
 Request bytes cross the host->component boundary as a plain `list<u8>`. Inside
 the sandbox, a codec (prost in Rust, a reflection-free wire codec in TinyGo)

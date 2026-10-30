@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 28.2, Ch28: the thread map. One WIT contract, two language builds,
+"""Figure 28.2: the thread map. One WIT contract, two language builds,
 one set of shared deploy targets the final project assembles.
 
 contracts/wit (patterncatalyst:cargo) is implemented twice: once by the Part
@@ -7,8 +7,8 @@ contracts/wit (patterncatalyst:cargo) is implemented twice: once by the Part
 its Part 3 HTTP component (http-rust, http-go/TinyGo) with wac plug to
 produce cargo-rust.wasm and cargo-go.wasm. Both composed components then feed
 the same four deploy targets built in earlier parts: the containerd shim
-(Part 5), the Istio gateway filter (Part 6, Ch25), the shim-to-otel-lgtm OTel
-pipeline (Ch24), and the wasmCloud operator on CRC (Ch19).
+(Part 5), the Istio gateway filter (Part 6), the shim-to-otel-lgtm OTel
+pipeline, and the wasmCloud operator on CRC.
 """
 import sys, os
 sys.path.insert(0, "scripts")
@@ -62,13 +62,13 @@ nodes = [
      "lines": ["containerd-shim-wasmtime", "Part 5: RuntimeClass: wasmtime"],
      "style": "box"},
     {"x": 385, "y": 670, "w": 310, "h": 110,
-     "lines": ["Istio gateway filter", "Part 6, Ch25: proxy-wasm"],
+     "lines": ["Istio gateway filter", "Part 6: proxy-wasm"],
      "style": "box"},
     {"x": 715, "y": 670, "w": 310, "h": 110,
-     "lines": ["shim OTel → otel-lgtm", "Ch24: Tempo traces"],
+     "lines": ["shim OTel → otel-lgtm", "Tempo traces"],
      "style": "box"},
     {"x": 1045, "y": 670, "w": 310, "h": 110,
-     "lines": ["wasmCloud operator", "Ch19: CRC"],
+     "lines": ["wasmCloud operator", "CRC"],
      "style": "box"},
 
     {"x": 20, "y": 890, "w": 1360, "h": 70,

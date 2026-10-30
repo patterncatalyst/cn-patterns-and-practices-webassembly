@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 27.2, Ch27: one wasi:nn API, swappable backends.
+"""Figure 27.2: one wasi:nn API, swappable backends.
 
 The same cargo-wasi-nn component sits above the model-agnostic wasi:nn API;
 the host wires that API to whichever inference backend it has installed:

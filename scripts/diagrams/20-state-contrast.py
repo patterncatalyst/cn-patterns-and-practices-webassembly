@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 20.2, Ch20: why the SAME request shape returns 200 on minikube and
+"""Figure 20.2: why the SAME request shape returns 200 on minikube and
 404 on CRC for a valid tracking id.
 
 The Part 3 front door handles GET /cargo/CARGO-{ORIGIN}-{DEST} by calling

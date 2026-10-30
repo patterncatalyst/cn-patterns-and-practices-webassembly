@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 23.2, Ch23: the Kafka lag flow, end to end, on minikube.
+"""Figure 23.2: the Kafka lag flow, end to end, on minikube.
 
 One loop, one owner. A producer burst lands on a six-partition topic and
 raises real consumer-group lag. KEDA's kafka ScaledObject reads that lag and

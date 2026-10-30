@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 15.2, Ch15: wadm's reconcile loop self-healing the component.
+"""Figure 15.2: wadm's reconcile loop self-healing the component.
 
 The real captured sequence from evidence/2026-10-21/05-resilience.txt:
 service healthy (200) -> `wash scale component ... --max-instances 0` removes

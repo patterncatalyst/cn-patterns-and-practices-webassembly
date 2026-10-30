@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figure 11.2: Ch11: the build/compose/serve pipeline for both language
+"""Figure 11.2: the build/compose/serve pipeline for both language
 front doors. `http-rust` builds with `cargo-component`; `http-go` builds with
 the TinyGo wasip1-reactor + wasm-tools pipeline from Chapter 7. Either
 artifact is `wac plug`-composed with the matching Part 2 provider (one source
