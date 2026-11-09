@@ -33,7 +33,7 @@ require_cmd helm
 require_cmd curl
 require_cmd gh
 
-kubectl get nodes >/dev/null || { echo "install-spinkube.sh: FAIL — minikube profile '$PROFILE' is not reachable" >&2; exit 1; }
+kubectl get nodes >/dev/null || { echo "install-spinkube.sh: FAIL, minikube profile '$PROFILE' is not reachable" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
 # 1. cert-manager
@@ -97,7 +97,7 @@ else
   echo "install-spinkube.sh: cert-manager $CERT_MANAGER_VERSION webhook smoke test FAILED — falling back to $CERT_MANAGER_VERSION_FALLBACK" >&2
   kubectl delete -f "$(CERT_MANAGER_MANIFEST_URL "$CERT_MANAGER_VERSION")" --ignore-not-found >/dev/null 2>&1 || true
   install_cert_manager "$CERT_MANAGER_VERSION_FALLBACK"
-  cert_manager_smoke_ok || { echo "install-spinkube.sh: FAIL — cert-manager $CERT_MANAGER_VERSION_FALLBACK webhook smoke test also failed (kubectl get pods -n cert-manager)" >&2; exit 1; }
+  cert_manager_smoke_ok || { echo "install-spinkube.sh: FAIL, cert-manager $CERT_MANAGER_VERSION_FALLBACK webhook smoke test also failed (kubectl get pods -n cert-manager)" >&2; exit 1; }
   CERT_MANAGER_INSTALLED="$CERT_MANAGER_VERSION_FALLBACK"
   echo "install-spinkube.sh: cert-manager $CERT_MANAGER_VERSION_FALLBACK OK (fallback) — webhook admits Certificate writes"
 fi
@@ -120,7 +120,7 @@ kubectl label node --all "$SHIM_SPIN_NODE_LABEL" --overwrite
 
 echo "install-spinkube.sh: waiting for RuntimeClass '$SPIN_RUNTIMECLASS' (runtime-class-manager provisions it once the shim is installed on a labeled node) ..."
 wait_for_resource 300 "RuntimeClass '$SPIN_RUNTIMECLASS' present" runtimeclass "$SPIN_RUNTIMECLASS" \
-  || { echo "install-spinkube.sh: FAIL — debug with: kubectl get shims.runtime-class-manager.spinframework.dev -A; kubectl get pods -n $RUNTIME_CLASS_MANAGER_NAMESPACE" >&2; exit 1; }
+  || { echo "install-spinkube.sh: FAIL, debug with: kubectl get shims.runtime-class-manager.spinframework.dev -A; kubectl get pods -n $RUNTIME_CLASS_MANAGER_NAMESPACE" >&2; exit 1; }
 kubectl get runtimeclass "$SPIN_RUNTIMECLASS"
 
 # ---------------------------------------------------------------------------
@@ -141,7 +141,7 @@ kubectl get pods -n "$SPIN_OPERATOR_NAMESPACE"
 # ---------------------------------------------------------------------------
 
 step "4/4 app namespace $SPINAPP_NAMESPACE: SpinAppExecutor ($SPIN_EXECUTOR) + ghcr-pull secret ($PULL_SECRET)"
-TOKEN="$(gh auth token 2>/dev/null)" || { echo "install-spinkube.sh: FAIL — gh auth token failed; run 'gh auth login' first" >&2; exit 1; }
+TOKEN="$(gh auth token 2>/dev/null)" || { echo "install-spinkube.sh: FAIL, gh auth token failed; run 'gh auth login' first" >&2; exit 1; }
 kubectl create namespace "$SPINAPP_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 # SpinAppExecutor is namespaced; the SpinApp references an executor in its own
 # namespace, so create it in the app namespace (the release manifest carries no

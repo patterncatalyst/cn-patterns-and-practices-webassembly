@@ -1,10 +1,10 @@
 package patterncatalyst:cargo-proto@0.1.0;
 
-/// Protobuf codec for the cargo domain, as a WebAssembly component (ch12).
+/// Protobuf codec for the cargo domain, as a WebAssembly component.
 ///
 /// The `codec` interface takes protobuf REQUEST bytes and returns protobuf
 /// RESPONSE bytes. The encode/decode happens with prost entirely inside the
-/// Wasm sandbox — this is Protobuf-the-serialization running server-side, as
+/// Wasm sandbox: this is Protobuf-the-serialization running server-side, as
 /// distinct from gRPC-the-transport (which the grpc-bridge terminates natively).
 interface codec {
     /// Decode a protobuf `GetCargoRequest`, dispatch to the imported cargo

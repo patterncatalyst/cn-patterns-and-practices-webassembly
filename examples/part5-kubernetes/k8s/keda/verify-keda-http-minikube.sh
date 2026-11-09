@@ -63,7 +63,7 @@ trap cleanup EXIT
 step "Step 0: tool + version checks"
 mk_ver="$(minikube version --short 2>/dev/null || echo v0.0.0)"
 [[ "$(printf '%s\n%s\n' "$MINIKUBE_MIN" "$mk_ver" | sort -V | head -1)" == "$MINIKUBE_MIN" ]] \
-  || { echo "verify-keda-http-minikube.sh: FAIL — minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
+  || { echo "verify-keda-http-minikube.sh: FAIL, minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
 echo "verify-keda-http-minikube.sh: minikube $mk_ver OK; shim $SHIM_VERSION; Kubernetes $KUBERNETES_VERSION"
 
 step "Step 1: minikube profile '$PROFILE' (docker driver, containerd, Kubernetes $KUBERNETES_VERSION)"
@@ -130,7 +130,7 @@ while (( waited < IDLE_TIMEOUT )); do
   sleep 5; waited=$(( waited + 5 ))
 done
 kubectl get deploy cargo-http -n "$NAMESPACE"
-[[ "$zeroed" -eq 1 ]] || { echo "verify-keda-http-minikube.sh: FAIL — cargo-http never scaled to 0 within ${IDLE_TIMEOUT}s of idle (scaledownPeriod is 30s; check KEDA operator + add-ons-http-controller-manager logs)" >&2; exit 1; }
+[[ "$zeroed" -eq 1 ]] || { echo "verify-keda-http-minikube.sh: FAIL, cargo-http never scaled to 0 within ${IDLE_TIMEOUT}s of idle (scaledownPeriod is 30s; check KEDA operator + add-ons-http-controller-manager logs)" >&2; exit 1; }
 
 step "Step 9: COLD request through the interceptor — 0 -> 1 -> real 200, timed"
 # -w total_time measures wall-clock from the request leaving curl to the full
@@ -150,11 +150,11 @@ echo "verify-keda-http-minikube.sh: cold-start latency = ${cold_seconds}s (0 -> 
 
 step "Step 10: confirm the scale-up actually happened (replicas > 0 post cold request)"
 r="$(current_replicas)"
-[[ "$r" -ge 1 ]] || { echo "verify-keda-http-minikube.sh: FAIL — cargo-http still shows $r replicas after a 200 response" >&2; exit 1; }
+[[ "$r" -ge 1 ]] || { echo "verify-keda-http-minikube.sh: FAIL, cargo-http still shows $r replicas after a 200 response" >&2; exit 1; }
 echo "verify-keda-http-minikube.sh: cargo-http at $r replica(s) after the cold request"
 
 echo
-echo "PASS — part5-kubernetes ch23 KEDA HTTP scale-to-zero on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
+echo "PASS: part5-kubernetes ch23 KEDA HTTP scale-to-zero on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
 echo "  KEDA HTTP add-on 0.16.0 (KEDA core 2.21.0) scaled cargo-http to ZERO"
 echo "  replicas while idle and back to 1 on the first cold request, with the"
 echo "  interceptor holding the request through the scale-up; cold-start latency"

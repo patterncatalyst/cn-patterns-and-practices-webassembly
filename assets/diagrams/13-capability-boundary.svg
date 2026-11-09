@@ -28,7 +28,7 @@
 <text x="880.0" y="247.0" font-size="11.5" fill="#555555" text-anchor="middle">refused while no listener is bound yet</text>
 <rect x="630" y="284" width="500" height="56" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="880.0" y="310.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">component backs off and retries</text>
-<text x="880.0" y="327.0" font-size="11.5" fill="#555555" text-anchor="middle">(see Figure 13.2)</text>
+<text x="880.0" y="327.0" font-size="11.5" fill="#555555" text-anchor="middle">(reconnect backoff)</text>
 <rect x="630" y="400" width="500" height="72" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="880.0" y="434.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">once a listener appears, the SAME</text>
 <text x="880.0" y="451.0" font-size="11.5" fill="#555555" text-anchor="middle">retry loop connects and returns</text>
@@ -40,6 +40,6 @@
 <path d="M880,184 L880,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M880,264 L880,284" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M880,340 L880,400" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="590" y="600" font-size="12" fill="#555555" text-anchor="middle">Contrast with Chapter 2: a container starts with the host&#x27;s network stack by default and loses it only by subtraction (namespaces, egress policy).</text>
+<text x="590" y="600" font-size="12" fill="#555555" text-anchor="middle">Contrast with a container: it starts with the host&#x27;s network stack by default and loses it only by subtraction (namespaces, egress policy).</text>
 <text x="590" y="620" font-size="12" fill="#555555" text-anchor="middle">A component starts with none and gains exactly what -S inherit-network hands it: no grant, no socket, no exception.</text>
 </svg>

@@ -2,33 +2,37 @@
 title: "Wasm on Kubernetes"
 order: 17
 part: "Deploying to Kubernetes"
-description: "How a Wasm component runs on Kubernetes at all: the containerd Wasm shim that replaces runc for a Pod, the RuntimeClass that routes a Pod to it, how the shim binary gets onto a node, and where this mechanism sits in the wider landscape."
-duration: "20 min read"
+description: "How a Wasm component runs on Kubernetes: the containerd Wasm shim that replaces runc for a Pod, the RuntimeClass that routes a Pod to it, how the shim gets onto a node, and where it sits among SpinKube, the wasmCloud operator and Krustlet."
+duration: "15 min read"
 ---
 
 ## Learning objectives
 
 By the end of this chapter you can:
 
-- Explain what a containerd shim is and why `containerd-shim-wasmtime` can stand in for `runc` on a per-Pod basis without changing anything else about how kubelet or the Kubernetes API schedule that Pod.
-- Read `examples/part5-kubernetes/k8s/base/runtimeclass.yaml` and `base/deployment.yaml` together and state exactly which field on which object routes a Pod to the Wasm shim instead of the default container runtime.
-- Trace `install-shim.sh`'s four steps (download and verify, install the binary on the node, register the runtime in `/etc/containerd/config.toml`, apply the `RuntimeClass`) and explain why step 3 restarts containerd and what that costs.
-- Compare the node-install approach this book uses against a DaemonSet installer (KWasm, Runtime-Class-Manager) and say which one fits a cluster you don't own the node image for.
-- Place `containerd-shim-wasmtime`/runwasi, SpinKube, the wasmCloud operator, and Krustlet on a single map by what each one schedules and what it will and won't run, and name which of the four this site's Part 5 examples use.
+- Explain what a containerd shim is and why `containerd-shim-wasmtime` can replace `runc` for one Pod without changing kubelet or the scheduler.
+- Name the field on each object (`RuntimeClass.handler`, `runtimeClassName`) that routes a Pod to the Wasm shim.
+- Install the shim on a node in four steps, and say why registering the runtime restarts containerd and what that costs.
+- Choose between a node-install script and a DaemonSet installer (KWasm, Runtime-Class-Manager) by who owns the node image.
+- Place the containerd shim, SpinKube, the wasmCloud operator and Krustlet on one map by what each schedules and runs.
 
 ## Why this matters
 
-This book has run a Wasm component somewhere ever since its first Rust component: a CLI host when composing components into WIT worlds, `wasmtime serve` when serving HTTP from a component and again under wasmtime's embedding, a wasmCloud lattice under wasmCloud. None of that involved Kubernetes, and the move to a cluster is not a change in the component at all. `app.wasm` in `examples/part5-kubernetes/` is the same `wasi:http/incoming-handler` artifact this book has been building and recomposing since Part 2, unchanged. What changes is who starts the process that runs it, and that question has a surprisingly specific answer: a Kubernetes node's container runtime, containerd, needs a plugin that knows how to execute a `.wasm` file instead of extracting and `chroot`-ing into an OCI image rootfs. Kubernetes itself does not know anything about WebAssembly. It schedules Pods onto nodes and hands each Pod's spec to the node's container runtime; whether that runtime turns the spec into a Linux container or into a Wasm component execution is entirely a property of what plugin the runtime resolves for that Pod, which is exactly the mechanism this chapter opens up.
+Moving to a cluster doesn't change the component. `app.wasm` in `examples/part5-kubernetes/` is the same `wasi:http/incoming-handler` artifact that runs under `wasmtime serve` and on a wasmCloud lattice. What changes is who starts the process that runs it.
 
-That mechanism has a name, `runwasi`, and a specific binary this book's `examples/part5-kubernetes/` tree installs and exercises live: `containerd-shim-wasmtime`, pinned at v0.6.1 and verified against minikube v1.39.0 running Kubernetes v1.37.1 with containerd v2.3.4 in the node. The go/no-go question for this entire Part was whether the generic, vendor-neutral shim could serve this book's `wasi:http/proxy` component without hitting a feature gap (some components use host imports or WIT shapes the shim's wasmtime embedding doesn't yet implement). `examples/part5-kubernetes/k8s/README.md` records the result directly: "The go/no-go test passed on the first run: the raw shim served the component with no feature-gap wall (runwasi #1004 did not bite), so this is the mechanism used; the wasmCloud-operator fallback was not needed." That one sentence is why this chapter teaches the shim-and-`RuntimeClass` path as the primary mechanism rather than hedging between two options, and it sets up the fallback path (the wasmCloud operator) that this chapter still has to explain, because the OpenShift Local (CRC) chapter needs it even though this book's own minikube deploy did not.
+Kubernetes knows nothing about WebAssembly. It schedules Pods onto nodes and hands each Pod spec to the node's container runtime, containerd. Whether containerd turns the spec into a Linux container or a Wasm execution depends on the plugin it resolves for that Pod. That plugin is a **shim**, and the `runwasi` project supplies the scaffolding for Wasm shims.
 
-{% include excalidraw.html file="17-shim-and-runtimeclass-layering" alt="Two side-by-side columns show kubelet scheduling the same kind of Pod. Left column, no runtimeClassName (default): containerd resolves the runc handler, runc creates a Linux container, and the result is a normal container image with an OS userland, a language runtime, and the app. Right column, runtimeClassName wasmtime: containerd resolves the handler wasmtime to runtime_type io.containerd.wasmtime.v1, containerd-shim-wasmtime-v1 starts, detects the component exports wasi:http/incoming-handler, and runs wasmtime serve on 0.0.0.0:8080 against a scratch OCI image holding only a roughly 290 KiB app.wasm, no OS userland and no language runtime. A banner across the bottom states that a RuntimeClass object with handler wasmtime is what makes runtimeClassName a valid, resolvable field value on the Pod. A side note warns that installing the shim restarts containerd on the node, which bounces every running Pod, so do it before other addons." caption="Figure 17.1: the same kubelet and the same containerd node, forked onto runc or the Wasm shim by one Pod-spec field." %}
+The generic, vendor-neutral `containerd-shim-wasmtime` served the cargo component with no feature gap (the open runwasi issue #1004 tracks that class of gap), so the shim and `RuntimeClass` path is the primary mechanism here. The wasmCloud operator is the fallback for a cluster where the shim doesn't fit.
 
-## The containerd Wasm shim: runwasi and `containerd-shim-wasmtime`
+{% include excalidraw.html file="17-shim-and-runtimeclass-layering" alt="Two columns show kubelet scheduling the same kind of Pod. Left, no runtimeClassName: containerd resolves the runc handler, runc creates a Linux container with an OS userland, a language runtime and the app. Right, runtimeClassName wasmtime: containerd resolves the handler to runtime_type io.containerd.wasmtime.v1, containerd-shim-wasmtime-v1 starts, detects the wasi:http/incoming-handler export and runs wasmtime serve on 0.0.0.0:8080 against a scratch OCI image holding only a roughly 290 KiB app.wasm. A RuntimeClass object with handler wasmtime makes runtimeClassName a valid field value. A side note warns that installing the shim restarts containerd, which bounces every running Pod on the node." caption="Figure 17.1: The same kubelet and containerd node, forked onto runc or the Wasm shim by one Pod-spec field." %}
 
-A containerd shim is not a sidecar and not a webhook; it is the actual process containerd forks to run a container's workload, one shim process per running container (or, in some shim implementations, one shim per Pod). For a normal Linux container, containerd resolves the runtime handler to `runc`, and `runc` sets up namespaces, cgroups, and a root filesystem before exec'ing the container's entrypoint inside that sandbox. `containerd-shim-wasmtime` does the same job in the Pod lifecycle slot `runc` normally occupies, except what it execs is not a process in a chroot; it is the `wasmtime` embedding, running the component's bytes directly, with no Linux userland underneath it at all. `runwasi` is the Bytecode Alliance project that supplies the shared Rust scaffolding containerd shims for Wasm runtimes are built from; `containerd-shim-wasmtime` is the specific shim built on that scaffolding for the `wasmtime` runtime, and it is the one this book's Part 5 examples install and run.
+## The containerd Wasm shim
 
-The install comment in `examples/part5-kubernetes/k8s/install-shim.sh` states the resolution chain the shim participates in without any hand-waving:
+For a Linux container, containerd resolves the runtime handler to `runc`, which sets up namespaces, cgroups and a root filesystem and execs the entrypoint. A `.wasm` file has no rootfs to chroot into and no process to exec. Without a second runtime, a Wasm component can't be a Pod.
+
+A **containerd shim** is the process containerd forks to run a workload. A Wasm shim runs the component's bytes in an embedded runtime with no Linux userland underneath.
+
+`containerd-shim-wasmtime` does the job of `runc` in the same Pod lifecycle slot, except it runs the `wasmtime` embedding. The install script states the resolution chain:
 
 ```
 # containerd resolves a CRI runtime of type `io.containerd.wasmtime.v1` to the
@@ -37,15 +41,15 @@ The install comment in `examples/part5-kubernetes/k8s/install-shim.sh` states th
 # our component targets wasi:http/proxy and serves it on 0.0.0.0:8080.
 ```
 
-Two separate name lookups are happening there, and conflating them is the easiest way to misread this mechanism. The `runtime_type` (`io.containerd.wasmtime.v1`) is a string containerd's CRI plugin maps to a binary name on its `PATH` by convention: append `-v1` to get the executable containerd execs as the shim. The `handler` (`wasmtime`) is a separate, shorter name that only exists at the Kubernetes API layer, carried by the `RuntimeClass` object and referenced from a Pod's `runtimeClassName` field. Nothing requires those two strings to match, and in this book's example they happen to both be `wasmtime` purely because that is the name chosen for the `RuntimeClass`, covered next.
+Two separate lookups happen here. The `runtime_type` (`io.containerd.wasmtime.v1`) is a string containerd maps to a binary on its `PATH` by convention: append `-v1`. The `handler` (`wasmtime`) is a shorter name that exists only at the Kubernetes API layer, carried by the `RuntimeClass` and referenced from a Pod's `runtimeClassName`. Nothing requires the two strings to match.
 
-Once the shim is running a component, what does it do with it? This book's `app.wasm` exports `wasi:http/incoming-handler`, the same interface `wasmtime serve` drives directly when serving HTTP from a component and under wasmtime. `containerd-shim-wasmtime` recognizes that export and runs the component behind its own built-in hyper server, bound to `0.0.0.0:8080` inside the Pod's network namespace; the README states this as "the same behaviour as `wasmtime serve`," and that is not a loose analogy: it is the identical `wasi:http/proxy` world machinery this book has used since its HTTP front door was built, now invoked by the shim instead of by a CLI command. A component targeting `wasi:cli/run` instead of `wasi:http/proxy` gets a different shim behavior (a one-shot process execution rather than a long-running server), but Part 5's example uses the HTTP path because it is the one this site has already proven portable across three different hosting arrangements (`wasmtime serve`, wasmCloud, and now a containerd shim).
+When the component exports `wasi:http/incoming-handler`, the shim runs it behind a built-in hyper server on `0.0.0.0:8080` in the Pod's network namespace, the same behavior as `wasmtime serve`. A component targeting `wasi:cli/run` gets a one-shot execution instead of a long-running server.
 
-<div class="callout callout--warn"><p class="callout__title">Note</p><p>The shim binary is a containerd shim, not a CLI: it does not respond to interactive flags the way a normal binary would. Running <code>containerd-shim-wasmtime-v1 --version</code> (or any flag it doesn't define) panics with <code>flag provided but not defined</code> instead of printing a version string, because the binary expects to be exec'd by containerd with containerd's own shim protocol on its file descriptors. <code>install-shim.sh</code> never queries it directly; it confirms the binary is in place with <code>ls -l</code> after installing it, and treats the running Pod itself as the proof the shim works, exactly the stance <code>examples/part5-kubernetes/k8s/README.md</code> takes: "Confirm it is in place with <code>ls</code>, and let the running Pod be the proof."</p></div>
+The shim binary is not a CLI. Invoking it with `--version`, or any flag it doesn't define, panics with `flag provided but not defined`, because it expects containerd's shim protocol on its file descriptors. Confirm it with `ls -l` and let the running Pod be the proof.
 
-## `RuntimeClass`: the field that routes a Pod to the shim
+## RuntimeClass routes a Pod to the shim
 
-`RuntimeClass` is a small, cluster-scoped Kubernetes object (`node.k8s.io/v1`, no spec beyond a `handler` string) and its entire job is to give a Pod a name it can reference instead of hard-coding a containerd runtime string into every Pod spec. `examples/part5-kubernetes/k8s/base/runtimeclass.yaml` is short enough to read in full:
+`RuntimeClass` is a cluster-scoped object (`node.k8s.io/v1`) whose only spec is a `handler` string. It gives a Pod a name to reference instead of a containerd runtime string:
 
 ```yaml
 apiVersion: node.k8s.io/v1
@@ -55,29 +59,43 @@ metadata:
 handler: wasmtime
 ```
 
-The comment above it in the repository spells out the dependency precisely: "`handler: wasmtime` must match the CRI runtime key `install-shim.sh` registers in the node's `/etc/containerd/config.toml` ... A Pod that sets `runtimeClassName: wasmtime` is scheduled onto this shim instead of runc." That is the whole mechanism, stated as one sentence: a `Deployment`'s Pod template sets `runtimeClassName: wasmtime`, the scheduler places the Pod on a node the way it always does (`RuntimeClass` does not change scheduling by itself, though `scheduling.nodeSelector` on the object can, for clusters with a mix of Wasm-capable and ordinary nodes), and kubelet on that node hands the Pod to containerd along with the resolved runtime handler. `examples/part5-kubernetes/k8s/base/deployment.yaml` is the consumer side of that contract, and its own comments name the field directly: "`runtimeClassName: wasmtime`: route this Pod to the Wasm shim, not runc." The Pod spec sets exactly one field beyond what an ordinary Deployment would carry:
+`handler` must match the CRI runtime key the install script registers in `/etc/containerd/config.toml`. The Deployment is the consumer side, and its Pod template sets one field beyond an ordinary workload:
 
 ```yaml
-spec:
-  runtimeClassName: wasmtime
-  containers:
-    - name: cargo-http
-      image: cargo-http-wasm:dev
-      imagePullPolicy: IfNotPresent
-      command: ["/app.wasm"]
+    spec:
+      runtimeClassName: wasmtime
+      containers:
+        - name: cargo-http
+          image: cargo-http-wasm:dev
+          imagePullPolicy: IfNotPresent
+          command: ["/app.wasm"]
 ```
 
-`command: ["/app.wasm"]` is the other half of making this work with ordinary Kubernetes primitives: the component is packaged as a single-layer `scratch` OCI image (`FROM scratch; COPY app.wasm /app.wasm`) so that `kubectl`, `kustomize`, image registries, and every other piece of day-to-day Kubernetes tooling treat it as an ordinary container image, right up until containerd hands it to the shim instead of `runc`. Nothing about the `Deployment`, `Service`, or `Ingress` objects in `examples/part5-kubernetes/k8s/base/` is Wasm-specific beyond that one `runtimeClassName` line; the rest of the manifest set is the same shape any HTTP workload's Kubernetes objects would take, which is close to the whole point of running Wasm behind a `RuntimeClass` rather than behind some parallel, Wasm-only orchestration layer.
+The scheduler places the Pod as it always does; `RuntimeClass` doesn't change scheduling, though `scheduling.nodeSelector` on the object can restrict it to Wasm-capable nodes in a mixed cluster. Kubelet then hands the Pod to containerd with the resolved handler.
 
-That also means `RuntimeClass` buys nothing on its own if the shim it names is not installed on the node the Pod lands on. `kubectl apply -f runtimeclass.yaml` only creates the Kubernetes-API-level object; it does nothing to containerd's configuration, and a Pod referencing a `RuntimeClass` whose handler containerd cannot resolve fails to start with a clear `RuntimeClass` resolution error rather than silently falling back to `runc`. The object and the node-level installation are two separate steps that have to both be true.
+The component is packaged as a single-layer `scratch` OCI image (`FROM scratch; COPY app.wasm /app.wasm`), so `kubectl`, kustomize and registries treat it as an ordinary image until containerd hands it to the shim. The `Deployment`, `Service` and `Ingress` have nothing else Wasm-specific.
 
-## Getting the shim onto a node: ours vs. the DaemonSet installer
+`RuntimeClass` alone buys nothing. `kubectl apply` creates only the API object and leaves containerd's configuration untouched. A Pod whose handler containerd can't resolve fails to start with a `RuntimeClass` resolution error and never falls back to `runc`. The object and the node installation both have to be true.
 
-`install-shim.sh`'s four-step sequence is the part of this mechanism that is specific to a cluster where you can reach into the node directly, which is exactly minikube's situation and not every cluster's. The steps, in order: download the pinned shim tarball and verify its SHA256 against the value recorded in `lib.sh` (`a9b1215ee670f11414c8fd8e970b52679085929c8ec73a0fe6ed9cf215cf9ba1`, taken from the release's own `SHA256SUMS`); copy the extracted `containerd-shim-wasmtime-v1` binary into the node and install it at `/usr/bin` with `chmod 0755`; edit `/etc/containerd/config.toml` to register `io.containerd.wasmtime.v1` under the CRI plugin's runtimes table, then restart containerd and wait for the CRI socket to answer again; apply the `RuntimeClass`. The config-edit step is the one worth reading closely, because it is written to be idempotent and safe to re-run:
+## Getting the shim onto a node
+
+On a cluster where you can reach the node (minikube), `install-shim.sh` does four things:
+
+1. Downloads the pinned shim tarball and verifies its SHA256 against the value in `lib.sh`.
+2. Installs the extracted `containerd-shim-wasmtime-v1` at `/usr/bin` with mode `0755`.
+3. Registers `io.containerd.wasmtime.v1` under the CRI plugin's runtimes table in `/etc/containerd/config.toml`, restarts containerd and waits for it to answer.
+4. Applies the `RuntimeClass`.
+
+The config edit is idempotent, and containerd restarts only when the config changed:
 
 ```bash
 if grep -q 'containerd.runtimes.wasmtime\]' "$CFG"; then
-  echo "install-shim.sh(node): wasmtime runtime already registered — skipping edit"
+  # Already registered: the config is unchanged, so DO NOT restart containerd.
+  # An unconditional restart here needlessly bounces every running Pod on the
+  # node, and a Wasm Pod that was mid-flight across the restart gets SIGKILLed
+  # (exit 137) and wedges into CrashLoopBackOff. Re-running install-shim (e.g.
+  # between Part 5 chapters) must be a no-op when nothing changed.
+  echo "install-shim.sh(node): wasmtime runtime already registered, config unchanged, NOT restarting containerd"
 else
   cp "$CFG" "${CFG}.bak.$(date +%s)"
   awk '
@@ -88,43 +106,71 @@ else
     }
   ' "$CFG" > "${CFG}.new"
   mv "${CFG}.new" "$CFG"
-fi
-echo "install-shim.sh(node): restarting containerd ..."
-systemctl restart containerd
+  echo "install-shim.sh(node): inserted wasmtime runtime block:"
+  grep -n 'wasmtime' "$CFG" || true
+  echo "install-shim.sh(node): restarting containerd (config changed) ..."
+  systemctl restart containerd
 ```
 
-Restarting containerd is unavoidable: the CRI plugin reads its runtimes table at startup, so a new runtime entry does not take effect until the process restarts, and that restart bounces every Pod currently scheduled through that node's containerd, not just the one you're about to deploy. `examples/part5-kubernetes/k8s/README.md` lists this under its gotchas for exactly that reason and the order-of-operations consequence it implies: install the shim and take the containerd restart before installing other addons (ingress-nginx, a CNI plugin, anything else that will also need to come back cleanly), not after, so you only pay that disruption once rather than interleaving it with other cluster changes.
+The restart is unavoidable: the CRI plugin reads its runtimes table at startup. It bounces every Pod on that node, and a Wasm Pod caught mid-flight is killed and can wedge in `CrashLoopBackOff`. So install the shim before other addons (ingress-nginx, a CNI) and pay the disruption once.
 
-Reaching `/etc/containerd/config.toml` directly like this only works because minikube gives SSH access to a node you fully control. A managed cluster (EKS, GKE, AKS, OpenShift, anything where the node image is the platform's responsibility rather than yours) does not hand you that kind of access, and even where it technically does, hand-editing a managed node's containerd configuration is the kind of change a node image update silently reverts. The production-shaped answer to that constraint is a DaemonSet installer: a Pod that runs once per node (or once per node matching a label), mounts the host's filesystem and `/etc/containerd` through a privileged `hostPath` volume, and performs the same binary-install-plus-config-edit-plus-restart sequence this chapter's script runs over SSH, but as a Kubernetes-native object that reconciles itself if a node is replaced. **KWasm** and its successor **Runtime-Class-Manager** are the two named projects doing this today: both ship a DaemonSet plus a small controller, install the shim binary and the containerd runtime registration onto every matching node automatically, and apply the corresponding `RuntimeClass`, so bringing a Wasm-capable node online becomes "label the node, let the DaemonSet do the rest" instead of an SSH session per node.
+Editing `/etc/containerd/config.toml` over SSH works only on a node you fully control. On a managed cluster (EKS, GKE, AKS, OpenShift) the node image is the platform's, and a node image update reverts hand edits. The answer there is a DaemonSet installer: a Pod per matching node that mounts the host's `/etc/containerd` through a privileged `hostPath` volume and does the same install, edit and restart, then reconciles itself when a node is replaced. **KWasm** and its successor **Runtime-Class-Manager** ship a DaemonSet plus a small controller, install the shim and runtime registration on every labeled node, and apply the `RuntimeClass`.
 
-The trade-off between the two approaches is a trade-off about who owns the node image and how many nodes there are. `install-shim.sh`'s SSH-and-restart approach is simpler to read, debug, and demonstrate on a single-node development cluster (every line of what it does is visible in one script, with no controller reconciliation loop or custom resource to reason about), and that transparency is exactly why this book uses it for a teaching example. A DaemonSet installer adds a controller and (for Runtime-Class-Manager) a CRD to the cluster's surface area, but it scales to a fleet of nodes you don't SSH into individually, survives node replacement without a re-run, and is the shape a platform team wants running continuously rather than as a one-time provisioning script. Pick the node-install script for a single box you control end to end; reach for a DaemonSet installer the moment "the node" becomes "however many nodes autoscaling adds next week."
+| | Node-install script | DaemonSet installer |
+| --- | --- | --- |
+| Where it runs | Over SSH, once | In-cluster, per labeled node |
+| Added to the cluster | Nothing | A controller (and a CRD for Runtime-Class-Manager) |
+| Survives node replacement | No, re-run it | Yes |
+| Easy to read and debug | Every step in one script | A reconciliation loop to reason about |
+| Fits | One box you own end to end | A fleet you don't SSH into |
 
 ## The landscape: four projects, four scopes
 
-`runwasi`/`containerd-shim-wasmtime` is not the only project putting WebAssembly inside Kubernetes's scheduling model, and naming the other three precisely matters because each one answers a narrower or differently-shaped question than "run an arbitrary Wasm component as a Pod."
+The containerd shim isn't the only project putting WebAssembly inside Kubernetes. Each of the others answers a narrower or differently shaped question.
 
-**SpinKube** is the closest sibling to this chapter's mechanism: it also ships a containerd shim, `containerd-shim-spin`, following the same runwasi scaffolding and the same `RuntimeClass` pattern this chapter just walked through. The difference is scope. A Spin application is built around Fermyon's Spin framework (HTTP and other triggers, a `spin.toml` manifest, a packaging format Spin's own tooling produces), and `containerd-shim-spin` runs Spin applications specifically, not arbitrary `wasi:http/proxy` or `wasi:cli` components. SpinKube adds a `SpinApp` custom resource and a `spin-operator` controller on top of the shim, so a Spin app becomes its own first-class Kubernetes object rather than a bare Deployment with a `runtimeClassName`. This book's components are built directly against the WIT contract introduced by the Component Model with no Spin-specific packaging step, so `containerd-shim-spin` is not a fit for anything in this Part. It is a Part 6 survey topic, named here because it is frequently confused with the generic shim this chapter teaches.
+**SpinKube** ships `containerd-shim-spin`, built on runwasi with the same `RuntimeClass` pattern. It runs Spin applications (a `spin.toml` manifest, Spin triggers), not arbitrary `wasi:http/proxy` or `wasi:cli` components. It adds a `SpinApp` custom resource and a `spin-operator`, so a Spin app is its own Kubernetes object rather than a Deployment with a `runtimeClassName`. Components built straight against the WIT contract have no use for it.
 
-**The wasmCloud operator** answers a structurally different question: instead of making a single component a Pod, it makes an entire wasmCloud host a Pod (or a set of Pods), and then the familiar `wash`/`wadm` tooling deploys applications onto that in-cluster lattice exactly as it would onto a lattice running anywhere else. Nothing about the component changes, and nothing about `wadm.yaml` changes; what changes is that the host process the lattice runs on is now itself a Kubernetes workload, supervised by the operator's reconciliation loop rather than by `wash up` on a developer's machine. This is the fallback path named in `examples/part5-kubernetes/k8s/README.md` for exactly the scenario this book's go/no-go test ruled out: if the raw `containerd-shim-wasmtime` had hit a feature gap serving this book's component (runwasi issue #1004, tracking exactly that class of gap, did not bite here), the wasmCloud operator would have been the way to still get the component running on the cluster, at the cost of carrying a lattice rather than a bare shim. The OpenShift Local (CRC) chapter uses this operator path directly, which is the reason this chapter introduces it by name now rather than leaving it as an unexplained reference later.
+**The wasmCloud operator** makes a whole wasmCloud host a Pod, and `wash` and `wadm` deploy applications onto that in-cluster lattice as they would anywhere. The component and `wadm.yaml` don't change; the host is now a Kubernetes workload supervised by the operator. It is the fallback when the raw shim hits a feature gap for a component, at the cost of carrying a lattice rather than a bare shim. It is also the mechanism for a cluster where node changes are off the table: on OpenShift Local, installing the shim needs a privileged RHCOS `MachineConfig`, which fights the `restricted-v2` security posture, so the operator runs an in-cluster wasmCloud host instead.
 
-**Krustlet** is the one entry on this map that is history rather than a live option. It predates the containerd-shim approach entirely: rather than teaching containerd a new runtime, Krustlet implemented an entire alternative kubelet in Rust, registering itself as a Kubernetes node and running WASI workloads (via `wasmtime` and, in its WAGI mode, HTTP-triggered CGI-style components) directly, bypassing containerd altogether. That was a reasonable design in 2020, before runwasi existed to give containerd native Wasm support, but it meant every piece of node-level machinery Kubernetes already has (the CRI, kubelet's own lifecycle management, the surrounding tooling that assumes a CRI-compliant runtime) had to be reimplemented or worked around rather than reused. Krustlet's maintainers archived the project in 2022, explicitly in favor of the containerd-shim direction this chapter teaches, which turned Wasm-on-Kubernetes from "bring an alternative kubelet" into "register a new containerd runtime," a far smaller and more maintainable surface. It belongs on this map only so a reader who finds it in an older blog post or conference talk knows it is not the mechanism this book, or the current ecosystem, uses.
+**Krustlet** is history. It implemented an alternative kubelet in Rust that registered as a node and ran WASI workloads directly, bypassing containerd, so every piece of node machinery that assumes a CRI-compliant runtime had to be reimplemented or worked around. Its maintainers archived it in 2022 in favor of the containerd-shim direction. Treat it as noise when it turns up in older articles.
 
-{% include excalidraw.html file="17-wasm-on-kubernetes-landscape" alt="A table with four rows and three columns (project, mechanism, scope/status). Row 1, runwasi containerd-shim-wasmtime: a generic containerd shim plus RuntimeClass, installed via node-install script or DaemonSet installer; runs any wasi:http/proxy or wasi:cli component, this book's mechanism, v0.6.1 verified. Row 2, SpinKube containerd-shim-spin: a containerd shim plus a SpinApp CRD and spin-operator; scoped to Spin applications specifically, not arbitrary components, a Part 6 survey topic. Row 3, wasmCloud operator: schedules a wasmCloud host itself as a Pod, then wadm deploys an application onto that in-cluster lattice; the fallback path if the raw shim hits a gap, and the path the OpenShift Local (CRC) chapter uses. Row 4, Krustlet, shown in a dashed/ghost style: a kubelet-replacement (virtual kubelet) running wasmtime or WAGI providers directly, bypassing containerd; archived by its maintainers in 2022, superseded by the containerd-shim approach above. A footer note states none of the four compete head-on; pick by what you are deploying (a generic component, a Spin app, or a wasmCloud lattice) and what you control (the node image)." caption="Figure 17.2: four projects putting Wasm inside Kubernetes's scheduling model, each answering a differently scoped question." %}
+{% include excalidraw.html file="17-wasm-on-kubernetes-landscape" alt="A table of four projects with mechanism and scope. runwasi containerd-shim-wasmtime: a generic containerd shim plus RuntimeClass, installed by a node script or DaemonSet installer, runs any wasi:http/proxy or wasi:cli component. SpinKube containerd-shim-spin: a shim plus a SpinApp CRD and spin-operator, scoped to Spin applications. wasmCloud operator: schedules a wasmCloud host as a Pod, then wadm deploys onto that in-cluster lattice; the fallback when the raw shim hits a gap. Krustlet, drawn dashed: a kubelet replacement running wasmtime or WAGI providers directly, archived in 2022. A footer says the four don't compete head-on; pick by what you deploy and what you control." caption="Figure 17.2: Four projects putting Wasm inside Kubernetes's scheduling model, each answering a differently scoped question." %}
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Default to the shim-per-node path this chapter teaches (<code>containerd-shim-wasmtime</code> plus a <code>RuntimeClass</code> plus <code>runtimeClassName</code> on the Pod) when the component exports a WASI world the shim already supports (<code>wasi:http/proxy</code> or <code>wasi:cli/run</code> cover most services) and when you either control the node image directly (a DaemonSet installer such as KWasm or Runtime-Class-Manager) or are working against a small, fully-owned cluster where a one-time node-install script is acceptable, as this chapter's minikube example does. This path keeps the operational surface smallest: one shim binary per node, one `RuntimeClass` object, ordinary `Deployment`/`Service`/`Ingress` manifests otherwise unchanged. Reach for the wasmCloud operator instead when the workload already needs the lattice's own properties (capability providers, declarative links, `wadm`'s self-healing reconciliation) on top of running inside Kubernetes, or when a go/no-go test against the raw shim surfaces a real feature gap for a specific component's WASI imports; in that case the lattice absorbs the gap by running the component in a host wasmtime embeds directly, at the cost of carrying NATS, `wadm`, and a host process as additional Kubernetes workloads. Do not reach for SpinKube unless the workload is a Spin application, and do not reach for Krustlet; it is maintained by no one.</p></div>
+> **Decision**
+>
+> Default to `containerd-shim-wasmtime`, a `RuntimeClass` and `runtimeClassName` when the component exports a world the shim supports (`wasi:http/proxy` or `wasi:cli/run` cover most services) and you own the node image, with a script on a small cluster or a DaemonSet installer on a fleet. It adds one binary per node and one `RuntimeClass`, and leaves `Deployment`, `Service` and `Ingress` unchanged. Reach for the wasmCloud operator when the workload needs the lattice (capability providers, declarative links, `wadm` self-healing), when a test against the raw shim shows a gap for the component's WASI imports, or when you can't change the node. Use SpinKube only for Spin applications. Don't use Krustlet.
+
+> **🤖 Explore with your agent**
+>
+> "In examples/part5-kubernetes/k8s, read base/runtimeclass.yaml, base/deployment.yaml and install-shim.sh. Tell me which field on which object routes the Pod to the Wasm shim, which two strings must match for containerd to resolve the handler, and which step of install-shim.sh restarts containerd and why. Then say whether this cluster should use the node-install script or a DaemonSet installer if I don't own the node image."
+>
+> Check: the reply names `runtimeClassName: wasmtime` on the Deployment, `handler: wasmtime` on the RuntimeClass matching the key in `/etc/containerd/config.toml`, and the restart in step 3.
+
+## Build, run, observe
+
+```bash
+cd examples/part5-kubernetes/k8s
+PROFILE=part5 ./install-shim.sh
+kubectl get runtimeclass wasmtime
+```
+
+`install-shim.sh` needs a running minikube profile. It prints `OK` once the shim is installed, the runtime registered and the `RuntimeClass` applied. The next chapter deploys the component and requests it end to end.
+
+- Re-run `install-shim.sh`: the config is already registered, so containerd isn't restarted and running Pods stay up.
+- Point `handler` at a name containerd has no registered runtime for: a Pod that references the class fails to start with a `RuntimeClass` resolution error rather than falling back to `runc`.
+- Run `containerd-shim-wasmtime-v1 --version` on the node: it panics with `flag provided but not defined`.
 
 ## For deeper coverage
 
-- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the runtime-integration chapter covering how a host embeds `wasmtime` and what a container-runtime-level integration like a containerd shim has to supply that a library embedding does not.
-- Shashank Jain, *WebAssembly for Cloud* (Apress): platform-level deployment patterns for Wasm workloads, including the orchestration surface a containerd shim sits underneath.
-- [runwasi (Bytecode Alliance), GitHub](https://github.com/containerd/runwasi): the shared containerd-shim scaffolding `containerd-shim-wasmtime` is built on, including the open feature-gap issue (#1004) this chapter's go/no-go test checked against.
-- [Kubernetes documentation, RuntimeClass](https://kubernetes.io/docs/concepts/containers/runtime-class/): the object this chapter's `base/runtimeclass.yaml` instantiates, including the `scheduling.nodeSelector` field for mixed-node clusters not covered here.
-- [SpinKube documentation](https://www.spinkube.dev/): `containerd-shim-spin`, the `SpinApp` CRD, and `spin-operator`, the scoped sibling project named in this chapter's landscape section.
-- [wasmCloud documentation, Kubernetes](https://wasmcloud.com/docs/): the wasmCloud operator and deploying a wadm application onto an in-cluster lattice, the fallback path this chapter names and the OpenShift Local (CRC) chapter uses directly.
-- HTTP from a component: the `wasi:http/proxy` world and `wasi:http/incoming-handler` export this chapter's shim drives the same way `wasmtime serve` does.
-- wasmtime: the embedding and `wasmtime serve` behavior the shim replicates inside a Pod, without a native host binary.
-- wasmCloud: the lattice, `wadm`, and capability-provider model the wasmCloud operator schedules into a cluster unchanged.
-- wasmtime and wasmCloud together: the single-process-versus-lattice axes this chapter's Decision box applies one layer up, inside Kubernetes.
-- Deploying on minikube: the full live deploy this chapter's mechanism supports: the `verify-minikube.sh`/`capture-evidence.sh` run, the Ingress request path, and the committed evidence.
-- OpenShift Local (CRC): the cluster where the wasmCloud-operator fallback named in this chapter is the actual mechanism in use, not a hypothetical.
-- cloud-native-design-patterns, the Kubernetes extension patterns chapters: the general shape of a `RuntimeClass`/shim pair as an instance of the broader "pluggable node-level execution" pattern this chapter's mechanism is one concrete case of.
+- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): how a host embeds `wasmtime`, and what a container-runtime integration like a containerd shim supplies that a library embedding doesn't.
+- Shashank Jain, *WebAssembly for Cloud* (Apress): deployment patterns for Wasm workloads, including the orchestration surface a containerd shim sits under.
+- [runwasi](https://github.com/containerd/runwasi): the shared containerd-shim scaffolding `containerd-shim-wasmtime` is built on, including the feature-gap issue #1004.
+- [Kubernetes documentation, RuntimeClass](https://kubernetes.io/docs/concepts/containers/runtime-class/): the object, including the `scheduling.nodeSelector` field for mixed-node clusters.
+- [SpinKube documentation](https://www.spinkube.dev/): `containerd-shim-spin`, the `SpinApp` CRD and `spin-operator`.
+- [wasmCloud documentation, Kubernetes](https://wasmcloud.com/docs/): the wasmCloud operator and deploying a `wadm` application onto an in-cluster lattice.
+- HTTP from a component: the `wasi:http/proxy` world and `wasi:http/incoming-handler` export the shim drives the way `wasmtime serve` does.
+- wasmtime: the embedding and `wasmtime serve` behavior the shim reproduces inside a Pod.
+- wasmCloud: the lattice, `wadm` and capability-provider model the operator schedules into a cluster unchanged.
+- Deploying on minikube: the full live deploy of this mechanism, with the Ingress request path and recorded evidence.
+- OpenShift Local (CRC): the cluster where the wasmCloud operator fallback is the mechanism in use.
+- cloud-native-design-patterns, the Kubernetes extension patterns: a `RuntimeClass` and shim pair as one case of pluggable node-level execution.

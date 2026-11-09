@@ -36,9 +36,9 @@ bands = [
 ]
 
 headers = [
-    ["raw containerd shim", "(ch17–ch18)"],
-    ["wasmCloud", "(ch15, ch19)"],
-    ["SpinKube / Spin", "(ch26)"],
+    ["raw containerd shim", "(RuntimeClass)"],
+    ["wasmCloud", "(lattice, operator)"],
+    ["SpinKube / Spin", "(SpinApp operator)"],
     ["WasmEdge / other runwasi shims"],
 ]
 
@@ -90,7 +90,7 @@ edges = []
 
 notes = [
     {"x": 590, "y": 812, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "WasmEdge / other runwasi shims shown for completeness; not exercised as a runnable example in this book."},
+     "text": "WasmEdge / other runwasi shims shown for completeness; not exercised as a runnable example."},
 ]
 
 gd.emit("26-wasm-backend-landscape", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

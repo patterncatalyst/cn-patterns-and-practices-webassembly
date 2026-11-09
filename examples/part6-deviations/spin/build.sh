@@ -57,7 +57,7 @@ for arg in "$@"; do
   case "$arg" in
     --push) PUSH=1 ;;
     *)
-      echo "build.sh: FAIL — unknown argument '$arg' (expected: --push)" >&2
+      echo "build.sh: FAIL, unknown argument '$arg' (expected: --push)" >&2
       exit 1
       ;;
   esac
@@ -65,7 +65,7 @@ done
 
 for tool in cargo spin wac wasm-tools; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "spin/build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "spin/build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -73,7 +73,7 @@ done
 echo "spin/build.sh: [1/5] building the Part 2 Rust cargo provider (reused, not edited) ..."
 ( cd "$PART2/rust" && cargo component build --release )
 PROVIDER="$(find "$PART2/rust/target" -name cargo_rust.wasm -not -path '*/deps/*' | head -1)"
-[[ -s "$PROVIDER" ]] || { echo "spin/build.sh: FAIL — part2 provider not produced" >&2; exit 1; }
+[[ -s "$PROVIDER" ]] || { echo "spin/build.sh: FAIL, part2 provider not produced" >&2; exit 1; }
 
 echo "spin/build.sh: [2/5] writing the build-time manifest (declares the patterncatalyst:cargo dependency; gitignored) ..."
 cat > "$BUILD_MANIFEST" <<EOF
@@ -106,8 +106,8 @@ EOF
 echo "spin/build.sh: [3/5] spin build (regenerates spin-dependencies.wit, compiles the handler) ..."
 spin build -f "$BUILD_MANIFEST"
 HANDLER="$SCRIPT_DIR/target/wasm32-wasip2/release/cargo_spin.wasm"
-[[ -s "$HANDLER" ]] || { echo "spin/build.sh: FAIL — handler component not produced" >&2; exit 1; }
-[[ -s "$SCRIPT_DIR/spin-dependencies.wit" ]] || { echo "spin/build.sh: FAIL — spin-dependencies.wit was not regenerated" >&2; exit 1; }
+[[ -s "$HANDLER" ]] || { echo "spin/build.sh: FAIL, handler component not produced" >&2; exit 1; }
+[[ -s "$SCRIPT_DIR/spin-dependencies.wit" ]] || { echo "spin/build.sh: FAIL, spin-dependencies.wit was not regenerated" >&2; exit 1; }
 
 echo "spin/build.sh: [4/5] composing cargo-spin.wasm (wac plug: provider -> handler) ..."
 wac plug --plug "$PROVIDER" "$HANDLER" -o "$OUT"
@@ -115,18 +115,18 @@ wasm-tools validate "$OUT"
 
 WIT="$(wasm-tools component wit "$OUT")"
 if ! grep -q 'export wasi:http/handler@0.3.0;' <<<"$WIT"; then
-  echo "spin/build.sh: FAIL — cargo-spin.wasm does not export wasi:http/handler@0.3.0" >&2
+  echo "spin/build.sh: FAIL, cargo-spin.wasm does not export wasi:http/handler@0.3.0" >&2
   echo "$WIT" >&2
   exit 1
 fi
 if grep -qE '^\s*import patterncatalyst:' <<<"$WIT"; then
-  echo "spin/build.sh: FAIL — cargo-spin.wasm still imports patterncatalyst:cargo/* (plug left it unsatisfied)" >&2
+  echo "spin/build.sh: FAIL, cargo-spin.wasm still imports patterncatalyst:cargo/* (plug left it unsatisfied)" >&2
   echo "$WIT" >&2
   exit 1
 fi
 NON_WASI_IMPORTS="$(grep -E '^\s*import ' <<<"$WIT" | grep -vE '^\s*import wasi:' || true)"
 if [[ -n "$NON_WASI_IMPORTS" ]]; then
-  echo "spin/build.sh: FAIL — cargo-spin.wasm imports something other than wasi:*:" >&2
+  echo "spin/build.sh: FAIL, cargo-spin.wasm imports something other than wasi:*:" >&2
   echo "$NON_WASI_IMPORTS" >&2
   exit 1
 fi
@@ -141,11 +141,11 @@ echo "spin/build.sh: [5/5] OK — cargo-spin.wasm exports wasi:http/handler@0.3.
 
 if [[ "$PUSH" -eq 1 ]]; then
   if ! command -v gh >/dev/null 2>&1; then
-    echo "spin/build.sh: FAIL — --push requires the 'gh' CLI (authenticated) on PATH" >&2
+    echo "spin/build.sh: FAIL, --push requires the 'gh' CLI (authenticated) on PATH" >&2
     exit 1
   fi
   GH_TOKEN="$(gh auth token 2>/dev/null)" || {
-    echo "spin/build.sh: FAIL — gh auth token failed; run 'gh auth login' first" >&2
+    echo "spin/build.sh: FAIL, gh auth token failed; run 'gh auth login' first" >&2
     exit 1
   }
   echo "spin/build.sh: pushing the Spin application to $IMAGE_REF (minikube SpinKube path) ..."

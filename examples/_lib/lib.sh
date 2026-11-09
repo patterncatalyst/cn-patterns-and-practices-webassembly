@@ -57,10 +57,10 @@ assert_eq() {
   local actual="$2"
   local context="${3:-equality}"
   if [[ "$expected" != "$actual" ]]; then
-    echo "lib.sh: FAIL — ${context}: expected '$expected', got '$actual'" >&2
+    echo "lib.sh: FAIL, ${context}: expected '$expected', got '$actual'" >&2
     return 1
   fi
-  echo "lib.sh: ok — ${context}: '$actual'" >&2
+  echo "lib.sh: ok, ${context}: '$actual'" >&2
 }
 
 # assert_contains <needle> <haystack> <context>
@@ -69,10 +69,10 @@ assert_contains() {
   local haystack="$2"
   local context="${3:-contains}"
   if [[ "$haystack" != *"$needle"* ]]; then
-    echo "lib.sh: FAIL — ${context}: '$needle' not found" >&2
+    echo "lib.sh: FAIL, ${context}: '$needle' not found" >&2
     return 1
   fi
-  echo "lib.sh: ok — ${context}: found '$needle'" >&2
+  echo "lib.sh: ok, ${context}: found '$needle'" >&2
 }
 
 # assert_file <path> <context> — fail if the file does not exist / is empty.
@@ -80,10 +80,10 @@ assert_file() {
   local path="$1"
   local context="${2:-file}"
   if [[ ! -s "$path" ]]; then
-    echo "lib.sh: FAIL — ${context}: missing or empty file '$path'" >&2
+    echo "lib.sh: FAIL, ${context}: missing or empty file '$path'" >&2
     return 1
   fi
-  echo "lib.sh: ok — ${context}: '$path'" >&2
+  echo "lib.sh: ok, ${context}: '$path'" >&2
 }
 
 # ---------------------------------------------------------------------------
@@ -95,7 +95,7 @@ require_cmd() {
   local cmd="$1"
   local hint="${2:-}"
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "lib.sh: FAIL — required tool '$cmd' not found on PATH${hint:+ ($hint)}" >&2
+    echo "lib.sh: FAIL, required tool '$cmd' not found on PATH${hint:+ ($hint)}" >&2
     return 1
   fi
 }
@@ -166,7 +166,7 @@ assert_component_matches_contract() {
 
   require_cmd wasm-tools
   if ! wasm-tools validate "$wasm" >/dev/null 2>&1; then
-    echo "lib.sh: FAIL — ${label}: $wasm is not a valid wasm component/module" >&2
+    echo "lib.sh: FAIL, ${label}: $wasm is not a valid wasm component/module" >&2
     return 1
   fi
 
@@ -175,9 +175,9 @@ assert_component_matches_contract() {
   contract_digest="$(wasm-tools component wit "$contract_dir" | wit_interface_digest)"
 
   if [[ "$comp_digest" != "$contract_digest" ]]; then
-    echo "lib.sh: FAIL — ${label}: exported interfaces do not match the contract" >&2
+    echo "lib.sh: FAIL, ${label}: exported interfaces do not match the contract" >&2
     diff <(printf '%s\n' "$contract_digest") <(printf '%s\n' "$comp_digest") >&2 || true
     return 1
   fi
-  echo "lib.sh: ok — ${label}: exported interfaces match the contract (types + booking + handling)" >&2
+  echo "lib.sh: ok, ${label}: exported interfaces match the contract (types + booking + handling)" >&2
 }

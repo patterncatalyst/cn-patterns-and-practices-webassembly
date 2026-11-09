@@ -18,35 +18,44 @@ By the end of this chapter you can:
 
 ## Why this matters
 
-The case for running server-side workloads as Wasm components placed that choice against containers on cost, density, and startup time. None of that claim holds up unless the execution model underneath it isolates a guest the way that case promised. This chapter supplies that mechanism: what a module is before it runs, what an instance is once it does, where a guest's data lives, and why a guest cannot reach outside its own memory unless the host hands it a function that can.
+Running server-side workloads as Wasm components only beats containers on cost, density and startup if the execution model isolates a guest the way that claim assumes. Two primitives carry the whole argument. Linear memory is the only address space a guest can see. The import table is the only channel from a guest to anything else. A module exchanges only numbers across its boundary and touches nothing outside except what the host passes in by name. WASI's scoped file and network access, the typed interfaces of the Component Model and Istio's Wasm filters all follow from those two.
 
-The core idea worth carrying forward is narrower than it sounds: a Wasm module exchanges only numbers across its boundary, and it can touch nothing in the outside world except what the host passes in by name. Every later claim about Wasm's security story builds on this chapter's two primitives (linear memory as the only address space a guest can see, and the import table as the only channel into anything else): WASI's capability-scoped file and network access, the typed interfaces the Component Model layers on top, and Istio's Wasm filters. Fix those two primitives in mind and every later security claim on this site reads as a consequence of them, not a separate assertion to take on faith.
-
-One scoping note before the diagrams: this chapter describes the WebAssembly Core specification, the W3C Recommendation that defines modules, instances, linear memory, and the instruction set. It does not cover the Component Model's typed interfaces or WIT contracts, which build directly on the numbers-only boundary described here. It also doesn't cover WASI, the standard set of host capabilities a runtime can expose, one particular, standardized way to use the import mechanism this chapter introduces. Treat this chapter as the floor those two stand on, not a preview of either.
+The scope is the WebAssembly Core specification, the W3C Recommendation that defines modules, instances, linear memory and the instruction set. WIT contracts and WASI both build on the numbers-only boundary described here.
 
 {% include excalidraw.html file="02-module-structure" alt="Diagram contrasting a Wasm module as a compile-time artifact made of sections (types, imports, functions, tables, memories, globals, exports, code, data) against a module instance as the runtime object created at instantiation, holding its own linear memory, table, globals, and resolved imports. An arrow labeled instantiate() points from the module to the instance." caption="Figure 2.1: A module is a static binary; instantiation produces a running instance with its own state." %}
 
 ## Modules and instances
 
-A Wasm module is a binary artifact, typically produced by compiling Rust, Go, C, or another source language to the `wasm32` (or `wasm64`) target. The binary format is organized into sections, and every compliant toolchain emits roughly the same shape: a **type section** declaring function signatures, an **import section** naming what the module expects the host to provide, a **function section** and matching **code section** holding the module's own function bodies, a **memory section** declaring how much linear memory the module needs, a **table section** for indirect call targets, a **global section** for mutable or immutable module-level values, an **export section** naming what the module offers the host, and optional **data** and **element** sections that initialize memory and tables at instantiation time. Custom sections can carry debug information or tool-specific metadata without affecting execution.
+A Wasm module is a binary artifact, typically produced by compiling Rust, Go or C to the `wasm32` target. It is organized into sections:
 
-That binary is inert until a runtime instantiates it. Instantiation is the step that turns a module into a live instance: the engine allocates the instance's own linear memory (sized per the memory section, typically starting at one or more 64 KiB pages), allocates its table, initializes its globals, resolves every entry in the import section against functions, memories, tables, or globals the host supplies, and runs any data and element segments that populate memory and tables before the module's own code runs. Two instances created from the same module are independent: each gets its own linear memory, its own table, and its own globals, with no sharing unless the host explicitly links them together (sharing a memory instance across guests is possible and is exactly how threads work in the shared-memory proposal, but it never happens by default).
+| Section | Holds |
+|---------|-------|
+| type | Function signatures |
+| import | What the module expects the host to provide |
+| function, code | The module's own function signatures and bodies |
+| memory | How much linear memory the module needs |
+| table | Targets for indirect calls |
+| global | Module-level values, mutable or not |
+| export | What the module offers the host |
+| data, element | Initial contents for memory and tables |
 
-This split matters because it is the first place "the module" and "the running thing" stop being the same noun. A module is a file on disk, something Buf-style tooling, a container registry, or a plain object store can hold and version. An instance is runtime state: a specific allocation of memory, a specific set of resolved imports, a specific stack. wasmtime can instantiate the same module thousands of times, cheaply, because most of the expensive work (validating and compiling the module's bytecode to native code) happens once per module, not once per instance. That property is a large part of why cold-start costs for Wasm workloads look nothing like cold-start costs for a container image: an already-compiled module instantiates in microseconds, because instantiation is mostly memory allocation and import resolution, not another pass over the bytecode.
+Custom sections carry debug information or tool metadata without affecting execution.
 
-Validation happens before any of this. Every module is statically type-checked against the Core spec's rules before an engine will execute a single instruction from it: every operand stack transition, every branch target, every function call signature is checked for soundness ahead of time. A module that fails validation is rejected outright; it never gets an instance. This static guarantee is part of why a Wasm trap at run time (an out-of-bounds memory access, an integer division by zero, a stack overflow) is a controlled failure rather than memory corruption: the categories of error the type system can rule out statically, it does, and the categories it can't (mostly about *values*, not *types*) become traps the engine catches and the host decides how to handle, rather than undefined behavior the guest's own code might exploit.
+The binary is inert until a runtime instantiates it. The engine allocates the instance's own linear memory (sized per the memory section, in 64 KiB pages), allocates its table, initializes its globals, resolves every import against functions, memories, tables or globals the host supplies, and applies the data and element segments before the module's code runs. Two instances of one module are independent, each with its own memory, table and globals. Sharing a memory between instances is possible, and is how threads work in the shared-memory proposal, but never happens by default.
+
+A module is a file that a registry or object store can hold and version. An instance is runtime state: an allocation of memory, a set of resolved imports, a stack. Validating and compiling the bytecode to native code happens once per module, and instantiation is mostly memory allocation and import resolution. That is why an already-compiled module instantiates in microseconds, and why Wasm cold starts look nothing like container cold starts.
+
+Validation comes first. The engine type-checks every module against the Core spec before it runs one instruction: every operand stack transition, branch target and call signature. A module that fails validation never gets an instance. What the type system can't rule out statically, such as an out-of-bounds access, an integer division by zero or a stack overflow, becomes a trap: a controlled failure the host handles, not memory corruption the guest could exploit.
 
 ## Linear memory
 
-A module's linear memory is a single, contiguous, mutable array of bytes, indexed from zero, that the module's own instructions address directly. It is called *linear* specifically to contrast it with a general-purpose heap of separately allocated objects: there is exactly one flat address space per memory instance, and every load and store instruction specifies an offset into it. Memory grows in units of pages, each 64 KiB, either at instantiation (the module's initial page count) or at run time via the `memory.grow` instruction, up to whatever maximum the module declares or the host enforces.
+A module's linear memory is one contiguous, mutable byte array indexed from zero, which the module's instructions address directly. "Linear" contrasts with a heap of separately allocated objects: each memory instance is a single flat address space, and every load and store names an offset in it. Memory grows in 64 KiB pages, at instantiation or through `memory.grow`, up to the maximum the module declares or the host enforces.
 
-The property worth sitting with is what linear memory is *not*. It is not the host process's address space, and a guest has no instruction that lets it read or write an address outside its own memory instance. A pointer inside a Wasm module is just an integer offset into that module's own linear memory: it means nothing to the host, and it means nothing to a different instance, even one created from the identical module. This is the mechanical reason a Wasm module cannot leak or corrupt host memory the way a native shared library loaded into a process can: there is no address space for it to leak into, because every load and store instruction is bounds-checked against the current size of that instance's own memory before it executes. An access past the end of linear memory does not read adjacent host memory or an adjacent instance's memory; the engine traps, execution of that instance halts, and the host decides what to do next, typically tearing the instance down and reporting the failure up to whatever scheduled it. Compare this to a native buffer overflow in a C program's heap, which keeps running past the end of an allocation into whatever bytes happen to be there next; a Wasm linear-memory overrun has nowhere to run past, because the bounds check is part of every single memory instruction, not an optional hardening feature a compiler flag turns on.
+Linear memory is not the host process's address space, and no instruction reads or writes outside the instance's own memory. A pointer inside a module is an integer offset into that memory. It means nothing to the host and nothing to another instance, even one built from the same module. Every load and store is bounds-checked against the current memory size before it executes, and an access past the end traps and halts the instance. The host typically tears it down and reports the failure to whatever scheduled it. A native buffer overflow keeps running into whatever bytes come next. A linear-memory overrun has nowhere to run, because the check is part of every memory instruction and not a compiler flag.
 
-{% include excalidraw.html file="02-linear-memory" alt="Diagram of a Wasm linear memory as a contiguous byte array starting at offset 0 and growing in 64 KiB pages. One arrow shows an in-bounds load instruction succeeding at an offset inside the current memory size. A second arrow shows an access past the end of the final page hitting the bounds check and trapping instead of reading further memory." caption="Figure 2.2: Every load and store is bounds-checked against the instance's own memory size; past the edge is a trap, not adjacent memory." %}
+{% include excalidraw.html file="02-linear-memory" alt="Diagram of a Wasm linear memory as a contiguous byte array starting at offset 0 and growing in 64 KiB pages. One arrow shows an in-bounds load instruction succeeding at an offset inside the current memory size. A second arrow shows an access past the end of the final page hitting the bounds check and trapping instead of reading further memory." caption="Figure 2.2: Every load and store is bounds-checked against the instance's own memory size. Past the edge is a trap, not adjacent memory." %}
 
-This also explains why data crossing the module boundary looks the way it does in practice. A host function and a guest function can't pass a string or a struct directly, because there's no shared type system for anything beyond the numeric value types the next section covers. What toolchains do is have the guest allocate a region of its own linear memory, write bytes into it, and return the offset and length as two plain integers; the host then reads that same region out of the guest's memory using the memory accessor its embedding API provides. The guest never hands the host a pointer the host could dereference directly; it hands the host coordinates into the guest's own memory, and the host's embedding API (not the guest) is responsible for translating those coordinates into an actual read.
-
-A minimal Rust guest, compiled for `wasm32-unknown-unknown`, showing that pattern directly:
+This is also why data crossing the boundary looks the way it does. A host and a guest can't pass a string or a struct, because the only shared types are numeric. The guest allocates a region of its own memory, writes bytes into it and returns the offset and length as two integers. The host reads that region through its embedding API's memory accessor. The guest never hands over a pointer the host could dereference, only coordinates into its own memory. A guest in Rust, compiled for `wasm32-unknown-unknown`:
 
 ```rust
 #[no_mangle]
@@ -90,33 +99,43 @@ func sum(ptr *int32, length uint32) int32 {
 func main() {}
 ```
 
-Both export a `ptr` that is nothing more than an `i32` offset from the host's point of view: a number, not an address the host's own memory-unsafe code could dereference. The Component Model and WIT pick this exact friction up: they exist largely to stop every project from hand-rolling this allocate-write-pass-offset dance for every string and record it needs to move across the boundary.
+To the host, `ptr` is an `i32` offset, a number and not an address. The Component Model and WIT exist largely so that no project hand-rolls this allocate, write and pass-offset routine for every string and record.
 
-## The stack and types
+## The stack and value types
 
-Wasm's instruction set is stack-based: most instructions pop operands off an implicit operand stack and push a result back onto it, rather than naming registers the way a native ISA does. That operand stack is engine-internal and invisible to both the guest's own code and the host: a module has no instruction that reads or manipulates it as data, which closes off a whole category of stack-smashing techniques that target native call stacks. Local variables and function parameters live in a separate, per-call-frame local variable space, and module-level state that needs to persist across calls lives in globals or in linear memory, not on the operand stack.
+The instruction set is stack-based: most instructions pop operands from an implicit operand stack and push a result. That stack is invisible to the guest's code and to the host. No instruction reads it as data, which closes off stack-smashing techniques that target native call stacks. Locals and parameters live in a separate per-frame space, and state that persists across calls lives in globals or linear memory.
 
-The Core spec defines a small, fixed set of value types: `i32` and `i64` (integers, with no built-in signedness: instructions like `i32.add` are sign-agnostic while comparison instructions like `i32.lt_s` versus `i32.lt_u` make the signedness explicit at the instruction level), `f32` and `f64` (IEEE 754 floating point), `v128` (128-bit vectors for SIMD), and two reference types, `funcref` and `externref`, added by the reference-types proposal and folded into the 2.0 Recommendation. `funcref` is an opaque reference to a function, usable for indirect calls through a table; `externref` is an opaque reference to a host-defined value that a module can hold and pass back to the host without ever being able to inspect or forge it. Neither reference type lets a module manufacture a reference out of thin air or inspect what it points to; a module can only hold a reference it was handed and pass it along, which keeps the type system's soundness guarantees intact even in the presence of host-defined objects.
+The Core spec fixes a small set of value types:
 
-That list leaves out strings, structs, arrays, and pointers in the native sense. Every exported or imported function signature is built from these value types alone. That is a real constraint at the core level, and it's the reason the pattern in the previous section (allocate memory, write bytes, pass an offset and a length as two `i32`s) is the idiom every language's Wasm toolchain converges on before the Component Model gives it names and generated bindings.
+| Type | Meaning |
+|------|---------|
+| `i32`, `i64` | Integers with no built-in signedness. `i32.add` is sign-agnostic, while `i32.lt_s` and `i32.lt_u` state signedness in the instruction |
+| `f32`, `f64` | IEEE 754 floating point |
+| `v128` | 128-bit vector for SIMD |
+| `funcref` | Opaque reference to a function, used for indirect calls through a table |
+| `externref` | Opaque reference to a host-defined value that a module can hold and pass back but never inspect or forge |
+
+The reference types came from the reference-types proposal and are part of the 2.0 Recommendation. A module can't manufacture a reference, only pass along one it was handed, which keeps the type system sound in the presence of host objects.
+
+Strings, structs, arrays and native pointers are not on the list. Every import and export signature is built from these types alone, which is why every language's Wasm toolchain converges on the offset-and-length idiom above.
 
 ## The sandbox
 
-A Wasm instance runs inside a sandbox the engine enforces at two layers: the static layer is validation, described above; the dynamic layer is that nothing a guest's bytecode can do reaches outside its own linear memory, its own table, and its own globals, except through a function the host resolved into its import section. There is no instruction in the Core spec for opening a file, making a network connection, reading an environment variable, or issuing any other syscall. A freshly instantiated module, given no imports at all, can compute, branch, loop, and read and write its own linear memory. Nothing else. It cannot see the filesystem, the network, the clock, or any other instance running in the same engine unless one of those things was handed to it explicitly as an import.
+The engine enforces the sandbox at two layers. Statically, validation rejects unsound modules. Dynamically, nothing a guest does reaches outside its own memory, table and globals except through a function the host resolved into its import section. The Core spec has no instruction to open a file, connect a socket, read an environment variable or issue a syscall. A module instantiated with no imports can compute, branch, loop and use its own memory, and nothing else. It sees no filesystem, network, clock or other instance.
 
-This is the structural difference from a container. A containerized process is still a regular OS process: by default it inherits the full syscall interface the kernel exposes, and a container runtime's isolation (namespaces for what it can see, cgroups for what it can consume, seccomp filters for which syscalls are permitted at all) is bolted on afterward, as restrictions applied to something that starts out with ambient access to the machine it runs on. Getting that isolation right is an ongoing, layered exercise: a missing seccomp rule, a namespace that isn't dropped, a capability that wasn't stripped, and a container process can reach further than intended, because the starting position was "can do anything the kernel allows" and the hardening work is all subtraction from there.
+A container is an ordinary OS process. It inherits the kernel's full syscall interface, and namespaces, cgroups and seccomp filters are restrictions applied afterward to something that began with ambient access. A missing seccomp rule, an undropped namespace or an unstripped capability widens what the process can reach, because hardening is all subtraction from "can do anything the kernel allows."
 
-A Wasm instance starts from the opposite position. It has no ambient access to anything outside its own linear memory until the host adds some, one import at a time. There is no subtraction to perform and no syscall surface to audit for gaps, because the syscall surface doesn't exist inside the sandbox at all: every capability a guest has is something a human or a deploy pipeline wrote down explicitly when wiring up that instance's imports. This is why a Wasm engine like wasmtime can run guest code from an untrusted source with confidence that the guest cannot touch the host filesystem, even with zero firewall rules or seccomp configuration layered on top: the guest was never given a function that could reach the filesystem in the first place.
+A Wasm instance starts from the opposite position: no access to anything beyond its own memory until the host adds some, one import at a time. There is no syscall surface to audit for gaps, because none exists inside the sandbox. Every capability is something a person or a deploy pipeline wrote down when wiring the instance's imports. That is how an engine such as Wasmtime can run untrusted guest code with no seccomp or firewall layered on top.
 
-{% include excalidraw.html file="02-sandbox-boundary" alt="Side-by-side diagram. Left: a container process inside a host OS, with a dashed line showing ambient, default access to the kernel syscall interface, filesystem, and network, narrowed afterward by namespaces, cgroups, and seccomp. Right: a Wasm guest instance inside an engine, with no line at all to host filesystem, network, or syscalls by default, and a single solid arrow labeled imports showing the only path out, through specific host functions the engine resolved at instantiation." caption="Figure 2.3: A container starts with ambient OS access that isolation narrows; a Wasm guest starts with none, and gains only what its imports name." %}
+{% include excalidraw.html file="02-sandbox-boundary" alt="Side-by-side diagram. Left: a container process inside a host OS, with a dashed line showing ambient, default access to the kernel syscall interface, filesystem, and network, narrowed afterward by namespaces, cgroups, and seccomp. Right: a Wasm guest instance inside an engine, with no line at all to host filesystem, network, or syscalls by default, and a single solid arrow labeled imports showing the only path out, through specific host functions the engine resolved at instantiation." caption="Figure 2.3: A container starts with ambient OS access that isolation narrows. A Wasm guest starts with none and gains only what its imports name." %}
 
 ## Capability-based security
 
-The import section is the entire capability surface. At instantiation, the host (the embedding application, using an API like wasmtime's or wasmCloud's) decides exactly which functions, memories, tables, and globals satisfy the module's declared imports. Whatever isn't linked in doesn't exist from the guest's point of view: there's no ambient namespace of "the host's functions" a guest can enumerate or probe; a guest can call only the specific, named imports the host chose to resolve for that instance.
+The import section is the entire capability surface. At instantiation the embedding application (using the API of Wasmtime, wasmCloud or another host) decides which functions, memories, tables and globals satisfy the module's imports. Anything not linked in doesn't exist for the guest. There is no ambient namespace of host functions to enumerate or probe.
 
-This is capability-based security in the strict sense the term has in access-control theory: authority to do something flows only through an unforgeable reference that was explicitly handed over, never through ambient identity or a global namespace a caller can reach into. A Wasm guest holding no file-access import cannot open a file no matter how its own code is written, because "open a file" is not an operation its instruction set can express without a host function that does it on its behalf. Two instances of the identical module can be given entirely different capability sets (one wired to a logging function and nothing else, another wired to logging plus an outbound HTTP call), and each instance's actual authority matches exactly what it was handed, not what the module's code happens to contain.
+This is capability security in the access-control sense: authority flows only through an unforgeable reference that was explicitly handed over, never through ambient identity or a global namespace. A guest with no file import can't open a file however its code is written. Two instances of one module can hold different capability sets, say logging only for one and logging plus outbound HTTP for the other, and each has exactly the authority it was handed, not what its code happens to contain.
 
-A host-side Rust example, using wasmtime's `Linker`, showing exactly one capability (a logging function) wired in for a guest to call:
+A Rust host wiring one capability, a logging function, with Wasmtime's `Linker`:
 
 ```rust
 let mut linker = Linker::new(&engine);
@@ -132,7 +151,7 @@ linker.func_wrap(
 let instance = linker.instantiate(&mut store, &module)?;
 ```
 
-The same wiring with wasmtime-go on the host side:
+The same wiring with wasmtime-go:
 
 ```go
 linker := wasmtime.NewLinker(engine)
@@ -144,13 +163,13 @@ err := linker.FuncWrap("env", "host_log", func(caller *wasmtime.Caller, ptr, len
 instance, err := linker.Instantiate(store, module)
 ```
 
-In both, `host_log` is the only door this particular instance has to the outside world. No filesystem function, no socket function, no process function was named, so none exist for this guest to call. That's not because a policy engine is watching for violations; it's because the function table the guest's calls resolve against has nothing else in it. WASI names this exact mechanism: a standardized set of imports a runtime can offer, each one scoped (a guest can be handed a single pre-opened directory handle rather than open filesystem access, for instance) rather than the all-or-nothing access a process normally inherits from its parent.
+`host_log` is the only door this instance has. No policy engine watches for violations. The function table the guest's calls resolve against holds nothing else. WASI standardizes this mechanism as a set of imports, each scoped, so a guest receives a single preopened directory handle and not open filesystem access.
 
-{% include excalidraw.html file="02-capability-passing" alt="Diagram showing a host process with several functions available internally: host_log, host_fetch, write_file, open_socket. An instantiation step links only host_log into a guest instance's import table, shown as a single arrow crossing the boundary, while the other three functions remain inside the host with no connecting line to the guest at all." caption="Figure 2.4: The host chooses, function by function, what crosses into a guest's import table; everything else stays unreachable." %}
+{% include excalidraw.html file="02-capability-passing" alt="Diagram showing a host process with several functions available internally: host_log, host_fetch, write_file, open_socket. An instantiation step links only host_log into a guest instance's import table, shown as a single arrow crossing the boundary, while the other three functions remain inside the host with no connecting line to the guest at all." caption="Figure 2.4: The host chooses, function by function, what crosses into a guest's import table. Everything else stays unreachable." %}
 
-## A minimal module, concretely
+## A minimal module
 
-Stripped of any language's compiler, a Wasm module is text (`.wat`, the spec's human-readable format) or binary (`.wasm`). A module exporting one function and declaring its own memory looks like this:
+A module in the spec's text format, `.wat`, that declares its own memory and exports one function:
 
 ```wat
 (module
@@ -161,16 +180,35 @@ Stripped of any language's compiler, a Wasm module is text (`.wat`, the spec's h
     i32.add))
 ```
 
-That's a complete, valid module: one memory of one page, one exported function taking an `i32` and returning an `i32`. It declares no imports, so an engine can instantiate it with nothing supplied from the host at all, and the resulting instance can do exactly two things from outside: expose its one page of linear memory for the host to read and write, and compute `add_one` on a number the host passes in. Every module this site builds in Rust and Go compiles down to a much larger version of this same shape (more sections, a real memory layout, a real import list) but nothing fundamentally different from it.
+It declares no imports, so an engine instantiates it with nothing from the host. From outside, the instance can do two things: expose its one page of memory for the host to read and write, and compute `add_one` on a number. Every module built in Rust or Go is a larger version of this shape, with more sections, a real memory layout and a real import list.
 
-## Where this goes next
+> **Decision**
+>
+> Instantiate every component with the narrowest import set it needs. A component that logs gets a logging import, one that calls out over HTTP gets an HTTP import, and none gets blanket host access in case it needs more later. A guest's authority is exactly its resolved imports, so the only way to shrink its reach is to resolve fewer. Container habits point the other way: a `Dockerfile` or a `securityContext` subtracts from an ambient starting position, while here you add, one named function at a time, to a starting position of none.
 
-This chapter fixed two primitives: linear memory as the only address space a guest instance can see, and the import table as the only channel to anything outside it. The Component Model and WIT build directly on top of the numbers-only boundary this chapter described, giving the allocate-write-pass-offset pattern a name, a schema, and generated bindings in both Rust and Go instead of hand-written glue. WASI covers the standardized set of capability-scoped imports a runtime can offer a guest for files, clocks, and networking, built entirely from the import mechanism in this chapter's last section. Debugging a real component's misbehavior later revisits linear memory and traps from that side.
+> **🤖 Explore with your agent**
+>
+> "Write `imp.wat`, a copy of the `add_one` module that also imports `env.host_log` as `(func (param i32 i32))`, and run `wasmtime run --invoke add_one imp.wat 41`. Then explain, using the rule that a guest's authority is exactly its resolved imports, what I would have to link in before it instantiates, and what the narrowest set is for a component that only logs."
+>
+> Check: the run fails at instantiation with ``unknown import: `env::host_log` has not been defined``, and the reply names the host function to supply and nothing wider.
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Every component this site builds, in both Rust and Go, is instantiated with the narrowest import set the example needs and nothing wider: a component that logs gets a logging import, a component that calls out over HTTP gets an HTTP import, and no component gets blanket host access on the theory that it might need more later. That rule follows directly from this chapter's execution model, not from an external policy layer: a Wasm instance's authority is exactly its resolved imports, so the only way to shrink a guest's reach is to resolve fewer imports at instantiation time. Readers coming from containers should expect the opposite default from what a `Dockerfile` or a Kubernetes `securityContext` trains: there, isolation is something subtracted from an ambient starting position; here, it's something added, one named function at a time, to a starting position of none.</p></div>
+## Build, run, observe
+
+Wasmtime runs a `.wat` file directly. Save the module above as `add_one.wat`:
+
+```bash
+wasmtime run --invoke add_one add_one.wat 41
+```
+
+It prints `42`. Wasmtime warns that `--invoke` with arguments and results is experimental. The module has no imports, so nothing else is needed.
+
+Experiments:
+
+- Add `(import "env" "host_log" (func $log (param i32 i32)))` to the module. Instantiation fails with ``unknown import: `env::host_log` has not been defined``, because the host linked nothing under that name.
+- Replace the function with `(func (export "peek") (param $x i32) (result i32) local.get $x i32.load)` and run `wasmtime run --invoke peek add_one.wat 65536`. The one-page memory ends at offset 65536, and the access traps with `memory fault ... out of bounds memory access` instead of reading further.
 
 ## For deeper coverage
 
-- Chiarlone, *Server-Side WebAssembly* (Manning): the Wasm fundamentals, module and instance model, and toolchain this chapter's execution model underlies.
-- Jain, *WebAssembly for Cloud* (Apress): the Wasm memory model, module layout, and the capability-oriented sandboxing model this chapter builds from.
-- [WebAssembly Core Specification (W3C Recommendation)](https://www.w3.org/TR/wasm-core-2/): the primary source for module structure, linear memory semantics, the value types, validation, and the instruction set this chapter walks through.
+- Chiarlone, *Server-Side WebAssembly* (Manning): the Wasm fundamentals, module and instance model, and toolchain behind the execution model.
+- Jain, *WebAssembly for Cloud* (Apress): the Wasm memory model, module layout, and the capability-oriented sandboxing model.
+- [WebAssembly Core Specification (W3C Recommendation)](https://www.w3.org/TR/wasm-core-2/): the primary source for module structure, linear memory semantics, the value types, validation, and the instruction set.

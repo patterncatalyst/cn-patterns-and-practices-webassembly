@@ -34,8 +34,8 @@ const PRICE_AMOUNT: &str = "1500.00";
 const PRICE_CURRENCY: &str = "USD";
 
 // Documented sentinel tracking id that makes `get-cargo` PANIC, so the host (and
-// the debugging/error chapter) can show a genuine wasm TRAP — the whole instance
-// is torn down — as distinct from a recoverable domain `cargo-error`. Kept in
+// the debugging and error examples) can show a genuine wasm TRAP, where the whole
+// instance is torn down, as distinct from a recoverable domain `cargo-error`. Kept in
 // LOCKSTEP with the Go provider (go/main.go `trapSentinel`) and deliberately NOT
 // used by the main scenario, so the byte-identical cross-language summary is
 // unaffected.
@@ -165,7 +165,7 @@ impl BookingGuest for Component {
 
     fn get_cargo(tracking_id: String) -> Result<Cargo, CargoError> {
         if tracking_id == TRAP_SENTINEL {
-            // A panic unwinds to a wasm trap at the component boundary — the host
+            // A panic unwinds to a wasm trap at the component boundary. The host
             // observes an `Err` from the CALL itself, not an `Ok(Err(..))` domain
             // result. This is the "unrecoverable" side of the error taxonomy.
             panic!("__TRAP__ sentinel: deliberate trap for the debugging/error chapter");

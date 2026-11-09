@@ -2,35 +2,35 @@
 title: "wasmCloud"
 order: 15
 part: "Runtimes: wasmtime & wasmCloud"
-description: "Move the same component onto wasmCloud's lattice, with a capability provider, a declarative OAM link, and wadm's reconcile loop replacing a single wasmtime process."
-duration: "21 min read"
+description: "Run the same component on wasmCloud's lattice, with a capability provider, a declarative OAM link and wadm's reconcile loop in place of a single wasmtime process."
+duration: "17 min read"
 ---
 
 ## Learning objectives
 
 By the end of this chapter you can:
 
-- Name the three things `wash up -d` starts in a local **lattice** (NATS the message bus, a wasmcloud **host**, and **wadm**) and explain what each one is responsible for.
-- Read a wadm OAM manifest (`wadm.yaml`) and identify its three moving parts: the **component** (`cargo-http`, a local `file://./app.wasm` reference), the **capability provider** (`httpserver`, an OCI image), and the **link** that wires the provider's `wasi:http/incoming-handler` calls to the component, carrying the listen address as `source_config`.
-- Explain why the deployed `app.wasm` is the identical artifact the single-process wasmtime runtime runs under `wasmtime serve`, and why that matters for the "same component, different runtime" claim this Part makes.
-- Walk the real deploy sequence (`wash up -d`, then `wash app deploy wadm.yaml`, then a live `curl` against `127.0.0.1:8000`) and state why `wash app status: Deployed` is not, by itself, proof the service answers.
-- Read wadm's self-healing transcript (scale the component to zero, watch traffic fail, watch wadm restore it without a redeploy) and explain the SpreadScaler's reconcile loop in your own words.
-- State the one real difference this runtime introduces versus `wasmtime serve`: wasmCloud ignores an exported component **resource**, and the WARN wording the host emits when it does.
-- Decide, for a given component, whether a lattice's links and self-healing are worth the added infrastructure over a single wasmtime process, or whether that process is the simpler and equally correct choice.
+- Name the three things `wash up -d` starts (NATS, a wasmcloud **host** and **wadm**) and say what each is responsible for.
+- Read a wadm OAM manifest and identify its three parts: the **component**, the **capability provider** and the **link** that carries `wasi:http/incoming-handler` calls between them.
+- Explain why the deployed `app.wasm` is the same artifact `wasmtime serve` runs.
+- Deploy, and say why `wash app status: Deployed` does not prove the service answers.
+- Read wadm's self-healing transcript and explain the SpreadScaler's reconcile loop.
+- State the one runtime difference that matters here: wasmCloud ignores an exported component **resource**.
+- Decide whether a lattice is worth its infrastructure over a single wasmtime process.
 
 ## Why this matters
 
-Running `app.wasm` under the single-process wasmtime runtime means one process: `wasmtime serve` opened a socket, drove the component directly, and when that process died, nothing restarted it unless something outside wasmtime noticed and acted. wasmCloud takes the same component and asks a different question: what if "running a component" were a declarative statement to a platform instead of an invocation of a binary? `wadm.yaml` doesn't say "start this process"; it says "this component should have exactly one instance, linked to this capability provider, on this interface, forever," and a control plane (wadm) continuously makes the lattice's actual state match that statement. The networking, reconnect, and resilience discussion drew a hard boundary around this exact question and left it unanswered: its closing section named wasmCloud's lattice as "a different resilience question (link availability across a distributed runtime) answered at a different layer," and deferred the proof to this chapter. This is where that proof lands.
+`wasmtime serve` is one process. It opens a socket and drives the component directly, and when it dies nothing restarts it unless something outside wasmtime notices. wasmCloud treats "running a component" as a declarative statement to a platform. `wadm.yaml` does not say "start this process"; it says "this component has exactly one instance, linked to this provider on this interface," and a control plane keeps the lattice matching that statement.
 
-The example is the same cargo HTTP front door from Part 3, unmodified: the Part 2 Rust `cargo` provider, composed under the Part 3 `http-rust` world via `wac plug`, producing one `app.wasm` that exports `wasi:http/incoming-handler`. `examples/part4-runtimes/wasmcloud/build.sh` rebuilds it from the same upstream crates: nothing here forks or edits the component, and `contracts/wit` stays untouched. What's new is everything around it: a **lattice** (NATS-based messaging connecting a host, wadm, and the `wash` CLI), a **host** that runs the component and a **capability provider** alongside it, and a **link**, a declarative statement in the OAM manifest that the provider's inbound HTTP calls should be dispatched to this specific component on this specific interface. None of that infrastructure existed in the single-process wasmtime setup; all of it is live, in this example, captured end to end on 2026-10-21.
+The workload is the cargo HTTP front door, unmodified: a Rust `cargo` provider composed under the `http-rust` world with `wac plug` into one `app.wasm` that exports `wasi:http/incoming-handler`. `build.sh` rebuilds it from the same upstream crates and `contracts/wit` stays untouched. What is new is everything around it: a **lattice** (NATS connecting a host, wadm and the `wash` CLI), a **host** that runs the component and a **capability provider** beside it, and a **link** that dispatches the provider's inbound HTTP to this component on this interface.
 
-The payoff for sitting through that added machinery is the second half of this chapter: wasmCloud's wadm is not just a deployer, it's a continuous reconciler. Scale the running component to zero instances by hand (simulating a crash, an OOM-kill, anything that removes it without warning) and traffic fails immediately, because the provider's listener is still open but has nothing behind it. Within two seconds, with nobody running a second command, wadm notices the drift between the manifest's declared `instances: 1` and the lattice's actual `0`, and restores it. That self-healing loop, not the deploy step, is why this chapter treats a lattice as more than a footnote to "wasmtime, but distributed."
+The payoff is the reconcile loop. Scale the running component to zero by hand and traffic fails at once, because the provider's listener is open with nothing behind it. Within two seconds, with no second command, wadm sees the drift from the declared `instances: 1` and restores it.
 
-{% include excalidraw.html file="15-lattice-architecture" alt="A lattice diagram. Outside the lattice, curl sends GET http://127.0.0.1:8000/cargo/id. Inside a light band labeled lattice: everything wash up -d starts, two boxes on the left: NATS 2.11.3 (the lattice message bus wash, wadm, and the host all talk over) and wadm 0.21.1 (reconciles wadm.yaml against actual lattice state). A larger amber band on the right labeled wasmcloud host 1.9.1 contains two boxes: the httpserver capability provider 0.27.0 (image ghcr.io/wasmcloud/http-server:0.27.0, opens 0.0.0.0:8000, translates inbound HTTP into wasi:http/incoming-handler calls) above, and the cargo-http component (image file://./app.wasm, spreadscaler instances 1, exports wasi:http/incoming-handler@0.2.8) below, with a ghost box noting this is the same app.wasm that runs under wasmtime serve in the single-process runtime. Between the provider and the component, an ink box labeled the LINK lists namespace wasi, package http, interfaces incoming-handler, source_config cargo-http-listen, address 0.0.0.0:8000. Arrows: curl into the provider; a dashed arrow from wadm into the host labeled deploys/reconciles; an amber arrow from the provider through the link labeled link; an amber arrow from the link down into the component labeled wrpc:http/incoming-handler. A caption notes the provider owns the socket and the component only ever sees a WIT call." caption="Figure 15.1: the wasmCloud lattice for cargo-http: NATS + wadm outside the host, the httpserver provider and the component linked inside it, dispatching the same app.wasm that runs under wasmtime serve single-process." %}
+{% include excalidraw.html file="15-lattice-architecture" alt="Outside the lattice, curl sends GET http://127.0.0.1:8000/cargo/id. Inside a band labeled lattice (everything wash up -d starts) sit NATS 2.11.3, the message bus, and wadm 0.21.1, which reconciles wadm.yaml against actual state. A larger band for wasmcloud host 1.9.1 contains the httpserver capability provider 0.27.0, which opens 0.0.0.0:8000 and translates inbound HTTP into wasi:http/incoming-handler calls, and below it the cargo-http component (file://./app.wasm, one instance, exporting wasi:http/incoming-handler@0.2.8). Between them a link box lists namespace wasi, package http, interface incoming-handler and source_config with address 0.0.0.0:8000. The component is the same app.wasm that runs under wasmtime serve. The provider owns the socket and the component only ever sees a WIT call." caption="Figure 15.1: the lattice for cargo-http, with NATS and wadm outside the host, the httpserver provider and the component linked inside it, and the same app.wasm that runs under wasmtime serve." %}
 
-## The lattice: NATS, the host, and wadm, all from one command
+## The lattice: NATS, the host and wadm
 
-Everything in this chapter runs behind a single command, `wash up -d`, where `wash` is wasmCloud's CLI (`wash` itself is the tool; the host, NATS server, and wadm it launches are separate bundled binaries). The real version output, captured first:
+One command, `wash up -d`, starts everything, where `wash` is wasmCloud's CLI. It bundles pinned versions of the three pieces:
 
 ```
 $ wash --version
@@ -40,47 +40,19 @@ wash          v0.43.0
 └ wasmcloud   v1.9.1
 ```
 
-`wash 0.43.0` is the current stable CLI, and it bundles three specific pinned versions underneath it: `nats-server 2.11.3`, `wadm 0.21.1`, and the `wasmcloud` host itself at `1.9.1`. (A ground-up rewrite of `wash`, version 2.x, with the host built directly into the CLI instead of launched as a separate bundled binary, is in release-candidate as this is written. It isn't the shipping tool yet, so this chapter teaches what `wash 0.43.0` does today, not what the 2.x line is expected to simplify later.)
+A ground-up rewrite of `wash` (2.x), with the host built into the CLI, is in release-candidate; the shipping 0.43 line is what applies here. The `-d` flag detaches the lattice as a background daemon. Each piece has a distinct job:
 
-`wash up -d` starts the lattice **detached** (the `-d` is what makes it a background daemon instead of a foreground process this chapter would otherwise have to leave running in its own terminal) and the real transcript shows exactly what comes up:
+| Piece | Job |
+|---|---|
+| **NATS** | The lattice's message bus. Every invocation, link and host-to-wadm status update travels over NATS subjects. Any number of hosts can join the same subject space and see the same components and providers, which is why it is a lattice and not a cluster. |
+| **wasmcloud host** | Runs components and supervises capability providers as OS processes. Exposes the lattice operations (`wash get hosts`, `wash get inventory`, `wash scale component`). |
+| **wadm** | The control plane that makes a declarative manifest true. It watches actual state over NATS and continuously reconciles it against deployed OAM `Application` manifests. `wash app deploy` hands it a manifest and wadm keeps enforcing it afterward. |
 
-```
-$ wash up -d
-👀 Found nats-server version on the disk: nats-server: v2.11.3
-✅ Using nats-server version [v2.11.3]
-ℹ️  NATS server successfully started, using config @ [/home/rsedor/.local/share/wash/downloads/nats.conf]
-ℹ️  NATS server logs written to [/home/rsedor/.local/share/wash/downloads/nats.log]
-👀 Found wadm version on the disk: wadm 0.21.1
+A host is a separate OS process that `wash up` spawns, so it is not ready the moment the command returns. `capture-evidence.sh` polls `wash get hosts -o json` until one appears.
 
-🛁 wash up completed successfully
-🕸  NATS is running in the background at 127.0.0.1:4222
-📜 Logs for the host are being written to /home/rsedor/.local/share/wash/downloads/wasmcloud.log
+## The wadm manifest: component, provider and link
 
-⬇️  To stop wasmCloud, run "wash down"
-```
-
-Three things are now running, and each has a distinct job:
-
-- **NATS** is the lattice's message bus. Every component invocation, every link, every host-to-wadm status update travels over NATS subjects; it's the wire the lattice is built on, the same way a service mesh's sidecar proxies are built on a shared data plane. A component or provider never talks to NATS directly, the host mediates that, but NATS is what makes "lattice" the right word instead of "cluster": any number of hosts can join the same NATS subject space and see the same components and providers, regardless of which machine they're physically running on.
-- **The wasmcloud host** (`1.9.1` here) is the thing that runs components and capability providers as OS processes it supervises, and exposes the lattice-level operations (`wash get hosts`, `wash get inventory`, `wash scale component`) this chapter uses below. `wash get hosts` confirms exactly one host came up:
-
-  ```
-  $ wash get hosts
-
-                                                                                                           
-    Host ID                                                      Friendly name           Uptime (seconds)  
-    NCQR6FIQCONSILLUFUMAENAPFDCRP223B53PRVRR42HSOA4NYFW3SYPC     sparkling-sunset-0738   2                 
-                                                                                                           
-  ```
-
-  wasmCloud assigns every host a random, human-pronounceable friendly name (`sparkling-sunset-0738` here) alongside the long host ID, purely so a person reading `wash` output has something easier to say out loud than the ID string.
-- **wadm** (`0.21.1`) is the control plane that makes a declarative manifest true. It watches the lattice's actual state over NATS and continuously reconciles it against whatever OAM `Application` manifests have been deployed. `wash app deploy` hands wadm a manifest; wadm is what keeps enforcing it afterward, which is the entire reason the resilience section later in this chapter works without a second deploy.
-
-`capture-evidence.sh` polls `wash get hosts -o json` in a loop until a host appears before doing anything else: a host is a separate OS process `wash up` spawns, and the script doesn't assume it's instantly ready the moment the `wash up -d` command returns.
-
-## The wadm manifest: components, a capability provider, and the link
-
-`examples/part4-runtimes/wasmcloud/wadm.yaml` is a `wadm 0.21.x` / OAM `core.oam.dev/v1beta1` `Application`, and it is the entire declarative description of what should run:
+`wadm.yaml` is an OAM `core.oam.dev/v1beta1` `Application` for wadm 0.21.x, and it is the whole declarative description of what runs:
 
 ```yaml
 apiVersion: core.oam.dev/v1beta1
@@ -96,7 +68,7 @@ spec:
       type: component
       properties:
         # Local build output (build.sh writes it next to this manifest). The
-        # same bytes also run under `wasmtime serve` — see ch16 / prove-same-bytes.sh.
+        # same bytes also run under `wasmtime serve`; see prove-same-bytes.sh.
         image: file://./app.wasm
       traits:
         # Keep one instance of the component running.
@@ -126,14 +98,14 @@ spec:
                   address: 0.0.0.0:8000
 ```
 
-wasmCloud's OAM spec distinguishes two kinds of things that can run in the lattice, and the manifest names both:
+The manifest names two kinds of thing that can run in the lattice:
 
-- **A component** (`type: component`) is a WebAssembly component, exactly the kind of artifact this site has built since its first Rust component, compiled to a `.wasm` file and run inside the host's wasmtime-based embedding. `cargo-http`'s `image: file://./app.wasm` is a *local file reference*, not an OCI pull: `build.sh` writes `app.wasm` next to `wadm.yaml`, and because every `wash` command in this example runs from that same directory, the relative path resolves. **Local file refs resolve against the deploy CWD, not the manifest's location**: the host's own log records the path it resolved as an absolute `file:///…/app.wasm`, and a `wash app deploy` run from any other directory would need an absolute `file:///` reference (or an OCI push) instead. The `spreadscaler` trait with `instances: 1` is the declarative instance count this chapter's whole resilience section depends on: it's not "start one instance," it's "there should always be exactly one instance," enforced continuously.
-- **A capability provider** (`type: capability`) is *not* a WebAssembly component. It's a native binary wasmCloud starts as its own OS process, specifically to own a capability a sandboxed component structurally cannot hold itself: in this case, an open TCP listening socket. `httpserver`'s `image: ghcr.io/wasmcloud/http-server:0.27.0` pulls wasmCloud's own maintained HTTP server provider from GitHub Container Registry: the latest released semver tag at the time of this capture (the only tags published past it are commit-SHA builds, not releases). The provider opens `0.0.0.0:8000`, terminates real HTTP on that socket, and for every inbound request, translates it into a `wasi:http/incoming-handler` call dispatched into whichever component is linked to it. This is the same provider/component split WASI Preview 2 drew in the abstract between a capability a component imports and the host implementation that satisfies it, now running as a separate, independently versioned process instead of code linked into wasmtime's embedding API.
+- **A component** (`type: component`) is a WebAssembly component compiled to `.wasm` and run inside the host's wasmtime-based embedding. `image: file://./app.wasm` is a local file reference, not an OCI pull. **Local file references resolve against the deploy working directory, not the manifest's location.** The host's log records the absolute `file:///…/app.wasm` it resolved; a `wash app deploy` from another directory needs an absolute `file:///` reference or an OCI push. The `spreadscaler` trait with `instances: 1` is the desired instance count: not "start one instance" but "there is always exactly one," enforced continuously.
+- **A capability provider** (`type: capability`) is not a WebAssembly component. It is a native binary wasmCloud starts as its own OS process to own a capability a sandboxed component cannot hold, here an open TCP listener. `ghcr.io/wasmcloud/http-server:0.27.0` is wasmCloud's maintained HTTP provider and the latest released semver tag; later tags are commit-SHA builds. It terminates HTTP on the socket and turns each request into a `wasi:http/incoming-handler` call on the linked component. This is the same split WASI draws between a capability a component imports and the host that satisfies it, now a separate, independently versioned process.
 
-The **link** is the trait that ties the two together. Every field does real work: `target: cargo-http` says which component receives the calls; `namespace: wasi` / `package: http` / `interfaces: [incoming-handler]` names the exact WIT interface this link is for (a provider can expose more than one capability, and more than one link can target the same component on different interfaces); and `source_config` passes configuration *to the provider*: here, the one thing the httpserver provider needs to know that isn't in its image at all, which address and port to bind. The provider is generic; the address it listens on is link-level configuration, not something baked into `ghcr.io/wasmcloud/http-server:0.27.0` itself. Our `app.wasm` exports `wasi:http/incoming-handler@0.2.8`; the provider speaks `wasi:http` at the 0.2.x line in general, and wasmCloud links by interface name across compatible 0.2.x patch levels, so the link is satisfied without either side needing to pin an identical patch version.
+The **link** ties them together. `target: cargo-http` names the receiving component. `namespace`, `package` and `interfaces` name the WIT interface (a provider can expose several, and several links can target one component on different interfaces). `source_config` passes configuration to the provider: the address to bind is link-level configuration, not baked into the provider image. The component exports `wasi:http/incoming-handler@0.2.8` and the provider speaks `wasi:http` 0.2.x; wasmCloud links by interface name across compatible 0.2.x patch levels, so neither side needs the identical patch version.
 
-## Deploying it: wash up, wash app deploy, a real 200
+## Deploying and verifying
 
 With the lattice up, deployment is one command:
 
@@ -143,7 +115,7 @@ $ wash app deploy wadm.yaml
 Deployed application "cargo-http", version "v0.0.1"
 ```
 
-That output is wadm accepting the manifest and beginning to reconcile toward it; it is not proof the service is answering requests yet. `capture-evidence.sh` treats the gap between "accepted" and "answering" as the thing to gate on, polling `curl` against the real endpoint for up to 90 seconds before doing anything else:
+That is wadm accepting the manifest and beginning to reconcile. It does not mean the service answers yet. `capture-evidence.sh` gates on the real endpoint, polling for up to 90 seconds:
 
 ```bash
 ready=0
@@ -155,7 +127,7 @@ for i in $(seq 1 90); do
 done
 ```
 
-Only after that loop exits does the script check `wash app status`, which, once the deploy settles, reports every piece as `Deployed`:
+Once the deploy settles, `wash app status` reports every piece `Deployed`:
 
 ```
 $ wash app status cargo-http
@@ -169,7 +141,7 @@ cargo-http@ - Deployed
                                                                     
 ```
 
-Notice the link itself shows up as its own row (`httpserver -(wasi:http)-> cargo_http`, a `LinkScaler`) alongside the two `SpreadScaler` rows for the provider and the component. wadm tracks the link's desired state exactly the same way it tracks instance counts: as something to continuously reconcile, not a one-time wiring step. `wash get inventory` confirms what's running on the host, by ID:
+The link is its own row, a `LinkScaler`: wadm reconciles the link's desired state as it does instance counts, not as a one-time wiring step. `wash get inventory` shows what runs on the host, by ID:
 
 ```
 $ wash get inventory
@@ -192,9 +164,9 @@ $ wash get inventory
                                                                                         
 ```
 
-**`wash app status: Deployed` means the desired state was accepted; it does not by itself mean the component is answering.** This is the same distinction a Kubernetes reader already knows from `kubectl get pods` showing `Running` before a readiness probe passes: wadm's status reflects what it has reconciled to, not a live health check of the HTTP path. The capture script treats the actual HTTP response as the only acceptable readiness signal, exactly as its Kubernetes counterparts in Part 5 will.
+wasmCloud gives every host a random friendly name (`sparkling-sunset-0738`) beside its long ID. **`Deployed` means the desired state was accepted, not that the component is answering.** It is the same distinction as a pod `Running` before its readiness probe passes, so treat the HTTP response as the only readiness signal.
 
-With the link live, the HTTP path behaves identically to the single-process `wasmtime serve`, because it's dispatching into the identical component:
+With the link live, the HTTP path matches the single-process runtime because it dispatches into the same component:
 
 ```
 $ curl -s http://127.0.0.1:8000/cargo/CARGO-USNYC-DEHAM
@@ -203,19 +175,19 @@ $ curl -s -o /dev/null -w %{http_code} http://127.0.0.1:8000/cargo/NOPE
 404
 ```
 
-Same tracking ID, same JSON shape, same 404 on a cargo ID that doesn't exist. The difference from the single-process wasmtime runtime isn't in the response; it's everything upstream of the component that produced it: a native capability provider owning the socket instead of wasmtime's own `wasi:http` proxy world, dispatching over a lattice link described in YAML instead of a command-line flag.
+The response is identical. What differs is everything upstream of the component: a native provider owns the socket instead of wasmtime's `wasi:http` proxy world, and the dispatch is a link described in YAML instead of a command-line flag.
 
-## Resilience: wadm's self-healing reconcile loop
+## Resilience: wadm's self-healing loop
 
-The networking, reconnect, and resilience discussion drew a hard line between an in-component retry loop and "the lattice's own supervision" as a different resilience question at a different layer, and deferred it to this chapter. Here it is, captured live. The test: remove the running component out from under a healthy, serving application, not by redeploying or editing the manifest but by telling the host directly to scale it to zero, and watch what wadm does next.
+An in-component retry loop and the lattice's own supervision answer different resilience questions at different layers. To see the second one, remove the component from under a healthy application: not by redeploying or editing the manifest, but by telling the host to scale it to zero.
 
 ```
 # before: service is healthy
 GET /cargo/CARGO-USNYC-DEHAM -> 200  {"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
 
 # scale the component to 0 instances (provider/listener stays up)
-$ wash scale component <host> file:///home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part4-runtimes/wasmcloud/app.wasm cargo_http-cargo_http --max-instances 0
-Component [cargo_http-cargo_http] (ref: [file:///home/rsedor/Dev/cn-patterns-and-practices-webassembly/examples/part4-runtimes/wasmcloud/app.wasm]) scaled on host [NCQR6FIQCONSILLUFUMAENAPFDCRP223B53PRVRR42HSOA4NYFW3SYPC] to 0 max concurrent instances
+$ wash scale component <host> file://<repo>/examples/part4-runtimes/wasmcloud/app.wasm cargo_http-cargo_http --max-instances 0
+Component [cargo_http-cargo_http] (ref: [file://<repo>/examples/part4-runtimes/wasmcloud/app.wasm]) scaled on host [NCQR6FIQCONSILLUFUMAENAPFDCRP223B53PRVRR42HSOA4NYFW3SYPC] to 0 max concurrent instances
 
 # burst while the component is gone: the provider answers but the
 # invoke fails (no component to handle it) -> non-200
@@ -230,21 +202,29 @@ GET /cargo/CARGO-USNYC-DEHAM -> 200  {"tracking_id":"CARGO-USNYC-DEHAM","origin"
 fail_observed=1 recovered=1
 ```
 
-Walk the sequence against what each layer does. `wash scale component ... --max-instances 0` talks directly to the host, not to wadm: it's an imperative command that tells the host "run zero instances of this component," and the host obeys immediately, no manifest involved. The httpserver provider never hears about this at all: its TCP listener on `0.0.0.0:8000` stays bound and accepting connections the entire time, because the provider is a separate process from the component and nothing told *it* to stop. That's exactly why the failure mode is a `500`, not a connection refused: the provider accepts the connection, tries to dispatch the `wasi:http/incoming-handler` call over `wrpc` to a component instance, finds none running, and the invoke itself fails: a different failure shape than the in-component retry loop's `access-denied` or `connection-refused`, because the capability boundary here is intact; it's the thing on the other end of the link that's temporarily gone.
+`wash scale component` talks to the host, not to wadm: an imperative "run zero instances" that the host obeys at once. The provider never hears about it, so its listener on `0.0.0.0:8000` stays bound. That is why the failure is a `500` and not a refused connection: the provider accepts the request, tries to dispatch over `wrpc` to a component instance, finds none, and the invoke fails. The capability boundary is intact; the thing on the other end of the link is gone.
 
-wadm, meanwhile, has never stopped watching. Its reconcile loop continuously compares `wadm.yaml`'s declared state (`spreadscaler: instances: 1`) against what the lattice reports, over the same NATS subjects the host publishes its state to. The moment `wash scale` drops the actual count to zero, wadm sees drift between desired (1) and actual (0), and issues its own command to bring the component back: the exact mechanism a Kubernetes `Deployment`'s controller uses to replace a pod a `kubectl delete pod` removed out from under it, applied here to a WebAssembly component instead of a container. Recovery took two seconds in this capture, with no `wash app deploy` run a second time and nobody touching `wadm.yaml`. The healed service answers with the exact same JSON as before the scale-to-zero, because it's running the exact same `app.wasm` wadm already had on file.
+wadm never stopped watching. It compares the declared `spreadscaler: instances: 1` with what the lattice reports over the same NATS subjects, sees 1 against 0, and issues its own command to bring the component back. A Kubernetes `Deployment` controller replaces a deleted pod the same way. Recovery took two seconds, with no second `wash app deploy` and no edit to `wadm.yaml`, and the healed service returns the same JSON because it runs the same `app.wasm`. Scaling to zero under a managed app is the intended way to see the loop on demand, as a chaos drill deletes a healthy pod to prove a controller replaces it.
 
-{% include excalidraw.html file="15-wadm-self-heal-loop" alt="A five-step timeline. Step 1, healthy: GET returns 200, component has 1 instance. Step 2, wash scale --max-instances 0: the provider's listener stays up, component instance count drops to 0, shown in an ink box. Step 3, traffic fails: GET returns 500, failed to invoke wrpc:http/incoming-handler, no component, shown in a dashed ghost box. Step 4, wadm reconciles: an amber box showing the SpreadScaler sees desired=1, actual=0. Step 5, recovered: GET returns 200 again, about 2 seconds later, no redeploy. Below the timeline, a wide box describes wadm's continuous reconcile loop: desired state is wadm.yaml's spreadscaler instances 1 always, actual state is what the lattice reports right now, every drift gets corrected automatically, no human ran wash start component to bring it back. A dashed arrow points from step 4 down into this explanation box labeled reconcile fires here. A top caption cites the real evidence file and the recovered-after-2s timing; a bottom caption notes wash app status: deployed already happened back at step 2 and does not mean step 3's 500s aren't occurring." caption="Figure 15.2: wadm's SpreadScaler reconciling the component back to one instance after a manual scale-to-zero: 500s for about two seconds, then recovery, with no redeploy." %}
+{% include excalidraw.html file="15-wadm-self-heal-loop" alt="A five-step timeline. Step 1, healthy: GET returns 200 and the component has 1 instance. Step 2, wash scale --max-instances 0: the provider's listener stays up and the component drops to 0 instances. Step 3, traffic fails: GET returns 500 with failed to invoke wrpc:http/incoming-handler. Step 4, wadm reconciles: the SpreadScaler sees desired 1 and actual 0. Step 5, recovered: GET returns 200 about 2 seconds later with no redeploy. Below, a box describes the continuous loop: desired state is the manifest's instances 1, actual state is what the lattice reports now, and every drift is corrected automatically. A note says wash app status reporting Deployed does not mean step 3's 500s are not occurring." caption="Figure 15.2: wadm's SpreadScaler restoring the component to one instance after a manual scale-to-zero: 500s for about two seconds, then recovery with no redeploy." %}
 
-`wash scale` fighting wadm like this is the intended use of the command, not a misuse of it: it's the cleanest way to *see* self-healing without waiting for a real crash. Scaling a component to zero under an app wadm is actively managing is exactly how the reconcile loop becomes visible on demand, the same way a chaos-engineering drill deletes a healthy pod to prove a Kubernetes controller replaces it rather than waiting for a real node failure to find out.
+## The one real gap: exported resources are ignored
 
-## The one real gap: exported component resources are ignored
-
-Deploying `app.wasm` under wasmCloud surfaces a host warning `wasmtime serve` never produces, because the two runtimes handle one part of the Component Model differently:
+Deploying `app.wasm` produces a host warning `wasmtime serve` never does:
 
 > **`exported component resources are not supported in wasmCloud runtime and will be ignored`**
 
-Our `handling` interface (the same WIT interface behind the shared cargo domain's components and their composition into WIT worlds) exports a `cargo-tracker` **resource**, a stateful handle type with its own methods, alongside the plain functions on `booking`. The wasmCloud host's component-loading path does not support exported resources at all: it loads the plain function exports it understands and ignores the resource export, logging a WARN rather than failing the deploy. This example's HTTP path only ever calls through `booking`, which is all plain functions, so the ignored `cargo-tracker` resource has zero effect on anything this chapter demonstrates: the cargo JSON comes back identical to the single-process wasmtime response. But it is a structural difference between the two runtimes, not a cosmetic one: a component that *did* depend on a caller using `cargo-tracker`'s resource methods through wasmCloud's host would find those methods unreachable, with no error beyond a log line a reader has to go looking for. Running wasmtime and wasmCloud together revisits this gap directly, with the identical `app.wasm` under both runtimes side by side; the fix, when a caller depends on a resource's statefulness, is to move that shape into a capability provider instead, which is exactly the kind of native-process boundary `httpserver` already demonstrates.
+The `handling` interface exports a `cargo-tracker` **resource**, a stateful handle type with methods, beside the plain functions on `booking`. wasmCloud's component-loading path loads the plain function exports and ignores the resource export, logging a WARN instead of failing the deploy. The HTTP path calls only `booking`, so nothing here changes: the JSON is identical to the single-process response. But the difference is structural. A caller that needs `cargo-tracker`'s methods through wasmCloud would find them unreachable, with no error beyond a log line. When a caller depends on a resource's statefulness, move that state into a capability provider, the native-process boundary `httpserver` already demonstrates.
+
+> **Decision**
+>
+> Use wasmCloud's lattice when you need what it provides by design: desired state that a control plane reconciles without anyone re-running a deploy (the SpreadScaler recovered the component in about two seconds), capabilities that run as separate, independently versioned, crash-isolated processes (the provider's socket survived a component crash), or components and providers addressable across hosts without hand-built distribution. Stay with one `wasmtime serve` process when none of that applies. One process under one restart policy (systemd, a container runtime, Kubernetes) has fewer moving parts and no link YAML to get wrong, and the request behavior is byte-identical. The lattice costs a NATS bus, a wadm process, an OAM manifest and a link that must be right before the first request succeeds. Pay that when the reconcile loop or the multi-host lattice is a requirement, not because it is available.
+
+> **🤖 Explore with your agent**
+>
+> "In examples/part4-runtimes/wasmcloud, read wadm.yaml and explain which parts a lattice gives that `wasmtime serve -S cli app.wasm` does not. Then change the spreadscaler `instances` from 1 to 2, say what `wash get inventory` should show for the component's max count, and name what an exported component resource in the `handling` interface would do under wasmCloud."
+>
+> Check: after `wash app deploy wadm.yaml`, `wash get inventory` lists `cargo_http-cargo_http` with the max count you predicted, and `wash app status cargo-http` shows every row `Deployed`.
 
 ## Build, run, observe
 
@@ -252,21 +232,18 @@ Our `handling` interface (the same WIT interface behind the shared cargo domain'
 cd examples/part4-runtimes/wasmcloud && export WASH_DISABLE_INTERACTIVE=1 && ./capture-evidence.sh
 ```
 
-`capture-evidence.sh` runs `build.sh` to `wac plug` the Part 2 Rust cargo provider under the Part 3 http-rust front door into `app.wasm`, brings up a local lattice with `wash up -d` (NATS, the wasmcloud host, and wadm), and runs `wash app deploy wadm.yaml` to start the `cargo-http` component and the `httpserver` capability provider and establish the link between them. It then polls `curl` against `127.0.0.1:8000/cargo/CARGO-USNYC-DEHAM` until the service answers `200` before checking `wash app status` and `wash get inventory`, runs the scale-to-zero resilience drill (`wash scale component ... --max-instances 0`, watch traffic fail, watch wadm's SpreadScaler restore it), and records a `sha256sum app.wasm` for comparing the same bytes when wasmtime and wasmCloud run them together. A successful run writes its transcripts under `evidence/<date>/` and exits zero; see `examples/part4-runtimes/wasmcloud/README.md` for the full script table, including `prove-same-bytes.sh` and the `teardown.sh` cleanup step.
+The script builds `app.wasm` with `build.sh`, brings up a local lattice with `wash up -d`, and deploys `wadm.yaml`. It polls `127.0.0.1:8000/cargo/CARGO-USNYC-DEHAM` until the service answers `200`, then records `wash app status` and `wash get inventory`, runs the scale-to-zero drill and records `sha256sum app.wasm`. A passing run writes transcripts under `evidence/<date>/` and exits zero. `teardown.sh` removes the application and stops the lattice, and the README has the full script table.
 
-## When to reach for the lattice
+Experiments:
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Reach for wasmCloud's lattice when a deployment needs the properties this chapter demonstrated as a byproduct of its architecture, not as something bolted on afterward: a declarative desired state that a control plane continuously reconciles without a human or a cron job re-running a deploy command (wadm's SpreadScaler, shown recovering the component in ~2s with zero extra automation), capabilities that must run as separate, independently versioned, independently crash-isolated processes from the components that use them (the httpserver provider's socket survives a component crash that would take down an in-process HTTP stack entirely), or a topology where components and providers need to be addressable across more than one host without hand-rolling that distribution (the lattice's whole reason to exist). Stay with a single `wasmtime serve` process when none of that is true yet: one process, one restart policy from whatever supervises it (systemd, a container runtime, Kubernetes itself in Part 5), is simpler to reason about, has fewer moving parts to misconfigure (there is no link YAML to get wrong), and loses nothing in request-handling behavior: the cargo JSON this chapter returned is byte-identical to the single-process wasmtime response. The lattice's cost is real: a NATS bus, a wadm process, an OAM manifest, and a link to get right before the first request succeeds. Pay that cost when the reconcile loop or the multi-host lattice is a requirement, not a chapter's worth of infrastructure adopted because it was available.</p></div>
+- Run `wash app deploy` from a directory other than the one holding `app.wasm`: the relative `file://./app.wasm` no longer resolves and the component does not start.
+- Scale to zero and watch: `500`s for about two seconds, then `200` again with no redeploy.
+- Check the host log for the `exported component resources ... will be ignored` WARN on every deploy of this component.
 
 ## For deeper coverage
 
-- [wasmCloud documentation](https://wasmcloud.com/docs/): the authoritative treatment of the lattice, the host, capability providers, and OAM application manifests this chapter builds a single worked example against.
-- [wadm (WebAssembly Distributed Application Manager)](https://github.com/wasmCloud/wadm): the SpreadScaler and LinkScaler reconcile logic this chapter's resilience section exercises directly.
-- [wasmCloud httpserver provider](https://github.com/wasmCloud/capability-providers/tree/main/http-server): the `ghcr.io/wasmcloud/http-server` provider source this chapter links against at `0.27.0`.
-- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the Component Model treatment of exported resources this chapter's resource-export behavior depends on.
-- Shashank Jain, *WebAssembly for Cloud* (Apress): wasmCloud's actor-and-lattice model and capability-provider architecture covered in more operational depth than this chapter's single-app walkthrough.
-- The shared cargo domain as components: where the `handling` interface's `cargo-tracker` resource is defined; this chapter is the first place its export is ignored by a runtime.
-- Networking, reconnect, and resilience: the discussion that deferred lattice-level resilience to this chapter, and the in-component retry loop this chapter's platform-level self-healing sits one layer above.
-- wasmtime: the single-process baseline this chapter's lattice, provider, and link all exist to replace or complement.
-- wasmtime and wasmCloud together: where the identical `app.wasm` (same sha256) runs under both runtimes side by side, and the exported-resource gap this chapter names gets a direct comparison.
-- Part 5, "Deploying to Kubernetes": where this chapter's lattice-level self-healing gets compared directly against a Kubernetes `Deployment` controller's own reconcile loop, the pattern wadm's SpreadScaler mirrors.
+- [wasmCloud documentation](https://wasmcloud.com/docs/): the lattice, host, capability providers and OAM application manifests.
+- [wadm (WebAssembly Distributed Application Manager)](https://github.com/wasmCloud/wadm): the SpreadScaler and LinkScaler reconcile logic the resilience drill exercises.
+- [wasmCloud httpserver provider](https://github.com/wasmCloud/capability-providers/tree/main/http-server): the `ghcr.io/wasmcloud/http-server` provider source linked at `0.27.0`.
+- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the Component Model treatment of exported resources.
+- Shashank Jain, *WebAssembly for Cloud* (Apress): wasmCloud's actor-and-lattice model and capability-provider architecture in more operational depth.

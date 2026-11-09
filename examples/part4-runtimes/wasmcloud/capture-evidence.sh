@@ -206,3 +206,6 @@ echo "  GET $VALID_PATH returned the exact cargo JSON, /cargo/NOPE -> 404,"
 echo "  resilience (scale-to-0 -> fail -> wadm self-heal -> recover) captured."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
 echo "  run ./teardown.sh to stop the lattice."
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

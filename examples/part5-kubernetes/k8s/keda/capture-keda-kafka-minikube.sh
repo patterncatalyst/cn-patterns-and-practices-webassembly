@@ -132,7 +132,7 @@ echo "=== 22 deploy-at-zero (idle) ==="
   printf '\n$ kubectl get deploy cargo-kafka-host -n %s\n' "$KAFKA_NAMESPACE"
   kubectl get deploy cargo-kafka-host -n "$KAFKA_NAMESPACE"
   if [[ "$zeroed" -ne 1 ]]; then
-    echo "FAIL — cargo-kafka-host never scaled to 0/0 within ${ZERO_TIMEOUT}s of idle" >&2
+    echo "FAIL, cargo-kafka-host never scaled to 0/0 within ${ZERO_TIMEOUT}s of idle" >&2
     exit 1
   fi
 } | tee "$OUT/22-deploy-at-zero.txt"
@@ -153,7 +153,7 @@ echo "=== 23 backlog-after-burst ==="
     sleep 5; waited=$(( waited + 5 ))
   done
   if [[ "$grew" -ne 1 ]]; then
-    echo "FAIL — topic backlog did not grow within ${LAG_TIMEOUT}s of the burst" >&2
+    echo "FAIL, topic backlog did not grow within ${LAG_TIMEOUT}s of the burst" >&2
     exit 1
   fi
 } | tee "$OUT/23-backlog-after-burst.txt"
@@ -175,7 +175,7 @@ echo "=== 24 deploy-scaled-out ==="
   printf '\n$ kubectl get scaledobject cargo-kafka-host -n %s -o wide\n' "$KAFKA_NAMESPACE"
   kubectl get scaledobject cargo-kafka-host -n "$KAFKA_NAMESPACE" -o wide
   if [[ "$peak" -le 1 ]]; then
-    echo "FAIL — cargo-kafka-host peak replica count was $peak (expected > 1) within ${SCALEOUT_TIMEOUT}s" >&2
+    echo "FAIL, cargo-kafka-host peak replica count was $peak (expected > 1) within ${SCALEOUT_TIMEOUT}s" >&2
     exit 1
   fi
   echo "peak-replicas: $peak"
@@ -196,7 +196,7 @@ echo "=== 25 handler-logs ==="
   done
   printf '%s\n' "$handler_logs"
   if [[ "$sawhandler" -ne 1 ]]; then
-    echo "FAIL — no per-message 'outcome=' log lines found from cargo-kafka-host within ${HANDLER_TIMEOUT}s" >&2
+    echo "FAIL, no per-message 'outcome=' log lines found from cargo-kafka-host within ${HANDLER_TIMEOUT}s" >&2
     exit 1
   fi
 } | tee "$OUT/25-handler-logs.txt"
@@ -212,7 +212,7 @@ echo "=== 26 lag-drained ==="
     sleep 10; waited=$(( waited + 10 ))
   done
   if [[ "$drained" -ne 1 ]]; then
-    echo "FAIL — lag never drained to 0 within ${DRAIN_TIMEOUT}s" >&2
+    echo "FAIL, lag never drained to 0 within ${DRAIN_TIMEOUT}s" >&2
     exit 1
   fi
 } | tee "$OUT/26-lag-drained.txt"
@@ -230,7 +230,7 @@ echo "=== 27 deploy-back-to-zero ==="
   printf '\n$ kubectl get deploy cargo-kafka-host -n %s\n' "$KAFKA_NAMESPACE"
   kubectl get deploy cargo-kafka-host -n "$KAFKA_NAMESPACE"
   if [[ "$rezeroed" -ne 1 ]]; then
-    echo "FAIL — cargo-kafka-host never returned to 0/0 within ${POST_DRAIN_ZERO_TIMEOUT}s of the drain" >&2
+    echo "FAIL, cargo-kafka-host never returned to 0/0 within ${POST_DRAIN_ZERO_TIMEOUT}s of the drain" >&2
     exit 1
   fi
 } | tee "$OUT/27-deploy-back-to-zero.txt"
@@ -266,18 +266,21 @@ PY
 }
 scrub | tee "$OUT/29-scrub.txt"
 if grep -rEl 'BEGIN [A-Z ]*PRIVATE KEY|[Bb]earer [A-Za-z0-9._-]{16,}|client-key-data: [A-Za-z0-9+/=]{16,}' "$OUT" >/dev/null 2>&1; then
-  echo "scrub: FAIL — credential material remains in $OUT" >&2
+  echo "scrub: FAIL, credential material remains in $OUT" >&2
   exit 1
 fi
-echo "scrub: ok — no secrets in evidence"
+echo "scrub: ok, no secrets in evidence"
 
 # peak is set inside the step-24 `| tee` subshell; recover it from that step's
 # evidence file for the summary line.
 peak="$(awk -F': ' '/^peak-replicas:/ { print $2 }' "$OUT/24-deploy-scaled-out.txt" 2>/dev/null)"
 echo
-echo "PASS — part5-kubernetes ch23 KEDA Kafka half (minikube, docker+containerd, Kubernetes $KUBERNETES_VERSION):"
+echo "PASS: part5-kubernetes ch23 KEDA Kafka half (minikube, docker+containerd, Kubernetes $KUBERNETES_VERSION):"
 echo "  cargo-kafka-host went 0/0 -> idle -> producer burst -> consumer-group lag"
 echo "  rose -> KEDA scaled it out to a peak of ${peak:-?} replica(s) -> the handler"
 echo "  processed the burst -> lag drained -> KEDA scaled it back to 0/0."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
 echo "  run ../teardown.sh to leave the box clean."
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

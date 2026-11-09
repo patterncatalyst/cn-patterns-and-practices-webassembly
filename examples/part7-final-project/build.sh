@@ -81,17 +81,17 @@ assert_http_composite() {
   local wit
   wit="$(wasm-tools component wit "$wasm")"
   if ! grep -q 'export wasi:http/incoming-handler' <<<"$wit"; then
-    echo "build.sh: FAIL — $label does not export wasi:http/incoming-handler" >&2
+    echo "build.sh: FAIL, $label does not export wasi:http/incoming-handler" >&2
     exit 1
   fi
   local bad
   bad="$(grep -E '^\s*import ' <<<"$wit" | grep -v 'import wasi:' || true)"
   if [[ -n "$bad" ]]; then
-    echo "build.sh: FAIL — $label still imports a non-wasi interface after wac plug:" >&2
+    echo "build.sh: FAIL, $label still imports a non-wasi interface after wac plug:" >&2
     echo "$bad" >&2
     exit 1
   fi
-  echo "build.sh: ok — $label exports wasi:http/incoming-handler, imports only wasi:*"
+  echo "build.sh: ok, $label exports wasi:http/incoming-handler, imports only wasi:*"
 }
 
 # ---------------------------------------------------------------------------
@@ -172,9 +172,9 @@ echo "build.sh: cargo-go.wasm sha256: $(sha256sum "$GO_OUT" | awk '{print $1}')"
 echo
 echo "=== Smoke: wasmtime serve + curl, both languages ==="
 serve_assert "cargo-rust" "$RUST_OUT" 18180
-echo "build.sh: ok — cargo-rust.wasm served the exact JSON and 404'd on an unknown id"
+echo "build.sh: ok, cargo-rust.wasm served the exact JSON and 404'd on an unknown id"
 serve_assert "cargo-go" "$GO_OUT" 18181
-echo "build.sh: ok — cargo-go.wasm served the exact JSON and 404'd on an unknown id"
+echo "build.sh: ok, cargo-go.wasm served the exact JSON and 404'd on an unknown id"
 
 # ---------------------------------------------------------------------------
 # Packaging: one `FROM scratch` image per composite, built from the same

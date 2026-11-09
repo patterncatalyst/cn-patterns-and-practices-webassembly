@@ -113,7 +113,7 @@ cleanup_nogrant
 trap 'rm -f "$CA" "${TMP_FILES[@]:-}"' EXIT
 
 echo
-echo "PASS — ch20/ch21 interposition on OpenShift Local (CRC) as the RUNTIME-LINK form:"
+echo "PASS: ch20/ch21 interposition on OpenShift Local (CRC) as the RUNTIME-LINK form:"
 echo "  Three SEPARATE wasmCloud components per app, wired by wadm links over wRPC on"
 echo "  the custom patterncatalyst:cargo interface, all through edge-TLS Routes"
 echo "  (CA-verified, never -k/port-forward/NodePort):"

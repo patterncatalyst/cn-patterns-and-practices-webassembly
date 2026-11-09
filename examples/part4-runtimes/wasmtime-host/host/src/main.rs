@@ -172,7 +172,7 @@ fn main() -> Result<()> {
         bail!("ASSERT FAIL [host-import]: guest summary missing host-provided data: {summary}");
     }
     println!(
-        "    host-caps fired: host_quote x{}, host_now x{} — host-provided import works",
+        "    host-caps fired: host_quote x{}, host_now x{}, host-provided import works",
         store.data().quote_calls,
         store.data().now_calls
     );
@@ -310,7 +310,7 @@ fn main() -> Result<()> {
     }
 
     println!();
-    println!("PASS — wasmtime-host (ch14):");
+    println!("PASS: wasmtime-host (ch14):");
     println!("  * host-provided import (host-caps) satisfied by a Rust closure and called by the guest");
     println!("  * fuel metering exhausts -> OutOfFuel trap (clean run with ample fuel succeeds)");
     println!("  * epoch interruption via a ticker thread -> Interrupt trap (far deadline succeeds)");

@@ -46,7 +46,7 @@ done
 
 for tool in cargo cargo-component wac wasm-tools; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "adapter/build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "adapter/build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -54,17 +54,17 @@ done
 echo "adapter/build.sh: [1/4] building the Part 2 Rust cargo provider (reused) ..."
 ( cd "$PART2/rust" && cargo component build --release )
 PROVIDER="$(find "$PART2/rust/target" -name cargo_rust.wasm -not -path '*/deps/*' | head -1)"
-[[ -s "$PROVIDER" ]] || { echo "adapter/build.sh: FAIL — provider not produced" >&2; exit 1; }
+[[ -s "$PROVIDER" ]] || { echo "adapter/build.sh: FAIL, provider not produced" >&2; exit 1; }
 
 echo "adapter/build.sh: [2/4] building the shape-translation adapter ..."
 cargo component build --release
 ADAPTER="$(find "$SCRIPT_DIR/target" -name cargo_adapter_rust.wasm -not -path '*/deps/*' | head -1)"
-[[ -s "$ADAPTER" ]] || { echo "adapter/build.sh: FAIL — adapter not produced" >&2; exit 1; }
+[[ -s "$ADAPTER" ]] || { echo "adapter/build.sh: FAIL, adapter not produced" >&2; exit 1; }
 
 echo "adapter/build.sh: [3/4] building the Part 3 http-rust front door (reused) ..."
 ( cd "$PART3/http-rust" && cargo component build --release )
 HTTP="$(find "$PART3/http-rust/target" -name cargo_http_rust.wasm -not -path '*/deps/*' | head -1)"
-[[ -s "$HTTP" ]] || { echo "adapter/build.sh: FAIL — http-rust not produced" >&2; exit 1; }
+[[ -s "$HTTP" ]] || { echo "adapter/build.sh: FAIL, http-rust not produced" >&2; exit 1; }
 
 echo "adapter/build.sh: [4/4] composing app-adapted.wasm (wac plug: provider -> adapter -> http) ..."
 TMP_PA="$(mktemp -t provider-adapter.XXXXXX.wasm)"
@@ -80,7 +80,7 @@ echo "adapter/build.sh: exports:"
 wasm-tools component wit "$OUT" | grep -E '^\s*export' | head
 
 if [[ "$BUILD_IMAGE" -eq 1 ]]; then
-  command -v docker >/dev/null 2>&1 || { echo "adapter/build.sh: FAIL — docker not found" >&2; exit 1; }
+  command -v docker >/dev/null 2>&1 || { echo "adapter/build.sh: FAIL, docker not found" >&2; exit 1; }
   echo "adapter/build.sh: packaging OCI image '$IMAGE' (FROM scratch) ..."
   docker build --provenance=false -t "$IMAGE" -f "$SCRIPT_DIR/Dockerfile" "$SCRIPT_DIR"
   echo "adapter/build.sh: built image $IMAGE"

@@ -6,7 +6,7 @@ package patterncatalyst:cargo-http@0.1.0;
 /// `wasi:http/incoming-handler` and `wasmtime serve` can drive it directly) and
 /// additionally IMPORTS the three cargo interfaces from the repository
 /// contract (`patterncatalyst:cargo`, supplied as a path dependency in
-/// Cargo.toml — the contract stays pristine). The handler terminates HTTP and
+/// Cargo.toml, so the contract stays pristine). The handler terminates HTTP and
 /// calls the imported `booking` interface across the component boundary; once
 /// composed with a `cargo` provider via `wac plug`, the import is satisfied and
 /// the result serves live under `wasmtime serve`.

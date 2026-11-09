@@ -2,41 +2,45 @@
 title: "Deploying on OpenShift Local (CRC)"
 order: 19
 part: "Deploying to Kubernetes"
-description: "Deploying the same cargo wasi:http component to OpenShift Local via the wasmCloud operator, under restricted-v2, exposed through a CA-verified edge-TLS Route."
-duration: "19 min read"
+description: "Deploying the cargo wasi:http component to OpenShift Local with the wasmCloud operator under restricted-v2, exposed through a CA-verified edge-TLS Route."
+duration: "17 min read"
 ---
 
 ## Learning objectives
 
 By the end of this chapter you can:
 
-- Explain why OpenShift Local does not run the raw containerd shim path used on minikube, and why the wasmCloud operator is the mechanism that fits `restricted-v2` instead.
-- Read `examples/part5-kubernetes/openshift/wasmcloud-host.yaml` and `wadm.yaml` together and state which field makes the operator create a Kubernetes Service, and which field pins the host version against a provider's wRPC protocol.
-- Name the one `values-crc.yaml` edit `restricted-v2` forces on the chart's bundled `wadm` subchart, and why nothing else in the chart needs an edit at all.
-- Diagnose a 403 on an operator-managed `EndpointSlice` as a narrow network-RBAC gap, not a missing SCC exception, and state the exact grant that closes it.
-- Trace the live request path from a CA-verified `curl` through an edge-TLS Route, a selector-less Service, the `httpserver` capability provider, and into the same `app.wasm` export wasmtime, wasmCloud, and the minikube deploy already proved.
+- Explain why OpenShift Local doesn't run the raw containerd shim, and why the wasmCloud operator fits `restricted-v2`.
+- Say which field makes the operator create a Kubernetes Service, and which field pins the host version against a provider's wRPC protocol.
+- Name the one `values-crc.yaml` edit `restricted-v2` forces on the bundled `wadm` subchart.
+- Diagnose a 403 on an operator-managed `EndpointSlice` as a network-RBAC gap rather than a missing SCC exception, and apply the grant that closes it.
+- Trace a CA-verified `curl` through an edge-TLS Route, a selector-less Service and the `httpserver` provider into the same `app.wasm` export the other runtimes serve.
 
 ## Why this matters
 
-The Wasm-on-Kubernetes landscape placed the wasmCloud operator on a map of four ways to run a Wasm component on Kubernetes, and named it the fallback path for a cluster where the raw containerd shim doesn't fit. Deploying on minikube proved the shim path live. This chapter is where that fallback stops being theoretical: on OpenShift Local, the shim path is not merely less convenient, it is the wrong tool, and the operator is the mechanism this chapter puts to work instead.
+The raw containerd shim needs `containerd-shim-wasmtime-v1` on the node and a new runtime in `/etc/containerd/config.toml`. On minikube that is `minikube ssh`, a root shell and a containerd restart. OpenShift Local runs Red Hat CoreOS nodes whose filesystem the Machine Config Operator manages. Installing a runtime plugin there means authoring a `MachineConfig`, which needs a privileged node role CRC doesn't grant an ordinary user and which bounces the single node to apply. That is a lot of node surgery for one HTTP component, and it fights `restricted-v2`.
 
-The reason is `restricted-v2`. The minikube shim needs `containerd-shim-wasmtime-v1` installed as a binary on the node and registered as a new CRI runtime in `/etc/containerd/config.toml`, which on minikube means `minikube ssh`, a root shell, and a containerd restart: ordinary node administration on a cluster you fully control. OpenShift Local runs Red Hat CoreOS (RHCOS) nodes whose filesystem is managed by the Machine Config Operator, not edited by hand; installing a new containerd runtime plugin there means authoring a `MachineConfig`, which needs a privileged node role CRC does not grant to an ordinary user session, and which bounces the entire single node to apply. That is a disproportionate amount of node surgery to run one HTTP component, and it fights the whole `restricted-v2` posture this book's OpenShift path otherwise keeps intact everywhere else. The wasmCloud operator sidesteps the question entirely: the host that runs `app.wasm` is an ordinary Deployment, admitted by `restricted-v2` like any other pod, with no node-level change at all. Same component, same contract, a completely different answer to what has to change about the node.
+The wasmCloud operator avoids it. The host that runs `app.wasm` is an ordinary Deployment, admitted by `restricted-v2` like any other Pod, with no node change. Same component, same contract.
 
-`examples/part5-kubernetes/openshift/` is that path.
+{% include excalidraw.html file="19-crc-request-path" alt="A CA-verified curl to cargo-http-wasmcloud.apps-crc.testing passes through the OpenShift router, which terminates an edge-TLS Route, into a selector-less Service named cargo-http on port 8000. An EndpointSlice the wasmCloud operator wrote by hand points at a wasmCloud host Pod running under restricted-v2 at UID 1000670000. Inside that Pod the httpserver capability provider listens on 0.0.0.0:8000 and invokes the cargo-http component's wasi:http/incoming-handler export over wRPC. A note says the whole path runs in a normal restricted-v2 namespace with no anyuid exception." caption="Figure 19.1: The CRC request path: edge-TLS Route to a selector-less Service to the wasmCloud host Pod to the httpserver provider to the same app.wasm export, all under restricted-v2." %}
 
-{% include excalidraw.html file="19-crc-request-path" alt="A CA-verified curl request to cargo-http-wasmcloud.apps-crc.testing flows through the OpenShift router terminating an edge-TLS Route, into a selector-less Service named cargo-http on port 8000, whose endpoints an EndpointSlice the wasmCloud operator wrote by hand points at a wasmCloud host pod running under restricted-v2 at UID 1000670000. Inside that pod the httpserver capability provider listens on 0.0.0.0:8000 and invokes the cargo-http component's wasi:http/incoming-handler export over wRPC. A note states the whole path runs in the wasmcloud project, a normal restricted-v2 namespace, with no anyuid exception anywhere." caption="Figure 19.1: the live CRC request path: edge-TLS Route to a selector-less Service to the wasmCloud host pod to the httpserver provider to the same app.wasm export, all under restricted-v2." %}
+## What the chart installs
 
-## The operator, not the shim: what the chart installs
+`install-operator.sh` installs one Helm release, `oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2`, into a dedicated `wasmcloud` project. It is a normal project and not `default`, because `default` runs under the `privileged` pod security profile and proves nothing about `restricted-v2`. The chart bundles NATS (the lattice's message bus), `wadm` (the control loop that reconciles OAM applications) and the operator (which turns a `WasmCloudHostConfig` into a host Deployment).
 
-`install-operator.sh` installs one Helm release, `oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2`, into a dedicated `wasmcloud` project: a normal OpenShift project, not `default`, because the `default` namespace runs under the `privileged` pod security profile and deploying there would prove nothing about `restricted-v2`. That chart bundles three things: NATS (the message bus the lattice runs on), `wadm` (the control loop that reconciles OAM applications), and the wasmCloud operator itself (the controller that turns a `WasmCloudHostConfig` custom resource into a running host Deployment). `README.md` in that directory records why this chart specifically: it is `0.1.2`, the last tagged release of the archived wasmCloud **v1** chart line. wasmCloud's v2 rewrite ships a different chart under a different `runtime-operator` model with its own host and manifest shapes; Part 4 of this book already committed to the `WasmCloudHostConfig` plus OAM `v1beta1` model the v1 chart speaks, and switching models here would mean maintaining two incompatible deployment stories for the same lattice concept. The v1 chart is the one that matches every other chapter in Part 4 and Part 5.
+`0.1.2` is the last tagged release of the archived wasmCloud v1 chart line. The v2 rewrite uses a different `runtime-operator` model with its own host and manifest shapes, and the `WasmCloudHostConfig` plus OAM `v1beta1` model is the one the single-host wasmCloud deploy already speaks. `lib.sh` pins three versions:
 
-Three version pins hold this chart together, all recorded in `lib.sh`: the chart itself at `oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2`, the operator image at `ghcr.io/wasmcloud/wasmcloud-operator:0.4.0`, and the `httpserver` provider tag `wadm` deploys at `ghcr.io/wasmcloud/http-server:0.27.0`.
+| Pin | Value |
+| --- | --- |
+| Chart | `oci://ghcr.io/wasmcloud/charts/wasmcloud-platform:0.1.2` |
+| Operator image | `ghcr.io/wasmcloud/wasmcloud-operator:0.4.0` |
+| `httpserver` provider | `ghcr.io/wasmcloud/http-server:0.27.0` |
 
-The chart's bundled host subchart defaults to version `1.2.1`. That is not the version this deployment runs: `wasmcloud-host.yaml`'s `WasmCloudHostConfig` overrides it to `1.9.1` explicitly, and that override matters, not as a cosmetic detail, because the chart's default host speaks a wRPC protocol too old for the `http-server:0.27.0` provider this app links against. Pairing the chart's own default host with that provider produces a Route that is reachable but a backend that cannot invoke the component: the provider forwards the call and the host answers `HTTP 500`, `failed to shutdown synchronous parameter channel: not connected`, because the two sides are speaking incompatible wire versions of the same RPC. `1.9.1` is the host version Part 4's single-host wasmCloud chapter already proved against this exact provider tag, so `wasmcloud-host.yaml` pins it by name instead of trusting whatever the chart ships next.
+The chart's host subchart defaults to version `1.2.1`, and `wasmcloud-host.yaml` overrides it to `1.9.1`. The default host speaks a wRPC protocol too old for `http-server:0.27.0`: the Route is reachable, the provider forwards the call, and the host answers `HTTP 500` with `failed to shutdown synchronous parameter channel: not connected`. `1.9.1` is the host already proven against this provider tag, so the CR pins it by name rather than trusting the chart's next default.
 
-## restricted-v2: one edit, and only one
+## restricted-v2: one edit
 
-Every pod this chart creates lands under `restricted-v2`, OpenShift's default security context constraint for an ordinary project: no `anyuid`, no fixed UID chosen by the workload, a namespace-scoped UID range assigned at admission, capabilities dropped to nothing, privilege escalation forbidden, seccomp set to `RuntimeDefault`. `evidence/2026-10-21/01-pods.txt` shows every single pod in the release landing on the identical assigned UID, with `restricted-v2` as the recorded SCC on each one:
+Every Pod in the release lands under `restricted-v2`: no `anyuid`, a namespace-assigned UID, capabilities dropped, privilege escalation forbidden, seccomp `RuntimeDefault`. The recorded Pods show one assigned UID across all five workloads (the columns are Pod, ready, restarts, SCC, UID):
 
 ```
 nats-0                                true,true   0,0        restricted-v2   1000670000
@@ -47,9 +51,9 @@ wasmcloud-operator-7f6d8c99bf-hjfms   true        0          restricted-v2   100
 namespace uid-range: 1000670000/10000
 ```
 
-Five different workloads, NATS, `wadm`, two wasmCloud host replicas, and the operator itself, all land on the exact same platform-chosen UID, `1000670000`, out of a `1000670000/10000` namespace range, with no `anyuid` exception requested or granted anywhere. The `WasmCloudHostConfig` CRD has no `securityContext` field at all, and the operator's own reconciler leaves the host and its NATS leaf sidecar's `securityContext` unset in the pod spec it generates, so `restricted-v2` admission fills in the UID, drops the capabilities, and forbids escalation entirely on its own. The host author never had to reason about OpenShift's UID model for that pod to run.
+The `WasmCloudHostConfig` CRD has no `securityContext` field, and the operator leaves the host and its NATS leaf sidecar unset, so admission fills in the UID, drops capabilities and forbids escalation. NATS and the operator set no `runAsUser` either.
 
-Only one piece of the chart fought that default: `wadm`'s own subchart hard-codes `securityContext.runAsUser: 1000` and `runAsGroup: 1000`. `1000` is a plausible-looking UID, which is exactly what makes it dangerous here: it is a fixed value, and it sits well outside this namespace's `1000670000`-based range, so admission rejects it outright rather than silently reassigning it. `values-crc.yaml` nulls both keys:
+Only `wadm`'s subchart fought the default. It hard-codes `securityContext.runAsUser: 1000` and `runAsGroup: 1000`, fixed values outside the namespace's `1000670000` range, so admission rejects them instead of reassigning. `values-crc.yaml` nulls both keys:
 
 ```yaml
 wadm:
@@ -58,6 +62,7 @@ wadm:
       nats:
         server: "nats://nats-headless.wasmcloud.svc.cluster.local"
   securityContext:
+    # Drop the chart's fixed UID/GID so restricted-v2 assigns one in range.
     runAsUser: null
     runAsGroup: null
     runAsNonRoot: true
@@ -69,15 +74,15 @@ wadm:
       type: RuntimeDefault
 ```
 
-Nulling the two UID keys, not removing the whole `securityContext` block, is the point: `wadm`'s own hardening (`runAsNonRoot`, dropped capabilities, `seccompProfile: RuntimeDefault`) was already correct and stays in place; only the two fields that collide with a namespace-assigned range come out. That is the entire security-context edit this chapter needed. NATS and the operator set no `runAsUser` of their own, so they never needed touching at all. `restricted-v2` was already the right fit for them, and the chart's defaults already matched a pattern the Wasm-on-Kubernetes landscape discussion would predict: the operator model is built to run as ordinary pods because that is the whole reason it exists as an alternative to the shim.
+Nulling the two UID keys, rather than removing the block, keeps `wadm`'s other hardening (`runAsNonRoot`, dropped capabilities, seccomp) in place.
 
-The same `values-crc.yaml` overlay also exists because of a second namespace effect that has nothing to do with security contexts: the chart hard-codes NATS's DNS name at `*.default.svc.cluster.local`, and installing into `wasmcloud` instead of `default` (the same `restricted-v2`-vs-`privileged` reasoning as above) means every NATS address in the chart has to be repointed at `*.wasmcloud.svc.cluster.local`. `values-crc.yaml` does it for `wadm`'s NATS server; `wasmcloud-host.yaml`'s own `natsAddress` field does the matching repoint for the host-to-lattice connection.
+The overlay has a second job. The chart hard-codes NATS's DNS at `*.default.svc.cluster.local`, so installing into `wasmcloud` means repointing every NATS address at `*.wasmcloud.svc.cluster.local`. `values-crc.yaml` does it for `wadm`, and the `natsAddress` field in `wasmcloud-host.yaml` does it for the host.
 
-## WasmCloudHostConfig, the daemonscaler, and the Service the operator builds
+## WasmCloudHostConfig and the daemonscaler
 
-{% include excalidraw.html file="19-operator-lattice-topology" alt="install-operator.sh installs the pinned wasmcloud-platform chart, bringing up standalone NATS, wadm with its runAsUser/runAsGroup nulled, and the wasmCloud operator, all under restricted-v2. deploy.sh pushes app.wasm to ghcr and creates a pull secret, then applies a WasmCloudHostConfig pinned to host version 1.9.1, which the operator reconciles into a host Deployment. Applying wadm.yaml, an OAM Application where both the component and the httpserver provider carry a daemonscaler trait rather than a spreadscaler, is what makes the operator auto-create a Service named cargo-http on port 8000." caption="Figure 19.2: the operator/lattice topology: the pinned chart brings up NATS, wadm, and the operator; a WasmCloudHostConfig becomes a host Deployment; a daemonscaler-traited wadm Application is what makes the operator create the Service." %}
+{% include excalidraw.html file="19-operator-lattice-topology" alt="install-operator.sh installs the pinned wasmcloud-platform chart, bringing up standalone NATS, wadm with runAsUser and runAsGroup nulled, and the wasmCloud operator, all under restricted-v2. deploy.sh pushes app.wasm to ghcr and creates a pull secret, then applies a WasmCloudHostConfig pinned to host version 1.9.1, which the operator reconciles into a host Deployment. Applying wadm.yaml, an OAM Application where both the component and the httpserver provider carry a daemonscaler trait rather than a spreadscaler, makes the operator create a Service named cargo-http on port 8000." caption="Figure 19.2: The operator and lattice topology: the chart brings up NATS, wadm and the operator; a WasmCloudHostConfig becomes a host Deployment; a daemonscaler-traited wadm Application makes the operator create the Service." %}
 
-`deploy.sh` applies `wasmcloud-host.yaml` after the platform chart is up. The CR itself is short:
+`deploy.sh` applies `wasmcloud-host.yaml` once the chart is up:
 
 ```yaml
 apiVersion: k8s.wasmcloud.dev/v1alpha1
@@ -94,27 +99,23 @@ spec:
   allowLatest: false
 ```
 
-The operator reconciles that CR into a Deployment named after it, which is why `deploy.sh` waits on `oc get deploy wasmcloud-host` rather than on a pod directly: the CR is the desired state, the Deployment is the mechanism, and the pod is just the Deployment's own replica. `registryCredentialsSecret` points at a `docker-registry` secret `deploy.sh` creates from a `gh auth token`, because the component image this host pulls is private: `deploy.sh` pushes `app.wasm` to `ghcr.io/patterncatalyst/cargo-http:crc` with `wash push` before the host ever starts, and the pull secret is what lets the in-cluster host retrieve it without a public artifact existing anywhere.
+The operator reconciles the CR into a Deployment of the same name, so `deploy.sh` waits on `oc get deploy wasmcloud-host` rather than on a Pod. `registryCredentialsSecret` names a `docker-registry` secret `deploy.sh` builds from `gh auth token`: the component image is private, pushed with `wash push` to `ghcr.io/patterncatalyst/cargo-http:crc` before the host starts.
 
-Once the host is running, `deploy.sh` applies `wadm.yaml`, an OAM `Application` that is, by design, almost the same manifest Part 4's single-host wasmCloud chapter already deployed: the same component, the same `httpserver` provider at `ghcr.io/wasmcloud/http-server:0.27.0`, the same link wiring the provider's `wasi:http/incoming-handler` calls to the component. The one change this manifest makes for the operator path is the scaler type on both the component and the provider:
+`deploy.sh` then applies `wadm.yaml`, the single-host manifest with one operator-specific change: both the component and the provider use a `daemonscaler` instead of a `spreadscaler`. The provider's half:
 
 ```yaml
-spec:
-  components:
-    - name: cargo-http
-      type: component
-      properties:
-        image: __COMPONENT_REF__
-      traits:
-        - type: daemonscaler
-          properties:
-            replicas: 1
-
     - name: httpserver
       type: capability
       properties:
+        # Reused verbatim from part4-runtimes/wasmcloud/wadm.yaml: the latest
+        # released HTTP server provider, speaks wasi:http 0.2.x, compatible with
+        # the host versions in this project.
         image: ghcr.io/wasmcloud/http-server:0.27.0
       traits:
+        # The provider (source) calls the component (target) on
+        # wasi:http/incoming-handler; source_config carries the listen address.
+        # On Kubernetes with the operator the port is configurable but the
+        # address MUST be 0.0.0.0.
         - type: link
           properties:
             target: cargo-http
@@ -126,12 +127,16 @@ spec:
               - name: cargo-http-listen
                 properties:
                   address: 0.0.0.0:8000
+        # daemonscaler on the httpserver provider is what makes the operator
+        # create the Service (named "cargo-http", port 8000).
         - type: daemonscaler
           properties:
             replicas: 1
 ```
 
-`daemonscaler` in place of Part 4's `spreadscaler` is the whole operator-specific edit, and it is required, not stylistic: the wasmCloud operator only auto-creates a Kubernetes Service for an application whose `httpserver` provider is scaled with a `daemonscaler`. Service creation for a `spreadscaler`-scaled provider is not implemented in the operator at all. Skip this edit and `wadm`'s reconcile loop still succeeds, the component and provider still link, and nothing in `wadm status` looks wrong: there is no Service for a Route to ever point at, and `deploy.sh`'s wait on `oc get svc cargo-http` times out with no error anywhere upstream to explain why. The Service the operator creates once the `daemonscaler` is in place is named after the Application itself, `cargo-http`, and exposes the provider's configured listen port, `8000`. `evidence/2026-10-21/02-service-route.txt` shows exactly that Service, and one detail in it needs a closer look:
+The edit is required. The operator creates a Kubernetes Service only for an application whose `httpserver` provider uses a `daemonscaler`; Service creation for a `spreadscaler` provider isn't implemented. Skip it and `wadm` still reconciles, the component and provider still link, and `wadm status` looks fine, but there is no Service for a Route to point at. `deploy.sh`'s wait on `oc get svc cargo-http` times out with nothing upstream to explain why.
+
+The Service is named after the Application and exposes the provider's listen port:
 
 ```
 --- Service (operator-created) ---
@@ -142,17 +147,30 @@ ROUTE        HOST                                    TERMINATION   PORT
 cargo-http   cargo-http-wasmcloud.apps-crc.testing   edge          8000
 ```
 
-`SELECTOR <none>` is correct: this Service has no label selector matching pods the way an ordinary Kubernetes Service would. The operator manages its routing by writing an `EndpointSlice` directly, pointing at the host pod's IP by hand, because the lattice, not a label on a Deployment, is what knows which host is serving this application. That design choice is also exactly what the next section's RBAC gap comes from.
+`SELECTOR <none>` is correct. The operator writes an `EndpointSlice` by hand that points at the host Pod's IP, because the lattice, not a Deployment label, knows which host serves the application.
 
-<div class="callout callout--warn"><p class="callout__title">Note</p><p>The first live run of this path 403'd on exactly that manually-written <code>EndpointSlice</code>. OpenShift's <code>RestrictedEndpointsAdmission</code> plugin rejects any <code>Endpoints</code>/<code>EndpointSlice</code> object whose address falls inside the cluster or service network unless the creating ServiceAccount holds the <code>endpoints(slices)/restricted</code> permission, a check that exists to stop a workload from spoofing traffic as if it originated from another pod on the cluster network. The operator's selector-less-Service pattern does exactly the thing that check exists to catch, for a legitimate reason, and what the ServiceAccount needs is not an SCC exception or <code>anyuid</code>: it is a narrow <code>ClusterRole</code> granting <code>create</code>/<code>update</code> on <code>endpoints/restricted</code> and <code>endpointslices.discovery.k8s.io/restricted</code>, bound to the <code>wasmcloud-operator</code> ServiceAccount. Without it the Service has a selector of <code>&lt;none&gt;</code> and zero endpoints, and the Route in front of it answers <code>503</code> with nothing in the operator's status to say why. The operator's own logs are the only place the rejection shows up, as <code>endpointslices ... "cargo-http" is forbidden: endpoint address X is not allowed</code>.</p></div>
+## The EndpointSlice 403
+
+That hand-written `EndpointSlice` is what the first live run hit. OpenShift's `RestrictedEndpointsAdmission` plugin rejects any `Endpoints` or `EndpointSlice` whose address falls inside the cluster or service network unless the creating ServiceAccount holds the `restricted` permission. The check stops a workload from spoofing traffic as another Pod. The operator's selector-less Service does exactly what it guards against, for a legitimate reason.
+
+The fix is network RBAC, not an SCC exception or `anyuid`. `install-operator.sh` applies a narrow `ClusterRole` and binds it to the `wasmcloud-operator` ServiceAccount:
+
+```yaml
+- apiGroups: [""]
+  resources: ["endpoints/restricted"]
+  verbs: ["create", "update"]
+- apiGroups: ["discovery.k8s.io"]
+  resources: ["endpointslices/restricted"]
+  verbs: ["create", "update"]
+```
+
+Without it the Service has no endpoints and the Route answers `503`, with nothing in the operator's status to say why. The rejection shows only in the operator's logs, as `endpointslices ... "cargo-http" is forbidden: endpoint address X is not allowed`.
 
 ## The edge-TLS Route and the CA-verified curl
 
-`deploy.sh` puts an edge-terminated Route in front of that Service once it exists, the same Route type this book's OpenShift references use everywhere, because edge termination is sufficient for a plain HTTP backend and does not require the pod to carry its own TLS certificate. The script does not trust `oc rollout status` or a Service's existence as proof the Route is serving; it polls the real path until it returns a real `200`, because the router finishes wiring a new backend to a Route some interval after the backend itself becomes reachable, not simultaneously with it.
+`deploy.sh` puts an edge-terminated Route in front of the Service. Edge termination suffices for a plain HTTP backend and needs no certificate in the Pod. The script polls the real path until it returns a real `200`, because the router wires a new backend some time after the backend is reachable.
 
-`verify-crc.sh`, run separately after `deploy.sh`, is where the proof happens, and it never uses `-k`/`--insecure`, `oc port-forward`, or a NodePort anywhere: house rule on every chapter in this book that touches a live cluster. OpenShift Local signs its router's certificate from the cluster's own ingress CA, which sits in no public trust store, so `lib.sh`'s `combined_ca_bundle` function extracts that CA directly from the `default-ingress-cert` ConfigMap in `openshift-config-managed` and appends it to the host's own system trust store before handing the result to `curl --cacert`. Appending rather than replacing matters: an ingress-CA-only bundle would verify the Route's own certificate correctly and then fail `UnknownIssuer` on the first unrelated TLS connection the script makes to a public endpoint, because the ingress CA alone chains to nothing a public certificate trusts.
-
-`evidence/2026-10-21/03-http.txt` is the live transcript of that CA-verified request:
+`verify-crc.sh` never uses `-k`, `oc port-forward` or a NodePort. OpenShift Local signs the router's certificate from the cluster's own ingress CA, which is in no public trust store. `combined_ca_bundle` in `lib.sh` extracts that CA from the `default-ingress-cert` ConfigMap in `openshift-config-managed` and appends it to the host's system trust store before handing the file to `curl --cacert`. Appending matters: a bundle holding only the ingress CA verifies the Route and then fails `UnknownIssuer` on the next connection to a public endpoint.
 
 ```
 # CA-verified against the cluster ingress CA (curl --cacert combined-bundle), never -k, never port-forward.
@@ -162,49 +180,65 @@ $ curl -o /dev/null -w %{http_code} https://cargo-http-wasmcloud.apps-crc.testin
 404
 ```
 
-That JSON is not a new behavior written for OpenShift. It is the exact tracking-id lookup this site's domain has returned since Part 2, the same `404`-for-an-unknown-id behavior, through the same `wasi:http/incoming-handler` export, and `evidence/2026-10-21/05-sha256.txt` confirms the component answering it is byte-for-byte the one every other runtime in this book has run:
+The JSON and the 404 for an unknown id match every other runtime, and the recorded sha256 of the deployed `app.wasm` matches the one `wasmtime serve`, the single-host lattice and the minikube shim run:
 
 ```
-eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3  .../app.wasm
+eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3  <repo>/examples/part5-kubernetes/openshift/../app.wasm
 MATCHES Part 2/3/4 expected sha256
 ```
 
-`wasmtime serve`, the single-host wasmCloud lattice, the minikube shim, and the OpenShift operator here are four different runtimes answering with four identical sets of bytes, `eff7f5ee…`, from one component, never recompiled or forked along the way.
+Four runtimes serve one component, never recompiled.
 
-`verify-crc.sh`'s full run, captured in `evidence/2026-10-21/04-verify-crc.log`, goes one step further than a single request: it deletes the running wasmCloud host pod mid-script and confirms the Deployment the operator manages recreates it, with traffic back to the exact cargo JSON, with no redeploy command run by hand:
+`verify-crc.sh` also deletes the running host Pod and confirms the operator's Deployment recreates it, with traffic back to the exact cargo JSON and no redeploy:
 
 ```
-==> 4/4 Resilience: delete the host pod; the Deployment restores it, traffic recovers
     deleting host pod wasmcloud-host-6c5f6c5f88-mbw4k ...
     ✓ Route serving (HTTP 200) on /cargo/CARGO-USNYC-DEHAM after 0s
     ✓ host pod recreated by the operator Deployment; traffic recovered to the exact cargo JSON
-
-PASS — Part 5 cargo component on OpenShift Local (CRC, crc-admin context): deployed by the wasmCloud operator to an in-cluster host; served the exact cargo JSON and a 404 through an edge-TLS Route (CA-verified against the cluster's own ingress CA, never -k/port-forward/NodePort); and recovered after the host pod was deleted.
 ```
 
-That resilience proof is a property of the ordinary Kubernetes Deployment the operator wrote, not of the wasmCloud lattice: `wadm`'s own self-healing reconcile loop, the one the wasmCloud chapter showed recovering a crashed component on a single host in roughly two seconds, is a separate mechanism from the Kubernetes-level Deployment restarting a crashed pod shown here. Both exist in this stack, at different layers, and this chapter's live run exercised the Kubernetes one.
+That is the Kubernetes Deployment restarting a Pod, a separate mechanism from `wadm`'s own reconcile loop recovering a crashed component on a host. Both exist in this stack, at different layers.
 
-## The rest of what the live run hit, and fixed
+## Four more issues from the live run
 
-Four more issues surfaced only once this ran against a real cluster, none of them visible from `helm template` or a YAML syntax check. NATS has to run standalone, not clustered: the chart's default `cluster.enabled: true` makes a single-node NATS server block forever on "waiting for routing to be established" to peers that will never exist, so JetStream never elects a meta leader and the readiness probe never passes. `values-crc.yaml` sets `nats.config.cluster.enabled: false`. The bundled `nats-box` debug sidecar CrashLoops under `restricted-v2` with `can't cd to /root: Permission denied`, because its entrypoint assumes a writable home directory an arbitrary assigned UID doesn't have; since it is a debug-only convenience nothing else in this chain depends on, `values-crc.yaml` disables it outright with `nats.natsBox.enabled: false`. The OAM Application itself is namespace-sensitive in a way that produces an unhelpful error if missed: the operator serves `Application` objects through an aggregated API that maps a namespace to a lattice via whichever `WasmCloudHostConfig` lives in that same namespace, so applying `wadm.yaml` anywhere other than `wasmcloud` fails immediately with `unable to initialize nats client` rather than any message naming a namespace mismatch. And `teardown.sh` has to delete the operator's own aggregated `v1beta1.core.oam.dev` APIService explicitly, before deleting the project: once `helm uninstall` removes the Service backing that APIService, cluster-wide API discovery starts failing against a registration that still exists, and that failure is specifically what stalls namespace deletion with `NamespaceDeletionDiscoveryFailure`. Deleting the stale APIService first is what lets the project finish terminating.
+None showed up in `helm template` or a YAML check.
+
+- **NATS must be standalone.** The chart default `cluster.enabled: true` makes a single-node NATS block on "waiting for routing to be established" to peers that never exist, so JetStream never elects a meta leader and the readiness probe never passes. `values-crc.yaml` sets `nats.config.cluster.enabled: false`.
+- **`nats-box` CrashLoops.** Its entrypoint assumes a writable home directory, so under `restricted-v2` it fails with `can't cd to /root: Permission denied`. It is a debug-only sidecar, disabled with `nats.natsBox.enabled: false`.
+- **Apply `wadm.yaml` in `wasmcloud`.** The operator serves `Application` objects through an aggregated API that maps a namespace to a lattice through the `WasmCloudHostConfig` in that namespace. Anywhere else fails with `unable to initialize nats client`, a message that doesn't mention namespaces.
+- **Teardown deletes the OAM APIService first.** After `helm uninstall` removes the Service behind the operator's aggregated `v1beta1.core.oam.dev` APIService, API discovery fails, and namespace deletion stalls with `NamespaceDeletionDiscoveryFailure`. `teardown.sh` deletes the stale APIService before the project.
+
+> **Decision**
+>
+> Use the wasmCloud operator, not a node-level shim, when the cluster enforces `restricted-v2` and you don't control node images. Within that choice: scale the `httpserver` provider with a `daemonscaler` or the operator creates no Service; pin the `WasmCloudHostConfig` version instead of trusting the chart default, because a host and provider wRPC mismatch surfaces as a runtime 500; and give the operator's ServiceAccount the `endpoints(slices)/restricted` grant, a network-RBAC decision and never an `anyuid` exception. Verify through the real Route with a CA-verified `curl`, because a Service with no endpoints looks healthy until something reaches it.
 
 ## Build, run, observe
 
+With CRC running (`crc start`; one cluster at a time) and `eval "$(crc oc-env)"` applied:
+
 ```bash
-cd examples/part5-kubernetes/openshift && ./verify-crc.sh
+cd examples/part5-kubernetes
+./openshift/install-operator.sh   # nats + wadm + operator (pinned chart)
+./openshift/deploy.sh             # push app.wasm to ghcr; host; wadm app; Route
+./openshift/verify-crc.sh         # CA-verified curl: JSON, 404, resilience
+./openshift/teardown.sh           # remove everything, then crc stop
 ```
 
-`verify-crc.sh` runs against an already-deployed CRC instance (`install-operator.sh` then `deploy.sh` first): it waits for a real HTTP 200 from the edge-TLS Route, confirms `GET /cargo/CARGO-USNYC-DEHAM` returns the exact cargo JSON and `GET /cargo/NOPE` returns 404, both CA-verified against the cluster's own ingress CA with no `-k`, no `oc port-forward`, and no NodePort. It then deletes the running wasmCloud host pod and confirms the operator's Deployment recreates it with traffic recovering to the same cargo JSON, with no redeploy run by hand. Expect `PASS` once all four checks hold; `README.md` and `evidence/` record the chart, operator, and host versions each run confirms.
+`verify-crc.sh` waits for a real 200 from the Route, then checks `GET /cargo/CARGO-USNYC-DEHAM` for the exact cargo JSON and `GET /cargo/NOPE` for 404, both against the cluster's ingress CA. It then deletes the host Pod and confirms recovery. Expect `PASS` after all four checks. `./openshift/capture-evidence.sh` re-runs the verification and records `evidence/<date>/`.
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Reach for the wasmCloud operator, not a node-level Wasm shim, whenever the target cluster enforces <code>restricted-v2</code> and you don't control node images. OpenShift Local is the concrete case here, but the same reasoning applies to any managed Kubernetes offering that won't grant a privileged node role for a containerd runtime plugin. The operator's host is an ordinary Deployment admitted like any other restricted-v2 workload; the shim needs node-level surgery that a managed platform is specifically designed to prevent. Within that choice, three things are non-negotiable: scale the httpserver provider with a <code>daemonscaler</code>, not a <code>spreadscaler</code>, or the operator never creates a Service at all; pin the <code>WasmCloudHostConfig</code> version explicitly rather than trusting the chart's bundled default, because a host/provider wRPC mismatch fails as a confusing runtime 500, not an install-time error; and grant the operator's ServiceAccount the narrow <code>endpoints(slices)/restricted</code> permission its hand-written EndpointSlice needs, which is a network-RBAC decision, never an SCC/<code>anyuid</code> exception. Verify every claim with a CA-verified <code>curl</code> through the real Route, never <code>-k</code>, never a port-forward, never a NodePort, because a Service with <code>SELECTOR &lt;none&gt;</code> and zero endpoints looks identical to a healthy one until something tries to reach it.</p></div>
+- Change `daemonscaler` to `spreadscaler` on the provider: no Service appears and `deploy.sh` times out waiting for it.
+- Remove the `endpoints(slices)/restricted` grant: the Service has no endpoints and the Route returns 503; the operator log shows the 403.
+- Drop the `version: "1.9.1"` pin: the chart's `1.2.1` host answers HTTP 500 with the wRPC error.
+- Remove the null `runAsUser` and `runAsGroup` keys: admission rejects `wadm`.
+- Apply `wadm.yaml` outside `wasmcloud`: `unable to initialize nats client`.
 
 ## For deeper coverage
 
-- Bilgin Ibryam & Roland Huß, *Kubernetes Patterns*, 2nd ed. (O'Reilly, 2023): the operator pattern this chapter's `WasmCloudHostConfig` reconcile loop follows: a custom resource as desired state, a controller that turns it into ordinary Kubernetes objects, and the Service/EndpointSlice machinery that pattern relies on.
-- Brendan Burns, Joe Beda, Kelsey Hightower & Lachlan Evenson, *Kubernetes: Up and Running*, 3rd ed. (O'Reilly, 2022): the Service/EndpointSlice and admission model behind the selector-less Service this chapter's operator writes by hand, and the SCC/PodSecurity reasoning `restricted-v2` applies at pod admission.
-- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the Component Model guarantee this chapter leans on directly: a component built once can run unmodified under a containerd shim, a standalone `wasmtime serve` process, or an operator-managed wasmCloud host, because none of those runtimes can see past its WIT-defined exports.
-- *Cloud Native Design Patterns*, "Running Example 05 on OpenShift Local" chapter: the same OperatorHub/`restricted-v2`/edge-TLS-Route shape this chapter applies, run against a different example.
-- [wasmCloud Kubernetes operator documentation](https://wasmcloud.com/docs/deployment/k8s/operator): the `WasmCloudHostConfig` CRD and OAM Application model this chapter's `wasmcloud-host.yaml` and `wadm.yaml` implement.
-- [OpenShift restricted-v2 SCC reference](https://docs.openshift.com/container-platform/latest/authentication/managing-security-context-constraints.html): the UID-range assignment and capability-dropping behavior `evidence/2026-10-21/01-pods.txt` shows every pod in this release landing under.
-- Wasm on Kubernetes: the landscape this chapter's operator choice comes from, and the shim-versus-operator decision stated before either path ran live.
-- Deploying on minikube: the same component on the other cluster path this book verifies live, the raw containerd shim and ingress-nginx in place of this chapter's operator and Route.
+- Bilgin Ibryam and Roland Huß, *Kubernetes Patterns*, 2nd ed. (O'Reilly, 2023): the operator pattern behind the `WasmCloudHostConfig` reconcile loop, a custom resource as desired state and a controller that turns it into ordinary objects.
+- Brendan Burns, Joe Beda, Kelsey Hightower and Lachlan Evenson, *Kubernetes: Up and Running*, 3rd ed. (O'Reilly, 2022): the Service, EndpointSlice and admission model behind the selector-less Service, and the SCC and PodSecurity reasoning `restricted-v2` applies.
+- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): why one component runs unmodified under a containerd shim, `wasmtime serve` or an operator-managed wasmCloud host, since none can see past its WIT exports.
+- *Cloud Native Design Patterns*, "Running Example 05 on OpenShift Local": the same OperatorHub, `restricted-v2` and edge-TLS Route shape against a different example.
+- [wasmCloud Kubernetes operator documentation](https://wasmcloud.com/docs/deployment/k8s/operator): the `WasmCloudHostConfig` CRD and OAM Application model.
+- [OpenShift restricted-v2 SCC reference](https://docs.openshift.com/container-platform/latest/authentication/managing-security-context-constraints.html): the UID-range assignment and capability dropping every Pod here lands under.
+- Wasm on Kubernetes: the landscape that makes the operator the fallback when the shim doesn't fit.
+- Deploying on minikube: the same component on the raw containerd shim and ingress-nginx.

@@ -2,7 +2,7 @@
 title: "Serverless Wasm: Scale-to-Zero with KEDA"
 order: 23
 part: "Deploying to Kubernetes"
-description: "Scale a Wasm workload to zero with KEDA's HTTP add-on and the Kafka scaler, and measure the cold-start payoff a component gets over a container."
+description: "Scale a Wasm workload to zero with KEDA's HTTP add-on and its Kafka scaler, and see where a component's cold start beats a container's."
 duration: "20 min read"
 ---
 
@@ -10,23 +10,30 @@ duration: "20 min read"
 
 By the end of this chapter you can:
 
-- Read the `HTTPScaledObject` spec and explain why KEDA's HTTP add-on 0.16 CRD nests replica bounds under `spec.replicas.{min,max}` rather than a top-level `minReplicaCount`, and why the Ingress in front of it routes through an `ExternalName` interceptor-proxy Service instead of straight to `cargo-http`.
-- Trace a cold request on minikube end to end: an idle Deployment at zero replicas, the KEDA HTTP add-on interceptor holding the request, the 0-to-1 scale-up, and the real response returned once the Pod is ready.
-- Read `examples/part5-kubernetes/kafka-handler/wit/world.wit` and `src/lib.rs` to see a Wasm component that exports `wasmcloud:messaging/handler@0.2.0` and imports the cargo domain's `handling` interface, and explain why a message-driven workload like this one needs a host that embeds a runtime and calls it per delivered message, rather than the raw containerd shim's fixed `wasi:http` listener.
-- Read `examples/part5-kubernetes/kafka-host/src/main.rs` to see a plain Rust binary join a real Kafka consumer group with `rdkafka`, embed a `wasmtime` runtime, and call `kafka-app.wasm`'s `handle-message` export once per delivered message, committing the offset only after that call returns.
-- Compare the HTTP add-on's `HTTPScaledObject` concurrency trigger against the Kafka half's `ScaledObject` `kafka` trigger, and explain why both patch a plain Kubernetes Deployment's replica count directly, 0 to N and back to 0, even though the signal driving each (request concurrency versus consumer-group lag) is different.
+- Write an `HTTPScaledObject` with replica bounds under `spec.replicas.{min,max}` and route an Ingress to it through an `ExternalName` interceptor Service.
+- Trace a cold request: Deployment at zero, interceptor holding the request, scale from 0 to 1, response once the Pod is Ready.
+- Explain why a message-driven component needs a native host that embeds the runtime, not the containerd shim's fixed `wasi:http` listener.
+- Scale that host on consumer-group lag with a `kafka` `ScaledObject`, capped at the topic's partition count.
+- Choose between the two triggers by the signal that should drive the replica count.
 
 ## Why this matters
 
-The HPA chapter drove `cargo-http`'s replica count with a plain `autoscaling/v2` HorizontalPodAutoscaler: real scaling, because a Pod with `runtimeClassName: wasmtime` is still cgrouped and metered by the kubelet exactly like a `runc` Pod, so metrics-server and the HPA controller work unmodified. That HPA is bounded below by `minReplicas: 1`: a plain HPA has no notion of zero, because something has to keep answering `/metrics` for it to read. This chapter goes one step further, all the way to zero replicas, with two different KEDA triggers reaching that point the same way: by patching a plain Kubernetes Deployment's `spec.replicas` directly.
+A plain HorizontalPodAutoscaler never reaches zero: it reads `/metrics` from a running Pod, so it stops at `minReplicas: 1`. KEDA scales a Deployment to zero and back by patching `spec.replicas` itself. A Pod with `runtimeClassName: wasmtime` is still cgrouped and metered like a `runc` Pod, so KEDA drives it without changes.
 
-The first trigger is request concurrency: the KEDA HTTP add-on holds a cold request at an interceptor, an `HTTPScaledObject` patches the raw-shim `cargo-http` Deployment from zero to one, and the interceptor forwards the held request once the new Pod is Ready. The second trigger is consumer-group lag: a plain `ScaledObject` with a `kafka` trigger reads lag on `cargo-handling-events` and patches `cargo-kafka-host`, a different kind of Deployment: a native process that joins the consumer group itself and calls a Wasm handler once per delivered message, rather than answering an inbound HTTP request. Both triggers end at the same mechanism, a `keda.sh/v1alpha1` object scaling a Deployment it can patch; what differs is the signal each one reads and the shape of workload on the other end of it.
+Two triggers reach zero the same way:
 
-{% include excalidraw.html file="23-two-keda-models" alt="Two bands, both labeled KEDA DRIVES. Left, HTTP: a cold HTTP request arrives at a raw-shim Wasm Deployment scaled to zero; the KEDA HTTP add-on interceptor queues the request and asks an HTTPScaledObject with replicas.min 0 / replicas.max N to scale the Deployment from 0 to 1, then replays the queued request once the new Pod is ready. Right, Kafka: Kafka consumer-group lag on cargo-handling-events feeds a KEDA kafka ScaledObject with lagThreshold 5, which scales the cargo-kafka-host Deployment from 0 to N directly; the host embeds an rdkafka consumer group plus a wasmtime runtime, calls the Wasm handler per record, and commits the offset, and lag draining scales it back to 0." caption="Figure 23.1: two trigger types, one owner: KEDA patches a Deployment's replica count directly in both halves, request concurrency on the left and consumer-group lag on the right." %}
+| | HTTP add-on | Kafka scaler |
+| --- | --- | --- |
+| Signal | request concurrency | consumer-group lag |
+| KEDA object | `HTTPScaledObject` | `ScaledObject` with a `kafka` trigger |
+| Target | raw-shim `cargo-http` Deployment | native `cargo-kafka-host` Deployment |
+| Workload | answers an inbound HTTP request | consumes records and calls a Wasm handler per message |
+
+{% include excalidraw.html file="23-two-keda-models" alt="Two bands labeled KEDA drives. Left, HTTP: a cold request reaches a Wasm Deployment at zero replicas; the KEDA HTTP add-on interceptor queues it, an HTTPScaledObject scales the Deployment from 0 to 1, and the interceptor replays the request once the Pod is ready. Right, Kafka: consumer-group lag on cargo-handling-events feeds a kafka ScaledObject with lagThreshold 5, which scales cargo-kafka-host from 0 to N; the host runs an rdkafka consumer and a wasmtime runtime, calls the handler per record, commits the offset, and scales back to 0 as lag drains." caption="Figure 23.1: Two triggers, one owner. KEDA patches a Deployment's replica count in both halves: request concurrency on the left, consumer-group lag on the right." %}
 
 ## The HTTP half: KEDA drives a raw-shim Deployment to zero
 
-`examples/part5-kubernetes/k8s/keda/install-keda.sh` installs two pinned Helm charts from the `kedacore` repository on minikube: KEDA core 2.21.0, then the KEDA HTTP add-on 0.16.0, which the add-on's own chart declares a hard floor against (core must be at least 2.21). Both land in the `keda` namespace alongside `ingress-nginx`, which this half already needs for the plain `cargo-http` stack already deployed, unmodified, since the Wasm-on-Kubernetes, minikube-deployment, and HPA chapters. `examples/part5-kubernetes/k8s/keda/base/httpscaledobject.yaml` is the object that turns that ordinary Deployment into a scale-to-zero workload:
+`install-keda.sh` installs two pinned Helm charts into the `keda` namespace on minikube: KEDA core 2.21.0 and the HTTP add-on 0.16.0, whose chart requires core 2.21 or later. `ingress-nginx` is already there for the plain `cargo-http` stack. This `HTTPScaledObject` turns that unmodified Deployment into a scale-to-zero workload:
 
 {% raw %}
 ```yaml
@@ -55,15 +62,24 @@ spec:
   scalingMetric:
     concurrency:
       targetValue: 1
+  # Shortened from the add-on's default (hundreds of seconds): a Wasm
+  # component has no JVM-style warm-up (containerd-shim-wasmtime starts
+  # serving within milliseconds of the Pod going Ready, the same point the HPA's
+  # hpa.yaml makes about scaleDown.stabilizationWindowSeconds), so there is no
+  # reason to wait minutes of idleness before scaling back to zero.
   scaledownPeriod: 30
 ```
 {% endraw %}
 
-`scalingMetric.concurrency.targetValue: 1` means a single in-flight request is enough to trigger a scale-out, matching the HPA chapter's low `50m` CPU request: both are tuned so a single `curl` demonstrates the mechanism without a load-testing tool. `scaledownPeriod: 30` is cut far below the add-on's own default (hundreds of seconds), because a Wasm component has no JVM-style warm-up to protect against: `containerd-shim-wasmtime` starts serving within milliseconds of a Pod going Ready, so there is no reason to wait minutes of idleness before scaling back down.
+A single in-flight request (`concurrency.targetValue: 1`) triggers scale-out, so one `curl` shows the mechanism without a load tool. `scaledownPeriod: 30` is far below the add-on's default of several minutes. A component has no JVM-style warm-up to protect: `containerd-shim-wasmtime` serves within milliseconds of the Pod going Ready, so there's no reason to wait out a long idle period.
 
-<div class="callout callout--warn"><p class="callout__title">Note</p><p>On the 0.16 <code>HTTPScaledObject</code> CRD, replica bounds nest under <code>spec.replicas.{min,max}</code>, not a top-level <code>minReplicaCount</code> (the field the Kafka half's plain <code>ScaledObject</code> uses). Verified against the upstream CRD (<code>kedacore/http-add-on @ v0.16.0</code>, <code>config/crd/bases/http.keda.sh_httpscaledobjects.yaml</code>) and the reference doc at <a href="https://keda.sh/docs/http-add-on/0.16/reference/httpscaledobject/">keda.sh/docs/http-add-on/0.16/reference/httpscaledobject</a>. <code>HTTPScaledObject</code> is marked deprecated as of the 0.16 line in favor of a newer <code>InterceptorRoute</code> (<code>http.keda.sh/v1beta1</code>), still shipped and functional in 0.16; the deprecation is a forward-migration notice, not a removal, so this chapter uses <code>HTTPScaledObject</code> and names the newer resource for anyone building past these pinned versions.</p></div>
+> **Note**
+>
+> On the 0.16 CRD, replica bounds nest under `spec.replicas.{min,max}`, not a top-level `minReplicaCount`, which is the field the Kafka half's plain `ScaledObject` uses ([reference](https://keda.sh/docs/http-add-on/0.16/reference/httpscaledobject/)). `HTTPScaledObject` is deprecated in the 0.16 line in favor of `InterceptorRoute` (`http.keda.sh/v1beta1`). It still ships and works; use the newer resource when you build past these pins.
 
-A `ScaledObject`-driven Ingress has one more wrinkle before a cold request can reach the interceptor. Kubernetes requires an Ingress backend to be a Service in the same namespace as the Ingress object, but the HTTP add-on's interceptor proxy Service lives in the `keda` namespace, not `part5-kubernetes`. The standard KEDA recipe for bridging that gap is a same-namespace `ExternalName` Service that resolves to the interceptor's cluster DNS name:
+### Routing through the interceptor
+
+An Ingress backend must be a Service in the Ingress's own namespace, but the interceptor proxy Service lives in `keda`. A same-namespace `ExternalName` Service bridges the gap:
 
 {% raw %}
 ```yaml
@@ -85,7 +101,7 @@ spec:
 ```
 {% endraw %}
 
-`examples/part5-kubernetes/k8s/keda/base/kustomization.yaml` then patches the base Ingress to point at `keda-interceptor-proxy` instead of `cargo-http` directly, and adds the companion annotation ingress-nginx needs to honor an `ExternalName` backend:
+The kustomization points the base Ingress at that Service and adds the annotation ingress-nginx needs to proxy to an `ExternalName` target:
 
 {% raw %}
 ```yaml
@@ -103,9 +119,7 @@ patches:
 ```
 {% endraw %}
 
-`nginx.ingress.kubernetes.io/service-upstream: "true"` tells ingress-nginx to proxy to the Service's ClusterIP/DNS name directly instead of resolving Endpoints, which is what makes routing to an `ExternalName` target work at all. Without that rewiring, an Ingress pointed straight at `cargo-http` would have nothing to send traffic to the instant the Deployment hits zero replicas, because there would be no Endpoint behind the Service. Scale-to-zero and a direct Ingress route are mutually exclusive, which is exactly why the interceptor has to sit in the path.
-
-With that in place, the request flow for an idle workload is:
+With `service-upstream: "true"`, ingress-nginx proxies to the Service name instead of resolving Endpoints. A direct Ingress route to `cargo-http` would have nothing to send traffic to at zero replicas because the Service has no Endpoints. Scale-to-zero and a direct route are mutually exclusive, so the interceptor must sit in the path:
 
 ```
 curl -> cargo.<minikube-ip>.nip.io  (ingress-nginx)
@@ -115,37 +129,33 @@ curl -> cargo.<minikube-ip>.nip.io  (ingress-nginx)
      -> containerd-shim-wasmtime -> app.wasm
 ```
 
-`examples/part5-kubernetes/k8s/keda/verify-keda-http-minikube.sh` proves this sequence against a live profile: it deploys the overlay, waits for the Deployment to report zero replicas while idle, then fires one timed cold request and asserts both a `200` and the exact cargo JSON the minikube-deployment, sidecar, and ambassador-and-adapter patterns chapters all return for the same tracking id. The timing comes from `curl -w '%{http_code} %{time_total}'`, so the cold-start latency is a measured wall-clock number, not an estimate. `k8s/keda/evidence/2026-10-21/` records the result:
+The recorded cold request on minikube:
 
 ```
-# idle: KEDA scales cargo-http to 0 after ~40s
-scaled-to-zero after 40s
-
 $ curl -sS -w "%{http_code} %{time_total}" http://cargo.192.168.49.2.nip.io/cargo/CARGO-USNYC-DEHAM
 http_code=200 cold_start_seconds=4.414011
-body={"tracking_id":"CARGO-USNYC-DEHAM","origin":"USNYC","destination":"DEHAM","weight_kg":1200.5,"price":{"amount":"1500.00","currency":"USD"}}
 ```
 
-4.414 seconds is the end-to-end 0-to-1 cold start, measured from the client's own `curl`: the KEDA interceptor holding the request, Kubernetes scheduling and starting a fresh Pod, and the shim instantiating `app.wasm`, all added together. Kubernetes's own scheduling and Pod-startup path dominates that number; the component's own start under `containerd-shim-wasmtime` is sub-second once the Pod is running, the same fast instantiation the HPA chapter's scale-down-window discussion already established. A container-based workload paying the identical scheduling cost would add an image pull (unless the node already cached the image) and a language runtime's own startup on top, a JVM's classloading or a Python interpreter's import graph; a Wasm component skips both of those, so a Deployment built this way has less to pay for once Kubernetes decides to start a Pod at all, even though Kubernetes's own scheduling latency is the same for either kind of Pod.
+That 4.4 seconds covers the interceptor hold, Kubernetes scheduling, Pod start and component instantiation. Scheduling and Pod startup dominate; the component itself starts in well under a second under the shim. A container pays the same scheduling cost plus an image pull on a cold node and its runtime's startup (JVM class loading, Python imports). A component skips both, so the only cold-start cost left is what Kubernetes charges for any Pod.
 
-There is no dedicated CRC build for this half of the chapter. OpenShift Local's Part 5 deployment runs the wasmCloud operator exclusively, as the OpenShift Local (CRC) deployment already established, never a plain `RuntimeClass`-backed Deployment, so there is no `cargo-http`-shaped workload on CRC for the Custom Metrics Autoscaler (Red Hat's KEDA distribution) to drive directly the way the upstream HTTP add-on drives one on minikube. Installing the Custom Metrics Autoscaler on CRC against a `cargo-kafka-host`-equivalent Deployment, the same KEDA-drives-a-Deployment shape this chapter builds on minikube, is a real follow-on; it is named here rather than built, since this chapter's scope stops at the two triggers already proven on minikube.
+CRC has no counterpart for this half. Its deployment runs the wasmCloud operator, so there is no `RuntimeClass`-backed Deployment for the Custom Metrics Autoscaler (Red Hat's KEDA) to patch.
 
-## Why the Kafka half needs a host that embeds the runtime, not the raw shim
+## Why the Kafka half needs a host that embeds the runtime
 
-Every other workload in Part 5, the plain `cargo-http` Deployment already proved on minikube, the interposed compositions the sidecar and ambassador-and-adapter patterns chapters build on top of it, and the HTTP half above, speaks `wasi:http/incoming-handler` behind a fixed `:8080` listener. That is the one thing the raw containerd shim knows how to serve. Consuming messages from a Kafka topic is a different kind of capability entirely: something has to hold a long-lived consumer-group subscription, deserialize delivered records, and invoke application code once per message, independent of any inbound HTTP request. The raw shim has no binding for that at all: it is a `wasi:http` listener, not a general-purpose capability host, so a message-driven Wasm consumer cannot run on it no matter how the component itself is written.
+Every other workload here speaks `wasi:http/incoming-handler` behind a fixed `:8080` listener, which is all the raw containerd shim serves. Consuming from Kafka needs something that holds a long-lived consumer-group subscription, receives records and invokes application code once per message. The shim has no binding for that, so the component can't run on it however it's written.
 
-The fix is a native host that owns the parts a Wasm component cannot: `cargo-kafka-host` (`examples/part5-kubernetes/kafka-host/src/main.rs`) is a plain Rust binary that joins the `cargo-handling-events` topic as a real consumer group using `rdkafka`, and for every delivered message, drives an embedded `wasmtime` runtime against `kafka-app.wasm`, calling its `handle-message` export and committing the offset only once that call returns. The Wasm side of the boundary is the same `kafka-handler` component below, exporting `wasmcloud:messaging/handler@0.2.0`: that WIT contract was already settled and vendored when the component was authored, so the host reuses it as the interface shape between the two sides, the same way Part 2's provider and consumer share a contract regardless of which concrete process calls which. What changes from a wasmCloud deployment is the thing on the other side of that export: here it is a native `wasmtime::component::bindgen!` host this chapter builds, not a wasmCloud lattice and a capability provider. `kafka-app.wasm` itself is `kafka-handler` plugged into the Part 2 cargo provider ahead of time with `wac plug` (`examples/part5-kubernetes/kafka-handler/build.sh`), the same compile-time composition the sidecar chapter's sidecar-filter uses on minikube: the composite's only unresolved import is WASI, so the host never has to satisfy a `patterncatalyst:cargo` import itself. Deployed as a plain Kubernetes `Deployment` named `cargo-kafka-host`, this workload is exactly the kind of object a `ScaledObject` can patch, which is the whole reason the Kafka half can be KEDA-driven at all, the same way the HTTP half's raw-shim Deployment is.
+The fix is a native host that owns what a component can't. `cargo-kafka-host` is a plain Rust binary that joins `cargo-handling-events` as a consumer group with `rdkafka` and, for each message, calls the `handle-message` export of `kafka-app.wasm` on an embedded `wasmtime` runtime. It commits the offset only after the call returns. It's an ordinary OCI container (no `runtimeClassName`), deployed as a plain Deployment, which is exactly what a `ScaledObject` can patch.
 
-## The Kafka half: KEDA drives a native rdkafka-to-wasmtime host
+`kafka-app.wasm` is the `kafka-handler` component plugged into the cargo provider with `wac plug`, the same compile-time composition the sidecar filter uses. The composite's only unresolved import is WASI, so the host never satisfies a `patterncatalyst:cargo` import itself.
 
-{% include excalidraw.html file="23-kafka-lag-flow" alt="A producer burst lands on a six-partition Kafka topic and raises real consumer-group lag. The KEDA kafka ScaledObject reads that lag and scales the cargo-kafka-host Deployment directly, 0 to N. The host joins the consumer group with rdkafka and, per delivered message, drives an embedded wasmtime runtime against kafka-app.wasm's handle-message export, then commits the offset. As the extra instances drain the backlog, lag falls and KEDA scales cargo-kafka-host back to zero." caption="Figure 23.2: one loop, one owner: KEDA reads real consumer-group lag and scales cargo-kafka-host's replica count directly; the host embeds the Wasm runtime itself." %}
+{% include excalidraw.html file="23-kafka-lag-flow" alt="A producer burst lands on a six-partition Kafka topic and raises consumer-group lag. The kafka ScaledObject reads that lag and scales cargo-kafka-host from 0 to N. Each host joins the consumer group with rdkafka, drives an embedded wasmtime runtime against kafka-app.wasm's handle-message export per message, then commits the offset. As the instances drain the backlog, lag falls and KEDA scales cargo-kafka-host back to zero." caption="Figure 23.2: KEDA reads consumer-group lag and scales cargo-kafka-host directly; the host embeds the Wasm runtime itself." %}
 
-`examples/part5-kubernetes/kafka-handler/wit/world.wit` is the whole contract for the component this half scales:
+## The handler component
+
+The handler's world (package `patterncatalyst:cargo-kafka-handler@0.1.0`) exports the messaging interfaces and imports the cargo domain:
 
 {% raw %}
 ```wit
-package patterncatalyst:cargo-kafka-handler@0.1.0;
-
 world cargo-kafka-handler {
     export wasmcloud:messaging/types@0.2.0;
     export wasmcloud:messaging/handler@0.2.0;
@@ -157,9 +167,9 @@ world cargo-kafka-handler {
 ```
 {% endraw %}
 
-`wasmcloud:messaging@0.2.0` is vendored verbatim under `wit/deps/messaging`, the same approach Part 3's `http-rust` already uses for `wasi:http`, because `cargo-component` never fetches WIT packages over the network: every non-contract package a local world references has to be present on disk. `patterncatalyst:cargo` is pulled in the same way the sidecar's and the ambassador-and-adapter patterns' interposers pull it, a path dependency to the repository contract, never a copy and never an edit. The component exports `handler` (the callback the native host below invokes) and the `types` interface the `broker-message` record it depends on lives in, following the house convention of always listing a types-only interface a world's functional interfaces depend on. It imports `booking` and `handling`: a handling event records against an existing cargo, so each message ensures the cargo is on record (booking it when the domain has none) before registering the event.
+`wasmcloud:messaging@0.2.0` is vendored under `wit/deps/messaging`, because `cargo-component` never fetches WIT over the network. `patterncatalyst:cargo` is a path dependency to the repository contract. The component exports `types` along with `handler` because the `broker-message` record lives there. It imports `booking` and `handling` because a handling event records against an existing cargo.
 
-`src/lib.rs` keeps the message format small: a pipe-delimited record, `CARGO_ID|EVENT_TYPE|UNLOCODE|VOYAGE_ID|RECORDED_AT`, parsed without a JSON crate, matching the zero-extra-dependency convention the sidecar's `sidecar-filter` and the ambassador-and-adapter patterns' `adapter` both already follow. The `Guest` implementation parses, validates, ensures the cargo exists, then records the event:
+The message format is a pipe-delimited record, `CARGO_ID|EVENT_TYPE|UNLOCODE|VOYAGE_ID|RECORDED_AT`, parsed without a JSON crate:
 
 {% raw %}
 ```rust
@@ -195,6 +205,11 @@ impl HandlerGuest for Component {
             )
         })?;
 
+        // Demo simplification: the Kafka wire format carries only the
+        // UN/LOCODE, not a full location lookup: name/country both default to
+        // the code itself. The cargo provider (Part 2) is authoritative for any
+        // display-quality location data; this handler's job is to record that
+        // a handling event happened, not to enrich it.
         let location = Location {
             unlocode: unlocode.to_string(),
             name: unlocode.to_string(),
@@ -216,9 +231,9 @@ impl HandlerGuest for Component {
 ```
 {% endraw %}
 
-A malformed or unrecognized message surfaces as a rejected `result<_, string>` the host's delivery semantics then act on: a bad event type, missing fields, empty cargo-id, or invalid UTF-8 all return `Err` rather than being swallowed inside the handler. The location record defaults its `name` and `country` to the UN/LOCODE itself: the Kafka wire format in this demo carries only the code, not a full location lookup, and the cargo provider stays authoritative for any display-quality data.
+Bad UTF-8, missing fields, an empty cargo id or an unknown event type all return `Err` instead of being swallowed. The location's `name` and `country` default to the UN/LOCODE, since the wire format carries only the code and the cargo provider stays authoritative for display data.
 
-`register-handling-event` records against an existing cargo, so `ensure_cargo_booked` runs first. It looks the cargo up and, when the domain has no record of it, reconstructs the route from the id, the `CARGO-<ORIGIN>-<DEST>` shape the cargo provider's own `book-cargo` generates (Part 2's `tracking_id_for`), and books it:
+`register-handling-event` needs an existing cargo, so `ensure_cargo_booked` runs first. It looks the cargo up and, if the domain has none, derives the route from the `CARGO-<ORIGIN>-<DEST>` id and books it:
 
 {% raw %}
 ```rust
@@ -227,16 +242,26 @@ fn ensure_cargo_booked(cargo_id: &str, recorded_at: &str) -> Result<(), String> 
         Ok(_) => Ok(()),
         Err(CargoError::NotFound(_)) => {
             let (origin, destination) = locations_from_cargo_id(cargo_id).ok_or_else(|| {
-                format!("cannot derive origin/destination from cargo-id '{cargo_id}': \
-                         expected CARGO-<ORIGIN>-<DEST>")
+                format!(
+                    "cannot derive origin/destination from cargo-id '{cargo_id}': \
+                     expected CARGO-<ORIGIN>-<DEST>"
+                )
             })?;
-            let loc = |c: &str| Location { unlocode: c.into(), name: c.into(), country: c.into() };
             let spec = RouteSpec {
-                origin: loc(origin),
-                destination: loc(destination),
+                origin: Location {
+                    unlocode: origin.to_string(),
+                    name: origin.to_string(),
+                    country: origin.to_string(),
+                },
+                destination: Location {
+                    unlocode: destination.to_string(),
+                    name: destination.to_string(),
+                    country: destination.to_string(),
+                },
                 arrival_deadline: recorded_at.to_string(),
             };
-            booking::book_cargo(&spec, DEFAULT_WEIGHT_KG).map(|_| ())
+            booking::book_cargo(&spec, DEFAULT_WEIGHT_KG)
+                .map(|_| ())
                 .map_err(|e| format!("book-cargo failed for cargo_id={cargo_id}: {e:?}"))
         }
         Err(e) => Err(format!("get-cargo failed for cargo_id={cargo_id}: {e:?}")),
@@ -245,9 +270,11 @@ fn ensure_cargo_booked(cargo_id: &str, recorded_at: &str) -> Result<(), String> 
 ```
 {% endraw %}
 
-Booking keyed on a lookup, not a create-once step, is what makes each invocation self-contained; that matters because the host below creates a fresh component instance per message, carrying no state between them.
+Because booking is keyed on a lookup, each invocation is self-contained. That matters because the host creates a fresh component instance for every message.
 
-`examples/part5-kubernetes/kafka-host/Cargo.toml` pins the host's Kafka-specific dependency exactly, because its build compiles a native library rather than linking a prebuilt one:
+## The native host
+
+The host's Kafka dependency is pinned exactly because its build compiles a native library:
 
 {% raw %}
 ```toml
@@ -260,14 +287,12 @@ signal-hook = "0.4.5"
 ```
 {% endraw %}
 
-`rdkafka` is pinned with `=0.39.0` and its `Cargo.lock` is committed, because the `cmake-build` feature compiles `librdkafka` from source at build time rather than linking a system package; the committed lockfile resolves `rdkafka-sys` to `4.10.0+2.12.1`, vendoring `librdkafka` **2.12.1**. `ssl`, `sasl`, and `gssapi` stay off: the broker's only listener is the unauthenticated internal `plain` listener on `kafka.yaml` below, so the build never needs OpenSSL, and turning those features on for a plaintext-only broker would just add attack surface and compile time for nothing. `wasmtime`/`wasmtime-wasi` stay on the same **50** line the rest of Part 5 pins. The synchronous `rdkafka::consumer::BaseConsumer` (no tokio) keeps the dependency surface small, since this host has no other reason to run an async executor; `signal-hook` gives it a clean SIGINT/SIGTERM shutdown instead of a bare process kill mid-poll.
+`cmake-build` compiles `librdkafka` from source (2.12.1 through `rdkafka-sys` 4.10.0 in the committed lockfile), so the lockfile ships with the crate. `ssl`, `sasl` and `gssapi` stay off because the broker's only listener is plaintext; enabling them would add build time and attack surface for nothing. The synchronous `BaseConsumer` avoids pulling in an async executor, and `signal-hook` gives a clean shutdown on SIGINT and SIGTERM, so the poll loop exits promptly when KEDA scales the host down.
 
-The host's own WIT world, `examples/part5-kubernetes/kafka-host/wit/world.wit`, stays narrow:
+The host's own WIT world (package `patterncatalyst:cargo-kafka-host@0.1.0`) is export-only:
 
 {% raw %}
 ```wit
-package patterncatalyst:cargo-kafka-host@0.1.0;
-
 world kafka-host {
     export wasmcloud:messaging/types@0.2.0;
     export wasmcloud:messaging/handler@0.2.0;
@@ -275,45 +300,49 @@ world kafka-host {
 ```
 {% endraw %}
 
-This world is export-only, and it stops short of reusing `kafka-handler`'s own `cargo-kafka-handler` world directly: that world additionally imports `patterncatalyst:cargo/{types,handling}`, and `wasmtime::component::bindgen!`-ing against it here would generate host-side Rust `Host` traits for those imports that this crate would then have to stub out for no reason. `kafka-app.wasm`, the composite `wac plug` produces, satisfies that import internally with the real Part 2 provider; from the host's perspective the composite's only unresolved import is WASI, and the only exports it ever calls are the two declared above.
+It doesn't reuse the handler's world, because generating host bindings for that world's `patterncatalyst:cargo` imports would force the crate to stub them for nothing. The composite already satisfies those imports internally.
 
-`examples/part5-kubernetes/kafka-host/src/main.rs` loads the engine and the composite once and shares them across every message, but gives each message a fresh `Store`: the same no-state-leak-across-invocations idiom Part 3's `grpc-bridge` uses for the identical reason, substituting a Kafka-delivered record for an RPC call:
-
-{% raw %}
-```rust
-/// Runs one delivered message through a fresh instance of `kafka-app.wasm`.
-fn handle(&self, subject: String, body: Vec<u8>) -> Result<Result<(), String>> {
-    let mut store = self.new_store();
-    let world = self.instantiate(&mut store)?;
-    let handler = world.wasmcloud_messaging_handler();
-    let msg = BrokerMessage { subject, body, reply_to: None };
-    handler
-        .call_handle_message(&mut store, &msg)
-        .wc("call handle-message")
-}
-```
-{% endraw %}
-
-The poll loop around it commits the offset only after `handle` returns, and commits past a handler error rather than retrying it forever:
+The host loads the engine and the composite once and shares them, but gives each message a fresh `Store`, so no state leaks between deliveries:
 
 {% raw %}
 ```rust
-let outcome = host.handle(subject, body);
-// At-least-once, drain-on-poison semantics: a handler error means this
-// message is malformed or unprocessable, not that the broker or the host
-// is unhealthy. Committing past it anyway keeps the consumer group
-// draining instead of wedging on a single bad message forever; a
-// dead-letter topic would be the production-grade follow-up, not
-// retry-without-bound.
-if let Err(e) = consumer.commit_message(&message, CommitMode::Sync) {
-    eprintln!("cargo-kafka-host: partition={partition} offset={offset} commit failed: {e}");
-}
+    /// Runs one delivered message through a fresh instance of `kafka-app.wasm`.
+    fn handle(&self, subject: String, body: Vec<u8>) -> Result<Result<(), String>> {
+        let mut store = self.new_store();
+        let world = self.instantiate(&mut store)?;
+        let handler = world.wasmcloud_messaging_handler();
+        let msg = BrokerMessage {
+            subject,
+            body,
+            reply_to: None,
+        };
+        handler
+            .call_handle_message(&mut store, &msg)
+            .wc("call handle-message")
+    }
 ```
 {% endraw %}
 
-A shared `AtomicBool` set by both `SIGINT` and `SIGTERM` handlers breaks the poll loop cleanly, so the process exits promptly instead of being force-killed the moment KEDA scales `cargo-kafka-host` down.
+The poll loop commits after the handler returns, and commits past a handler error:
 
-The broker underneath all of this is Strimzi 1.3.0, in single-node KRaft mode (no ZooKeeper; Strimzi dropped it entirely by this release line). Strimzi 1.3.0 supports Kafka 4.2.0 through 4.3.1 (verified against the 1.3.0 release's own example manifests), so `examples/part5-kubernetes/k8s/kafka/base/kafka.yaml` pins the exact pairing Strimzi ships in its own example:
+{% raw %}
+```rust
+        let outcome = host.handle(subject, body);
+
+        // At-least-once, drain-on-poison semantics: a handler error means this
+        // message is malformed or unprocessable, not that the broker or the
+        // host is unhealthy. Committing past it anyway keeps the consumer
+        // group draining instead of wedging on a single bad message forever;
+        // a dead-letter topic would be the production-grade follow-up, not
+        // retry-without-bound. A host-level failure (the `Err` wasmtime arm)
+```
+{% endraw %}
+
+That's at-least-once delivery with drain-on-poison semantics. A rejected message is malformed or unprocessable, not a sign of an unhealthy broker, and retrying it forever would wedge the group. A dead-letter topic is the production follow-up.
+
+## The broker and the ScaledObject
+
+The broker is Strimzi 1.3.0 in single-node KRaft mode, with no ZooKeeper. It supports Kafka 4.2.0 through 4.3.1, and `kafka.yaml` pins the pairing Strimzi ships in its own examples:
 
 {% raw %}
 ```yaml
@@ -335,7 +364,7 @@ spec:
 ```
 {% endraw %}
 
-The replication and ISR settings are all forced to 1 because the Kafka defaults assume at least three brokers; a single-node demo cluster would never finish bootstrapping its internal topics otherwise. The topic itself carries six partitions, not Strimzi's single-partition example default:
+Replication and ISR settings are forced to 1 because the defaults assume three brokers; a single node would never finish bootstrapping its internal topics. The topic has six partitions, not Strimzi's single-partition default:
 
 {% raw %}
 ```yaml
@@ -346,46 +375,14 @@ metadata:
   namespace: kafka
   labels:
     strimzi.io/cluster: cargo-kafka
+    app.kubernetes.io/part-of: part5-kubernetes
 spec:
   partitions: 6
   replicas: 1
 ```
 {% endraw %}
 
-Six partitions is a chosen ceiling, not an arbitrary number: KEDA's `kafka` scaler can only ever usefully drive `cargo-kafka-host` up to the topic's partition count, because one consumer-group member can own at most one partition at a time. A single-partition topic would cap this demo at a 0-versus-1 toggle and never show a real multi-instance scale-out under a burst.
-
-`examples/part5-kubernetes/k8s/kafka-host/base/deployment.yaml` is the plain `Deployment` KEDA scales. Unlike `cargo-http`, this Pod does not set `runtimeClassName: wasmtime`: the host process itself is an ordinary OCI container, and only the handler logic it loads from `KAFKA_APP_WASM` is a Wasm guest, run in-process:
-
-{% raw %}
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: cargo-kafka-host
-  namespace: kafka
-spec:
-  replicas: 1
-  template:
-    spec:
-      containers:
-        - name: cargo-kafka-host
-          image: cargo-kafka-host
-          env:
-            - name: KAFKA_BOOTSTRAP
-              value: cargo-kafka-kafka-bootstrap.kafka.svc:9092
-            - name: KAFKA_TOPIC
-              value: cargo-handling-events
-            - name: KAFKA_GROUP
-              value: cargo-handling
-            - name: KAFKA_APP_WASM
-              value: /opt/cargo-kafka/kafka-app.wasm
-          resources:
-            requests: { cpu: "50m", memory: "64Mi" }
-            limits: { cpu: "500m", memory: "256Mi" }
-```
-{% endraw %}
-
-`examples/part5-kubernetes/k8s/keda/base/kafka-scaledobject.yaml` is the object that reads lag on that topic and patches this Deployment:
+Six is the ceiling for scale-out. One consumer-group member owns at most one partition, so a single-partition topic would cap the demo at a 0-or-1 toggle. The `ScaledObject` reads lag on that topic and patches the host Deployment:
 
 {% raw %}
 ```yaml
@@ -394,12 +391,15 @@ kind: ScaledObject
 metadata:
   name: cargo-kafka-host
   namespace: kafka
+  labels:
+    app: cargo-kafka-host
+    app.kubernetes.io/part-of: part5-kubernetes
 spec:
   scaleTargetRef:
     name: cargo-kafka-host
     kind: Deployment
   minReplicaCount: 0
-  maxReplicaCount: 6 # capped at the topic's partition count
+  maxReplicaCount: 6 # capped at the topic's partition count (kafkatopic.yaml)
   cooldownPeriod: 30
   triggers:
     - type: kafka
@@ -412,38 +412,42 @@ spec:
 ```
 {% endraw %}
 
-`scaleTargetRef` names `cargo-kafka-host` as a `Deployment` because that object exists in this cluster: a plain Kubernetes Deployment with a real `spec.replicas` field, the same kind of object the HTTP half's `HTTPScaledObject` patches. KEDA's `kafka` trigger reads consumer-group lag for `consumerGroup: cargo-handling` on `cargo-handling-events` and drives `spec.replicas` on this Deployment directly, 0 at idle up to the 6-partition ceiling under load: no second control plane in between. No `TriggerAuthentication` is attached, because the single internal `plain` listener on `kafka.yaml` carries no SASL or mTLS: a production broker with either would add one, referenced via `authenticationRef`, but this demo cluster's listener does not need it.
+`scaleTargetRef` names a plain Deployment with a real `spec.replicas`, the same kind of object the HTTP half patches, so no second control plane sits in between. With no committed offset, `offsetResetPolicy: earliest` makes the scaler treat the whole backlog as lag. No `TriggerAuthentication` is attached because the `plain` listener has no SASL or mTLS; a production broker with either adds one through `authenticationRef`.
 
-`examples/part5-kubernetes/k8s/kafka/producer-burst.sh` is what creates the lag this `ScaledObject` reads. It runs entirely in-cluster: `kubectl run` launches a disposable Strimzi client Pod (`quay.io/strimzi/kafka:1.3.0-kafka-4.3.1`, the same distribution the broker itself ships, reused rather than pulling a separate client image), and `kubectl exec` pipes a batch of pipe-delimited messages into `kafka-console-producer.sh` against the bootstrap service's cluster DNS name: no port-forward, no NodePort, the same in-cluster-exec convention every Part 5 verify script in this book already follows. Sixty messages round-robin across six distinct keys by default, so the partitioner spreads the burst across all six partitions instead of landing it entirely on one, which would cap the demo's visible scale-out at a single instance no matter how large the burst was.
+> **Decision**
+>
+> Let KEDA own the replica count whenever the target has a real `spec.replicas` field, as both Deployments here do. The trigger follows the work: request concurrency for a service that answers HTTP, consumer-group lag for a process that consumes from a broker. The substrate follows the capability: a workload that consumes from a broker needs a host that embeds the runtime, because the raw shim serves only `wasi:http`.
 
-The full sequence `examples/part5-kubernetes/k8s/keda/verify-keda-kafka-minikube.sh` proves is: the burst lands and the topic backlog is confirmed to have risen by reading the topic's end offsets (`kafka-get-offsets.sh` through `kubectl exec`, never assumed from the producer's own exit code). With no committed offset yet for the group, `offsetResetPolicy: earliest` makes KEDA's scaler treat that backlog as the consumer-group lag, so the `ScaledObject` goes Active and KEDA patches `cargo-kafka-host`'s `spec.replicas` from 0 up toward the 6-partition ceiling. Each new Pod's host process joins the `cargo-handling` consumer group, gets a share of the rebalanced partitions, and drains them: calling `handle-message` per record and committing after each one. As the group's committed offset catches the log-end (`kafka-consumer-groups.sh --describe` confirms lag falls to zero), KEDA scales `cargo-kafka-host` back down to zero after the cooldown period.
-
-The live run on minikube (2026-10-22, evidence under `k8s/keda/evidence/2026-10-22/`) followed that sequence end to end:
-
-- Idle: `cargo-kafka-host` at `0/0`.
-- Burst of 120 messages: the topic end offset rose from 120 to 240.
-- KEDA scaled `cargo-kafka-host` from 0 to a peak of 4 replicas; the `ScaledObject` reported Active.
-- Each record was handled (`outcome=ok`, with `recorded handling event …` from the component).
-- Drain: the `cargo-handling` group's current offset caught the log-end (240/240, lag 0).
-- KEDA scaled `cargo-kafka-host` back to `0/0` after the cooldown.
+> **🤖 Explore with your agent**
+>
+> "In `examples/part5-kubernetes`, `cargo-kafka-host` is scaled by `k8s/keda/base/kafka-scaledobject.yaml` on lag for the topic in `k8s/kafka/base/kafkatopic.yaml`. Raise the topic to 12 partitions and set `maxReplicaCount` to match, using the rule that one consumer-group member owns at most one partition. Then say what happens to the extra hosts if `maxReplicaCount` stays at 6 and if it goes to 20, and whether `k8s/kafka/producer-burst.sh`, which spreads its burst over six keys, can still load all 12 partitions."
+>
+> Check: `git diff` touches only those two files and shows `partitions: 12` and `maxReplicaCount: 12`.
 
 ## Build, run, observe
 
 ```bash
 cd examples/part5-kubernetes/k8s/keda && ./verify-keda-http-minikube.sh
+cd examples/part5-kubernetes/k8s/keda && ./verify-keda-kafka-minikube.sh
 ```
 
-`verify-keda-http-minikube.sh` installs KEDA core and the KEDA HTTP add-on, deploys the `cargo-http` overlay with the `HTTPScaledObject` and the `ExternalName` interceptor-proxy routing, waits for the Deployment to idle at zero replicas, then fires one timed cold request through the real ingress-nginx edge and asserts both a 200 and the exact cargo JSON, reporting the measured 0-to-1 cold-start latency rather than an estimate. `verify-keda-kafka-minikube.sh` is the companion script for the Kafka half: it installs Strimzi, produces a burst of messages onto `cargo-handling-events`, confirms the backlog from the topic's own end offsets, and asserts the `kafka` `ScaledObject` drives `cargo-kafka-host` from zero up toward the six-partition ceiling and back to zero as the consumer group drains the lag, all through in-cluster `kubectl exec`, never a port-forward or NodePort. The HTTP half has no CRC counterpart, since CRC's Part 5 deployment runs the wasmCloud operator exclusively and leaves no `RuntimeClass`-backed Deployment for a Kubernetes-shaped autoscaler to patch; the Kafka half's CRC script (`openshift/verify-keda-kafka-crc.sh`) is author-only and not yet wired to a live `wadm` app. Expect `PASS` on either minikube script once its assertions hold, with `README.md` and `k8s/keda/evidence/` recording the version matrix and measured numbers each run confirms.
+The HTTP script installs KEDA and the add-on, deploys the overlay, waits for zero replicas, then sends one timed cold request through ingress-nginx and expects a 200 with the cargo JSON. The Kafka script installs Strimzi and sends a burst of 120 messages with `k8s/kafka/producer-burst.sh` (60 by default when run alone), which runs entirely in cluster: `kubectl exec` into a disposable Strimzi client Pod reusing the broker's own image, no port-forward and no NodePort. The messages round-robin across six distinct keys so the partitioner spreads them over all six partitions; a burst on one key lands on one partition and caps the visible scale-out at one host. It confirms the backlog from the topic's end offsets, then expects `cargo-kafka-host` to scale from zero toward six and back to zero as lag drains. Each prints `PASS`.
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Let KEDA own the replica count whenever the workload it targets is a resource the Kubernetes API lets a <code>ScaledObject</code> or <code>HTTPScaledObject</code> patch: a Deployment, a StatefulSet, anything with a real <code>spec.replicas</code> field. Both halves of this chapter take that shape now: the HTTP add-on's <code>HTTPScaledObject</code> against the raw-shim <code>cargo-http</code> Deployment, and the <code>kafka</code> <code>ScaledObject</code> against the native <code>cargo-kafka-host</code> Deployment. The two differ only in trigger type, request concurrency versus consumer-group lag, and in the shape of workload on the other end of it, a request/response HTTP service versus a long-lived message-consuming process, never in who owns the scale. Reach for a workload that embeds the runtime directly, an <code>rdkafka</code> consumer process driving an in-process <code>wasmtime</code> instance, the moment a job's work is consuming from a broker rather than answering an inbound HTTP request: the raw containerd shim has no binding for a long-lived subscription at all, so the substrate choice is forced by the capability the workload needs, independent of which trigger ends up scaling it.</p></div>
+The recorded Kafka run on minikube: idle at `0/0`; a burst of 120 messages moved the end offset from 120 to 240; KEDA scaled the host to a peak of 4 replicas; every record was handled; the group's committed offset caught the log end (240/240, lag 0); KEDA scaled back to `0/0` after the cooldown. Evidence is under `k8s/keda/evidence/`. The CRC script `openshift/verify-keda-kafka-crc.sh` is not yet wired to a live `wadm` app.
+
+Experiments:
+
+- Point the Ingress straight at `cargo-http` and a request at zero replicas has no Endpoint to reach.
+- Set `maxReplicaCount` above the partition count and the extra hosts sit idle: a member owns at most one partition.
+- Send a body with fewer than five pipe-delimited fields and the handler returns `Err`; the host logs it and commits past it.
 
 ## For deeper coverage
 
-- [KEDA HTTP add-on 0.16: `HTTPScaledObject` reference](https://keda.sh/docs/http-add-on/0.16/reference/httpscaledobject/): the current `spec.replicas.{min,max}` shape this chapter's `HTTPScaledObject` uses, and the `InterceptorRoute` resource it is deprecated in favor of.
-- [KEDA Apache Kafka scaler reference](https://keda.sh/docs/2.21/scalers/apache-kafka/): the `kafka` trigger fields (`bootstrapServers`, `consumerGroup`, `lagThreshold`, `offsetResetPolicy`) this chapter's `ScaledObject` uses against `cargo-handling-events` to drive `cargo-kafka-host` directly.
-- [Strimzi: deploying the Cluster Operator](https://strimzi.io/docs/operators/latest/deploying): the quickstart install method `install-strimzi.sh` follows for the pinned 1.3.0 operator and its KRaft-only, ZooKeeper-free topology.
-- Bilgin Ibryam & Roland Huß, *Kubernetes Patterns*, 2nd ed. (O'Reilly, 2023): the autoscaling and event-driven scaling patterns this chapter's two `keda.sh` mechanisms each instantiate, both by directly patching a workload's replica count.
-- gRPC with Wasm: the host-mediated-bridge idiom this chapter's `cargo-kafka-host` reuses: a native process embeds a `wasmtime` runtime and mediates a protocol, gRPC there, a Kafka consumer group here, that no Wasm component runtime exposes natively.
-- Deploying on minikube: the raw containerd shim this chapter's HTTP half scales directly, reused unmodified alongside the native host this chapter's Kafka half adds.
-- Wasm as a sidecar: the per-invocation statelessness finding this chapter's host design repeats: a fresh `wasmtime::Store` per Kafka message, so no domain state leaks across deliveries.
-- Scaling Wasm workloads: HPA: the CPU-based, floor-of-one autoscaling this chapter's scale-to-zero mechanisms both extend past the point a plain HPA can reach.
+- [KEDA HTTP add-on 0.16: `HTTPScaledObject` reference](https://keda.sh/docs/http-add-on/0.16/reference/httpscaledobject/): the `spec.replicas.{min,max}` shape and the `InterceptorRoute` replacement.
+- [KEDA Apache Kafka scaler reference](https://keda.sh/docs/2.21/scalers/apache-kafka/): the `kafka` trigger fields (`bootstrapServers`, `consumerGroup`, `lagThreshold`, `offsetResetPolicy`).
+- [Strimzi: deploying the Cluster Operator](https://strimzi.io/docs/operators/latest/deploying): the install method `install-strimzi.sh` follows.
+- Bilgin Ibryam & Roland Huß, *Kubernetes Patterns*, 2nd ed. (O'Reilly, 2023): the autoscaling and event-driven scaling patterns both KEDA objects instantiate.
+- gRPC with Wasm: the same host-mediated bridge, where a native process embeds `wasmtime` and mediates a protocol no component runtime exposes.
+- Deploying on minikube: the raw containerd shim the HTTP half scales.
+- Wasm as a sidecar: the fresh `Store` per invocation that the host repeats for each Kafka message.
+- Scaling Wasm workloads: HPA: the floor-of-one autoscaling these scale-to-zero mechanisms extend.

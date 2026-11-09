@@ -58,5 +58,5 @@
 <path d="M825,386 L825,450" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M300,496 L450,546" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M825,496 L650,546" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="550" y="600" font-size="12" fill="#555555" text-anchor="middle">Forward reference: wasmCloud / wash (Part 4) and minikube + OpenShift Local + the LGTM stack (Part 5) are each set up in their own parts, not here.</text>
+<text x="550" y="600" font-size="12" fill="#555555" text-anchor="middle">wasmCloud / wash, minikube, OpenShift Local and the LGTM stack are each set up where they are first used, not here.</text>
 </svg>

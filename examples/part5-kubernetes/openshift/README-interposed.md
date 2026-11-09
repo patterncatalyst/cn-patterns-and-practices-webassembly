@@ -1,6 +1,6 @@
-# ch20/ch21 interposition on OpenShift Local (CRC): the runtime-link form
+# Chapters 20 and 21 interposition on OpenShift Local (CRC): the runtime-link form
 
-The minikube deploy (`../k8s`) expresses the ch20/ch21 interposition patterns as
+The minikube deploy (`../k8s`) expresses the Chapters 20 and 21 interposition patterns as
 **compile-time `wac plug` composition**: the provider, the interposer and the HTTP
 front door are spliced into one `.wasm` per Pod. This directory expresses the same
 patterns as the **runtime-link form**: the three components run as **separate
@@ -10,7 +10,7 @@ OpenShift deploy (same platform chart, operator, host 1.9.1, restricted-v2,
 edge-TLS Routes, CA-verified curl, the 8 CRC notes); those files stay pristine.
 
 ```
-app  = cargo-filtered (ch20) / cargo-adapted (ch21) / cargo-ambassador (ch21)
+app  = cargo-filtered (Chapter 20) / cargo-adapted (Chapter 21) / cargo-ambassador (Chapter 21)
 httpserver --wasi:http/incoming-handler--> front door
 front door --patterncatalyst:cargo/booking--> interposer
 interposer --patterncatalyst:cargo/booking,handling--> provider
@@ -56,13 +56,13 @@ names are globally unique in the `default` lattice so the three apps coexist.
 
 ## What the runtime links PROVE (the working subset, all live, CA-verified)
 
-- **FILTERED (ch20):** the interposer's destination-embargo **policy fires across
+- **FILTERED (Chapter 20):** the interposer's destination-embargo **policy fires across
   the link**: `GET /cargo/CARGO-USNYC-CUHAV` → **400** (`destination CUHAV is
   under embargo`) before the provider is ever called; an unknown id traverses the
   full chain front door → filter → provider → **404**. The filter's own
   `cargo-filter: ...` log lines in the host pod prove it is live in the chain.
-- **ADAPTED (ch21):** the shape-translation round-trip runs; unknown id → **404**.
-- **AMBASSADOR (ch21):** the front door **reaches the provider across the
+- **ADAPTED (Chapter 21):** the shape-translation round-trip runs; unknown id → **404**.
+- **AMBASSADOR (Chapter 21):** the front door **reaches the provider across the
   runtime-granted link**: `GET /cargo/NOPE` → the provider's own **404** proves the
   outbound wRPC call completed. The same app without the link
   (`wadm-ambassador-nogrant.yaml`) cannot be admitted: the unlinked cargo import

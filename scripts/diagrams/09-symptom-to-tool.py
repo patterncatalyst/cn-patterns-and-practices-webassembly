@@ -61,6 +61,6 @@ gd.emit(
     nodes=nodes,
     edges=edges,
     notes=[
-        {"x": 600, "y": height - 18, "text": "All six run against the SAME Part 2 artifacts (rust/target/.../cargo_rust.wasm, go/cargo-go.wasm); none of them require rebuilding or instrumenting the component first.", "size": 12, "color": "#555555", "anchor": "middle"},
+        {"x": 600, "y": height - 18, "text": "All six run against the SAME cargo component artifacts (rust/target/.../cargo_rust.wasm, go/cargo-go.wasm); none of them require rebuilding or instrumenting the component first.", "size": 12, "color": "#555555", "anchor": "middle"},
     ],
 )

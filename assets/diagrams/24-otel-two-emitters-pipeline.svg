@@ -30,5 +30,5 @@
 <path d="M320,340 L380,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M640,340 L700,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M930,340 L980,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="590" y="440" font-size="12" fill="#555555" text-anchor="middle">Two separate clusters, two separate backends: don&#x27;t assume one chapter&#x27;s OTel pipeline describes the other substrate.</text>
+<text x="590" y="440" font-size="12" fill="#555555" text-anchor="middle">Two separate clusters, two separate backends: don&#x27;t assume one OTel pipeline describes the other substrate.</text>
 </svg>

@@ -18,7 +18,7 @@ spin_manifest_version = 2
 [application]
 name = "cargo-spin"
 version = "0.1.0"
-description = "Cargo domain HTTP front door as a Fermyon Spin component (ch26)."
+description = "Cargo domain HTTP front door as a Fermyon Spin component."
 
 [[trigger.http]]
 route = "/..."

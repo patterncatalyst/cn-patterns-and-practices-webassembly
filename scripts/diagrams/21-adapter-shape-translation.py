@@ -35,13 +35,13 @@ bands = [
 nodes = [
     # --- minikube band ---
     {"x": 60, "y": 90, "w": 230, "h": 70,
-     "lines": ["Part 3 http-rust", "imports cargo, exports wasi:http"],
+     "lines": ["http-rust", "imports cargo, exports wasi:http"],
      "style": "box"},
     {"x": 330, "y": 90, "w": 250, "h": 70,
      "lines": ["cargo-adapter", "book-cargo: canonical -> legacy", "-> canonical (round-trip)"],
      "style": "accent"},
     {"x": 620, "y": 90, "w": 230, "h": 70,
-     "lines": ["Part 2 cargo provider", "exports patterncatalyst:cargo/*"],
+     "lines": ["cargo provider", "exports patterncatalyst:cargo/*"],
      "style": "box"},
     {"x": 890, "y": 90, "w": 230, "h": 70,
      "lines": ["app-adapted.wasm", "wac plug x2, ONE Pod"],
@@ -67,7 +67,7 @@ nodes = [
     {"x": 60, "y": 500, "w": 790, "h": 90,
      "lines": ["round-trip still runs (lossless); but book-cargo and get-cargo are TWO wRPC calls",
                "across TWO fresh provider instances: valid id -> provider's own 404, not 200",
-               "(same per-invocation statelessness as Chapter 20's filter)"],
+               "(same per-invocation statelessness as the filter)"],
      "style": "ink"},
 ]
 
@@ -87,7 +87,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 645, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Verified live 2026-10-21: minikube returns the exact cargo JSON; CRC's round-trip runs but hits the Chapter 20 state finding."},
+     "text": "Verified live 2026-10-21: minikube returns the exact cargo JSON; CRC's round-trip runs but hits the filter's state finding."},
 ]
 
 gd.emit("21-adapter-shape-translation", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

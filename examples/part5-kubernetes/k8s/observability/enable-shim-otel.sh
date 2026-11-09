@@ -40,14 +40,14 @@ require_cmd minikube
 require_cmd kubectl
 
 minikube status -p "$PROFILE" >/dev/null 2>&1 || {
-  echo "enable-shim-otel.sh: FAIL — minikube profile '$PROFILE' is not running" >&2
+  echo "enable-shim-otel.sh: FAIL, minikube profile '$PROFILE' is not running" >&2
   exit 1
 }
 
 step "0. resolve the otel-lgtm Service ClusterIP in namespace $NAMESPACE"
 OTEL_LGTM_IP="$(kubectl get svc otel-lgtm -n "$NAMESPACE" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"
 if [[ -z "$OTEL_LGTM_IP" || "$OTEL_LGTM_IP" == "None" ]]; then
-  echo "enable-shim-otel.sh: FAIL — Service otel-lgtm not found in $NAMESPACE." >&2
+  echo "enable-shim-otel.sh: FAIL, Service otel-lgtm not found in $NAMESPACE." >&2
   echo "  Apply the observability overlay first:" >&2
   echo "    kubectl --context $PROFILE apply -k $SCRIPT_DIR/overlays/minikube" >&2
   exit 1
@@ -90,7 +90,7 @@ systemctl restart containerd
 for i in \$(seq 1 30); do
   if ctr version >/dev/null 2>&1; then echo "enable-shim-otel.sh(node): containerd back after \${i}s"; break; fi
   sleep 1
-  [ "\$i" -eq 30 ] && { echo "enable-shim-otel.sh(node): FAIL — containerd did not come back" >&2; exit 1; }
+  [ "\$i" -eq 30 ] && { echo "enable-shim-otel.sh(node): FAIL, containerd did not come back" >&2; exit 1; }
 done
 echo "enable-shim-otel.sh(node): confirming the env reached the containerd process:"
 systemctl show containerd --property=Environment

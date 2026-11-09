@@ -1,7 +1,7 @@
-// Reflection-free protobuf wire codec for the cargo messages (ch12, TinyGo).
+// Reflection-free protobuf wire codec for the cargo messages (TinyGo).
 //
 // Why hand-written: TinyGo 0.43 COMPILES google.golang.org/protobuf but TRAPS at
-// runtime — proto.Marshal reaches reflect.Type.MethodByName inside
+// runtime: proto.Marshal reaches reflect.Type.MethodByName inside
 // impl.MessageInfo.makeStructInfo, which TinyGo's partial reflect does not
 // implement (see proto-go/README/notes). So the component cannot use the
 // reflection-based library. This file encodes/decodes the proto3 wire format

@@ -56,7 +56,7 @@ nodes = [
      "style": "user"},
 
     {"x": 620, "y": 380, "w": 320, "h": 70,
-     "lines": ["same app.wasm Chapters 14/15/18 run", "byte-identical, no rebuild"],
+     "lines": ["same app.wasm the other runtimes run", "byte-identical, no rebuild"],
      "style": "ghost"},
 
     {"x": 800, "y": 130, "w": 340, "h": 100,

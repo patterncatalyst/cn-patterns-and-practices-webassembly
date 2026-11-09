@@ -58,7 +58,7 @@ trap cleanup EXIT
 step "Step 0: tool + version checks"
 mk_ver="$(minikube version --short 2>/dev/null || echo v0.0.0)"
 [[ "$(printf '%s\n%s\n' "$MINIKUBE_MIN" "$mk_ver" | sort -V | head -1)" == "$MINIKUBE_MIN" ]] \
-  || { echo "verify-spinkube-minikube.sh: FAIL — minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
+  || { echo "verify-spinkube-minikube.sh: FAIL, minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
 echo "verify-spinkube-minikube.sh: minikube $mk_ver OK (>= $MINIKUBE_MIN); Kubernetes $KUBERNETES_VERSION"
 echo "verify-spinkube-minikube.sh: pins — cert-manager $CERT_MANAGER_VERSION (fallback $CERT_MANAGER_VERSION_FALLBACK),"
 echo "  runtime-class-manager $RUNTIME_CLASS_MANAGER_VERSION, containerd-shim-spin $SHIM_SPIN_VERSION,"
@@ -91,7 +91,7 @@ step "Step 4: deploy the SpinApp (overlays/minikube)"
 # after the controller rollout reports complete; retry the apply until it lands.
 apply_waited=0
 until kubectl apply -k "$SCRIPT_DIR/overlays/minikube"; do
-  (( apply_waited >= 120 )) && { echo "verify-spinkube-minikube.sh: FAIL — overlay apply did not succeed within 120s" >&2; exit 1; }
+  (( apply_waited >= 120 )) && { echo "verify-spinkube-minikube.sh: FAIL, overlay apply did not succeed within 120s" >&2; exit 1; }
   echo "verify-spinkube-minikube.sh: apply failed (ingress webhook likely not ready yet) — retrying in 5s"
   sleep 5; apply_waited=$(( apply_waited + 5 ))
 done
@@ -117,7 +117,7 @@ while (( waited < 90 )); do
   fi
   sleep 2; waited=$(( waited + 2 ))
 done
-[[ "$ok" -eq 1 ]] || { echo "verify-spinkube-minikube.sh: FAIL — ingress never routed Host $CARGO_SPIN_HOST (no affinity cookie) within 90s" >&2; exit 1; }
+[[ "$ok" -eq 1 ]] || { echo "verify-spinkube-minikube.sh: FAIL, ingress never routed Host $CARGO_SPIN_HOST (no affinity cookie) within 90s" >&2; exit 1; }
 echo "verify-spinkube-minikube.sh: ingress routing confirmed for Host $CARGO_SPIN_HOST after ${waited}s"
 
 step "Step 6: live HTTP assertions through the ingress (readiness = a real 200)"
@@ -130,7 +130,7 @@ code404="$(curl_code "$BASE/cargo/NOPE")"
 assert_eq "404" "$code404" "SpinKube GET /cargo/NOPE through ingress"
 
 echo
-echo "PASS — ch26 SpinKube on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
+echo "PASS: ch26 SpinKube on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
 echo "  the cargo Spin component runs as a Pod via the spin-operator and the"
 echo "  containerd-shim-spin shim (RuntimeClass '$SPIN_RUNTIMECLASS'), and GET"
 echo "  $VALID_PATH through ingress-nginx returns the exact cargo JSON while"

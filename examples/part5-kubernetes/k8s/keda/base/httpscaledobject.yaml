@@ -62,7 +62,7 @@ spec:
       targetValue: 1
   # Shortened from the add-on's default (hundreds of seconds): a Wasm
   # component has no JVM-style warm-up (containerd-shim-wasmtime starts
-  # serving within milliseconds of the Pod going Ready — the same point ch22's
+  # serving within milliseconds of the Pod going Ready, the same point the HPA's
   # hpa.yaml makes about scaleDown.stabilizationWindowSeconds), so there is no
   # reason to wait minutes of idleness before scaling back to zero.
   scaledownPeriod: 30

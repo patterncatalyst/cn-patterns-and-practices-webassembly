@@ -102,3 +102,6 @@ echo "no secrets found under $OUT" > "$OUT/06-scrub.txt"
 ok "no secrets in $OUT"
 
 printf '\n    evidence: %s\n' "${OUT#"$REPO_ROOT"/}"
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

@@ -190,3 +190,6 @@ echo "  $VALID_PATH through ingress-nginx returned the exact cargo JSON and"
 echo "  /cargo/NOPE returned 404."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
 echo "  run ./teardown.sh to remove the SpinKube stack."
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

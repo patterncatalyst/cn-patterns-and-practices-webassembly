@@ -111,7 +111,7 @@ fn main() -> Result<()> {
     assert_field("price.currency", "USD", &price.currency)?;
 
     println!(
-        "host: ASSERT OK — prost round trip through Wasm: tracking_id={} origin={} dest={} weight_kg={} price={} {}",
+        "host: ASSERT OK, prost round trip through Wasm: tracking_id={} origin={} dest={} weight_kg={} price={} {}",
         cargo.tracking_id,
         cargo.origin.unwrap().unlocode,
         cargo.destination.unwrap().unlocode,

@@ -21,7 +21,7 @@ cd "$SCRIPT_DIR"
 
 for tool in cargo cargo-component wasm-tools; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -30,7 +30,7 @@ echo "build.sh: [1/3] building the guest component ..."
 ( cd guest && cargo component build --release )
 GUEST="$(find "$SCRIPT_DIR/guest/target" -name 'host_demo_guest.wasm' -not -path '*/deps/*' | head -1)"
 if [[ ! -s "$GUEST" ]]; then
-  echo "build.sh: FAIL — guest component not produced" >&2
+  echo "build.sh: FAIL, guest component not produced" >&2
   exit 1
 fi
 wasm-tools validate "$GUEST"
@@ -40,7 +40,7 @@ echo "build.sh: [2/3] building the native host ..."
 ( cd host && cargo build --release )
 HOST="$SCRIPT_DIR/host/target/release/host-demo-host"
 if [[ ! -x "$HOST" ]]; then
-  echo "build.sh: FAIL — host binary not produced" >&2
+  echo "build.sh: FAIL, host binary not produced" >&2
   exit 1
 fi
 

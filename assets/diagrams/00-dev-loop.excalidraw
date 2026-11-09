@@ -4,7 +4,7 @@
  "source": "https://excalidraw.com",
  "elements": [
   {
-   "id": "r915221473",
+   "id": "r494800284",
    "type": "rectangle",
    "x": 20,
    "y": 16,
@@ -23,8 +23,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1499877491,
-   "versionNonce": 318676640,
+   "seed": 1298920112,
+   "versionNonce": 269348658,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -32,7 +32,7 @@
    "locked": false
   },
   {
-   "id": "t1945502590",
+   "id": "t1953035508",
    "type": "text",
    "x": 32,
    "y": 22,
@@ -49,25 +49,25 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1329624776,
-   "versionNonce": 1889194335,
+   "seed": 617852445,
+   "versionNonce": 1371777228,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "examples/part2-building-components/: repeat this loop per language, then run verify.sh for both",
+   "text": "examples/part2-building-components/: repeat this loop per language, then run the check for both",
    "fontSize": 12,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "examples/part2-building-components/: repeat this loop per language, then run verify.sh for both",
+   "originalText": "examples/part2-building-components/: repeat this loop per language, then run the check for both",
    "lineHeight": 1.25,
    "baseline": 12
   },
   {
-   "id": "r1151632179",
+   "id": "r1147936596",
    "type": "rectangle",
    "x": 50,
    "y": 70,
@@ -86,8 +86,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1193385461,
-   "versionNonce": 843212393,
+   "seed": 1926067389,
+   "versionNonce": 1090180873,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -95,7 +95,7 @@
    "locked": false
   },
   {
-   "id": "t106714228",
+   "id": "t1790405707",
    "type": "text",
    "x": 60,
    "y": 78,
@@ -112,8 +112,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1942024015,
-   "versionNonce": 904345479,
+   "seed": 1858757998,
+   "versionNonce": 599561075,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -130,7 +130,7 @@
    "baseline": 14
   },
   {
-   "id": "t42638565",
+   "id": "t1485999995",
    "type": "text",
    "x": 60,
    "y": 98,
@@ -147,8 +147,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 447092901,
-   "versionNonce": 299173740,
+   "seed": 883608131,
+   "versionNonce": 1972245200,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -165,7 +165,7 @@
    "baseline": 11
   },
   {
-   "id": "t926840538",
+   "id": "t987877157",
    "type": "text",
    "x": 60,
    "y": 113,
@@ -182,8 +182,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1454863220,
-   "versionNonce": 277294521,
+   "seed": 524497003,
+   "versionNonce": 1436213568,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -200,7 +200,7 @@
    "baseline": 11
   },
   {
-   "id": "r1622747767",
+   "id": "r1980801308",
    "type": "rectangle",
    "x": 320,
    "y": 70,
@@ -219,8 +219,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1291412557,
-   "versionNonce": 404856844,
+   "seed": 131281946,
+   "versionNonce": 1268492775,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -228,7 +228,7 @@
    "locked": false
   },
   {
-   "id": "t1037488258",
+   "id": "t439873244",
    "type": "text",
    "x": 330,
    "y": 78,
@@ -245,8 +245,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 683411392,
-   "versionNonce": 1321005552,
+   "seed": 366699934,
+   "versionNonce": 773421931,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -263,7 +263,7 @@
    "baseline": 14
   },
   {
-   "id": "t260056028",
+   "id": "t1253130139",
    "type": "text",
    "x": 330,
    "y": 98,
@@ -280,8 +280,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1714048464,
-   "versionNonce": 1192281821,
+   "seed": 885387641,
+   "versionNonce": 453820301,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -298,7 +298,7 @@
    "baseline": 11
   },
   {
-   "id": "r1052872866",
+   "id": "r1892869115",
    "type": "rectangle",
    "x": 590,
    "y": 70,
@@ -317,8 +317,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 538733522,
-   "versionNonce": 1169182797,
+   "seed": 10957932,
+   "versionNonce": 1105809569,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -326,7 +326,7 @@
    "locked": false
   },
   {
-   "id": "t1791779869",
+   "id": "t576563565",
    "type": "text",
    "x": 600,
    "y": 78,
@@ -343,8 +343,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1823823055,
-   "versionNonce": 1231553036,
+   "seed": 1943671729,
+   "versionNonce": 920858932,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -361,7 +361,7 @@
    "baseline": 14
   },
   {
-   "id": "t1120602693",
+   "id": "t959220667",
    "type": "text",
    "x": 600,
    "y": 98,
@@ -378,8 +378,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1632542798,
-   "versionNonce": 1595177592,
+   "seed": 1135256514,
+   "versionNonce": 1629915290,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -396,7 +396,7 @@
    "baseline": 11
   },
   {
-   "id": "r1595456165",
+   "id": "r422543837",
    "type": "rectangle",
    "x": 860,
    "y": 70,
@@ -415,8 +415,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1297443311,
-   "versionNonce": 647716906,
+   "seed": 1683031737,
+   "versionNonce": 244907100,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -424,7 +424,7 @@
    "locked": false
   },
   {
-   "id": "t358519301",
+   "id": "t1561407026",
    "type": "text",
    "x": 870,
    "y": 78,
@@ -441,8 +441,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 130654819,
-   "versionNonce": 1647282374,
+   "seed": 874025501,
+   "versionNonce": 106407729,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -459,11 +459,11 @@
    "baseline": 14
   },
   {
-   "id": "t1071859103",
+   "id": "t1118586223",
    "type": "text",
    "x": 870,
    "y": 98,
-   "width": 66.55000000000001,
+   "width": 121.00000000000001,
    "height": 13.75,
    "angle": 0,
    "strokeColor": "#555555",
@@ -476,25 +476,25 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 752496252,
-   "versionNonce": 1220225746,
+   "seed": 1827148188,
+   "versionNonce": 1689908337,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "./verify.sh",
+   "text": "run the shared check",
    "fontSize": 11,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "./verify.sh",
+   "originalText": "run the shared check",
    "lineHeight": 1.25,
    "baseline": 11
   },
   {
-   "id": "r792922022",
+   "id": "r1768741782",
    "type": "rectangle",
    "x": 320,
    "y": 200,
@@ -513,8 +513,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 762100378,
-   "versionNonce": 1862047101,
+   "seed": 276136667,
+   "versionNonce": 28187733,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -522,7 +522,7 @@
    "locked": false
   },
   {
-   "id": "t330186343",
+   "id": "t1562813130",
    "type": "text",
    "x": 330,
    "y": 208,
@@ -539,25 +539,25 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1656720167,
-   "versionNonce": 40508479,
+   "seed": 749425038,
+   "versionNonce": 778235580,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "verify.sh diffs Rust output vs Go output",
+   "text": "The check diffs Rust output vs Go output",
    "fontSize": 14,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "verify.sh diffs Rust output vs Go output",
+   "originalText": "The check diffs Rust output vs Go output",
    "lineHeight": 1.25,
    "baseline": 14
   },
   {
-   "id": "t202025809",
+   "id": "t205481295",
    "type": "text",
    "x": 330,
    "y": 228,
@@ -574,8 +574,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1762715417,
-   "versionNonce": 592103803,
+   "seed": 298399019,
+   "versionNonce": 162059912,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -592,7 +592,7 @@
    "baseline": 11
   },
   {
-   "id": "r1217387421",
+   "id": "r593911487",
    "type": "rectangle",
    "x": 200,
    "y": 310,
@@ -611,8 +611,8 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1608767948,
-   "versionNonce": 400795504,
+   "seed": 330161929,
+   "versionNonce": 1289472519,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -620,7 +620,7 @@
    "locked": false
   },
   {
-   "id": "t901897828",
+   "id": "t1424911207",
    "type": "text",
    "x": 210,
    "y": 318,
@@ -637,8 +637,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 293372664,
-   "versionNonce": 640864498,
+   "seed": 1001847111,
+   "versionNonce": 687760505,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -655,7 +655,7 @@
    "baseline": 14
   },
   {
-   "id": "a483791544",
+   "id": "a1054896164",
    "type": "arrow",
    "x": 280,
    "y": 110,
@@ -674,8 +674,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 26470790,
-   "versionNonce": 952887452,
+   "seed": 1557433411,
+   "versionNonce": 404967983,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -698,7 +698,7 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "a1225917368",
+   "id": "a657687946",
    "type": "arrow",
    "x": 550,
    "y": 110,
@@ -717,8 +717,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 1341813928,
-   "versionNonce": 838448057,
+   "seed": 925409066,
+   "versionNonce": 1353986401,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -741,7 +741,7 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "t1905034554",
+   "id": "t1339512791",
    "type": "text",
    "x": 570.0,
    "y": 96.0,
@@ -758,8 +758,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1193123492,
-   "versionNonce": 1268655888,
+   "seed": 481613876,
+   "versionNonce": 448514035,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -776,7 +776,7 @@
    "baseline": 11
   },
   {
-   "id": "a902634647",
+   "id": "a667811830",
    "type": "arrow",
    "x": 820,
    "y": 110,
@@ -795,8 +795,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 419257923,
-   "versionNonce": 742963303,
+   "seed": 656876963,
+   "versionNonce": 1061746920,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -819,7 +819,7 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "a1014759101",
+   "id": "a1997005752",
    "type": "arrow",
    "x": 955,
    "y": 150,
@@ -838,8 +838,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 1189262637,
-   "versionNonce": 1468432238,
+   "seed": 735369743,
+   "versionNonce": 1641422029,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -862,7 +862,7 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "t267612889",
+   "id": "t951999013",
    "type": "text",
    "x": 827.5,
    "y": 161.0,
@@ -879,8 +879,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1635074819,
-   "versionNonce": 1110234346,
+   "seed": 1367229376,
+   "versionNonce": 158839199,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -897,7 +897,7 @@
    "baseline": 11
   },
   {
-   "id": "a1239170481",
+   "id": "a439448754",
    "type": "arrow",
    "x": 550,
    "y": 270,
@@ -916,8 +916,8 @@
    "roundness": {
     "type": 2
    },
-   "seed": 1517629715,
-   "versionNonce": 302787036,
+   "seed": 1046044216,
+   "versionNonce": 420247818,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -940,7 +940,7 @@
    "endArrowhead": "arrow"
   },
   {
-   "id": "t1837464859",
+   "id": "t815324705",
    "type": "text",
    "x": 550.0,
    "y": 276.0,
@@ -957,8 +957,8 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 473574363,
-   "versionNonce": 1871758049,
+   "seed": 707507664,
+   "versionNonce": 320621932,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
@@ -975,11 +975,11 @@
    "baseline": 11
   },
   {
-   "id": "t1454182787",
+   "id": "t28961877",
    "type": "text",
    "x": 550,
    "y": 410,
-   "width": 587.4000000000001,
+   "width": 600.6,
    "height": 15.0,
    "angle": 0,
    "strokeColor": "#555555",
@@ -992,20 +992,20 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1808545670,
-   "versionNonce": 1143277562,
+   "seed": 585751841,
+   "versionNonce": 1046689510,
    "isDeleted": false,
    "boundElements": [],
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "check-prereqs.sh runs once, before step 1, to confirm the toolchain this loop depends on.",
+   "text": "check-prereqs.sh runs once, before the loop, to confirm the toolchain this loop depends on.",
    "fontSize": 12,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "check-prereqs.sh runs once, before step 1, to confirm the toolchain this loop depends on.",
+   "originalText": "check-prereqs.sh runs once, before the loop, to confirm the toolchain this loop depends on.",
    "lineHeight": 1.25,
    "baseline": 12
   }

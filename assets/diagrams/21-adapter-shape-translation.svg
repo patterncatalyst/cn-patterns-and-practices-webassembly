@@ -5,14 +5,14 @@
 <rect x="20" y="340" width="1140" height="300" rx="12" fill="#f1f5f9" stroke="#ddd"/>
 <text x="32" y="360" font-size="12" font-weight="700" fill="#1d1d1d">CRC: runtime-link composition (wadm links): THREE components, round-trip across links</text>
 <rect x="60" y="90" width="230" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="175.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 3 http-rust</text>
+<text x="175.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">http-rust</text>
 <text x="175.0" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">imports cargo, exports wasi:http</text>
 <rect x="330" y="90" width="250" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
 <text x="455.0" y="115.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-adapter</text>
 <text x="455.0" y="132.5" font-size="11.5" fill="#555555" text-anchor="middle">book-cargo: canonical -&gt; legacy</text>
 <text x="455.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">-&gt; canonical (round-trip)</text>
 <rect x="620" y="90" width="230" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="735.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 2 cargo provider</text>
+<text x="735.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo provider</text>
 <text x="735.0" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">exports patterncatalyst:cargo/*</text>
 <rect x="890" y="90" width="230" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="1005.0" y="123.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">app-adapted.wasm</text>
@@ -35,7 +35,7 @@
 <rect x="60" y="500" width="790" height="90" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="455.0" y="535.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">round-trip still runs (lossless); but book-cargo and get-cargo are TWO wRPC calls</text>
 <text x="455.0" y="552.5" font-size="11.5" fill="#555555" text-anchor="middle">across TWO fresh provider instances: valid id -&gt; provider&#x27;s own 404, not 200</text>
-<text x="455.0" y="567.5" font-size="11.5" fill="#555555" text-anchor="middle">(same per-invocation statelessness as Chapter 20&#x27;s filter)</text>
+<text x="455.0" y="567.5" font-size="11.5" fill="#555555" text-anchor="middle">(same per-invocation statelessness as the filter)</text>
 <path d="M290,125 L330,125" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="316.0" y="119.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wac plug</text>
 <text x="316.0" y="119.0" font-size="11" fill="#555" text-anchor="middle">wac plug</text>
@@ -54,5 +54,5 @@
 <text x="851.0" y="419.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">link: incoming-handler</text>
 <text x="851.0" y="419.0" font-size="11" fill="#b8650a" text-anchor="middle">link: incoming-handler</text>
 <path d="M300,460 L300,500" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<text x="590" y="645" font-size="12" fill="#555555" text-anchor="middle">Verified live 2026-10-21: minikube returns the exact cargo JSON; CRC&#x27;s round-trip runs but hits the Chapter 20 state finding.</text>
+<text x="590" y="645" font-size="12" fill="#555555" text-anchor="middle">Verified live 2026-10-21: minikube returns the exact cargo JSON; CRC&#x27;s round-trip runs but hits the filter&#x27;s state finding.</text>
 </svg>

@@ -39,7 +39,7 @@ nodes = [
      "lines": ["Envoy: istio-ingress-gateway", "Istio-managed, ordinary pod"],
      "style": "box"},
     {"x": 640, "y": 150, "w": 480, "h": 300,
-     "lines": ["cargo-http Pod", "Part 5 Wasm substrate, unchanged"],
+     "lines": ["cargo-http Pod", "Wasm substrate, unchanged"],
      "style": "box"},
 
     {"x": 100, "y": 270, "w": 400, "h": 150,

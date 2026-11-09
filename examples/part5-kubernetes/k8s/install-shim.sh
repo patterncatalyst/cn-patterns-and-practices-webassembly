@@ -37,7 +37,7 @@ require_cmd sha256sum
 require_cmd tar
 
 minikube status -p "$PROFILE" >/dev/null 2>&1 || {
-  echo "install-shim.sh: FAIL — minikube profile '$PROFILE' is not running" >&2
+  echo "install-shim.sh: FAIL, minikube profile '$PROFILE' is not running" >&2
   exit 1
 }
 
@@ -55,7 +55,7 @@ chmod 0755 "$BIN"
 
 step "2. install the shim binary into the node (/usr/bin/$SHIM_BINARY)"
 minikube cp "$BIN" "$PROFILE:/tmp/$SHIM_BINARY" -p "$PROFILE"
-# NB: the shim is a containerd shim binary, not a CLI — it has no --version
+# NB: the shim is a containerd shim binary, not a CLI: it has no --version
 # flag (invoking it with one panics). Confirm it is in place and executable
 # instead; `ctr version` after the restart is the real "containerd can use it"
 # signal, and the go/no-go Pod is the definitive proof.
@@ -78,10 +78,10 @@ CFG=/etc/containerd/config.toml
 if grep -q 'containerd.runtimes.wasmtime\]' "$CFG"; then
   # Already registered: the config is unchanged, so DO NOT restart containerd.
   # An unconditional restart here needlessly bounces every running Pod on the
-  # node — and a Wasm Pod that was mid-flight across the restart gets SIGKILLed
+  # node, and a Wasm Pod that was mid-flight across the restart gets SIGKILLed
   # (exit 137) and wedges into CrashLoopBackOff. Re-running install-shim (e.g.
   # between Part 5 chapters) must be a no-op when nothing changed.
-  echo "install-shim.sh(node): wasmtime runtime already registered — config unchanged, NOT restarting containerd"
+  echo "install-shim.sh(node): wasmtime runtime already registered, config unchanged, NOT restarting containerd"
 else
   cp "$CFG" "${CFG}.bak.$(date +%s)"
   awk '
@@ -100,11 +100,11 @@ else
   for i in $(seq 1 30); do
     if ctr version >/dev/null 2>&1; then echo "install-shim.sh(node): containerd back after ${i}s"; break; fi
     sleep 1
-    [ "$i" -eq 30 ] && { echo "install-shim.sh(node): FAIL — containerd did not come back" >&2; exit 1; }
+    [ "$i" -eq 30 ] && { echo "install-shim.sh(node): FAIL, containerd did not come back" >&2; exit 1; }
   done
 fi
 # Always confirm containerd is answering (whether or not we restarted it).
-ctr version >/dev/null 2>&1 || { echo "install-shim.sh(node): FAIL — containerd not responding" >&2; exit 1; }
+ctr version >/dev/null 2>&1 || { echo "install-shim.sh(node): FAIL, containerd not responding" >&2; exit 1; }
 NODE
 minikube cp "$NODE_SCRIPT" "$PROFILE:/tmp/register-wasmtime-runtime.sh" -p "$PROFILE"
 minikube ssh -p "$PROFILE" -- "sudo bash /tmp/register-wasmtime-runtime.sh && sudo rm -f /tmp/register-wasmtime-runtime.sh"

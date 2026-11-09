@@ -27,7 +27,7 @@ spec:
       type: component
       properties:
         # Local build output (build.sh writes it next to this manifest). The
-        # same bytes also run under `wasmtime serve` — see ch16 / prove-same-bytes.sh.
+        # same bytes also run under `wasmtime serve`; see prove-same-bytes.sh.
         image: file://./app.wasm
       traits:
         # Keep one instance of the component running.

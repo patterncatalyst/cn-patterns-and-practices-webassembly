@@ -111,7 +111,7 @@ tempo_trace_count() {
 step "Step 0: tool + version checks"
 mk_ver="$(minikube version --short 2>/dev/null || echo v0.0.0)"
 [[ "$(printf '%s\n%s\n' "$MINIKUBE_MIN" "$mk_ver" | sort -V | head -1)" == "$MINIKUBE_MIN" ]] \
-  || { echo "verify-minikube.sh: FAIL — minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
+  || { echo "verify-minikube.sh: FAIL, minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
 echo "verify-minikube.sh: minikube $mk_ver OK (>= $MINIKUBE_MIN); shim $SHIM_VERSION; Kubernetes $KUBERNETES_VERSION"
 
 step "Step 1: minikube profile '$PROFILE' (docker driver, containerd, Kubernetes $KUBERNETES_VERSION) — shared with Part 5/ch25"
@@ -213,7 +213,7 @@ wait_for_ingress_rule() {
     fi
     sleep 2; waited=$(( waited + 2 ))
   done
-  echo "verify-minikube.sh: FAIL — ingress never routed Host $host (no affinity cookie) within 90s" >&2
+  echo "verify-minikube.sh: FAIL, ingress never routed Host $host (no affinity cookie) within 90s" >&2
   return 1
 }
 wait_for_ingress_rule "$RUST_HOST"
@@ -221,7 +221,7 @@ wait_for_ingress_rule "$GO_HOST"
 
 step "Step 11: resolve the istio-ingressgateway NodePort"
 NODE_PORT="$(kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')"
-[[ -n "$NODE_PORT" ]] || { echo "verify-minikube.sh: FAIL — istio-ingressgateway has no NodePort for 'http2' (see ../part6-deviations/istio/istio-install.sh step 4)" >&2; exit 1; }
+[[ -n "$NODE_PORT" ]] || { echo "verify-minikube.sh: FAIL, istio-ingressgateway has no NodePort for 'http2' (see ../part6-deviations/istio/istio-install.sh step 4)" >&2; exit 1; }
 echo "verify-minikube.sh: istio-ingressgateway NodePort (http2) = $NODE_PORT"
 
 # Gate on a with-header 200, not the filter's 403 — a 403 arrives as soon as
@@ -235,7 +235,7 @@ wait_for_istio_route() {
     [[ "$code" == "200" ]] && { echo "verify-minikube.sh: istio route + filter ready for Host $host after ${waited}s"; return 0; }
     sleep 3; waited=$(( waited + 3 ))
   done
-  echo "verify-minikube.sh: FAIL — istio route + filter not ready for Host $host within ${waited}s (last code '$code')" >&2
+  echo "verify-minikube.sh: FAIL, istio route + filter not ready for Host $host within ${waited}s (last code '$code')" >&2
   return 1
 }
 wait_for_istio_route "$RUST_ISTIO_HOST"
@@ -270,9 +270,9 @@ tmp_rust_body="$(mktemp -t istio-rust-body.XXXXXX)"
 register_cleanup "rm -f '$tmp_rust_body'"
 headers="$(curl -sS -D - -o "$tmp_rust_body" --max-time 8 -H "Host: $RUST_ISTIO_HOST" -H 'x-cargo-tenant: acme' "$ISTIO_URL")"
 echo "$headers" | grep -qi '^HTTP/.* 200' \
-  || { echo "verify-minikube.sh: FAIL — expected 200 with x-cargo-tenant (cargo-rust), got headers:" >&2; echo "$headers" >&2; exit 1; }
+  || { echo "verify-minikube.sh: FAIL, expected 200 with x-cargo-tenant (cargo-rust), got headers:" >&2; echo "$headers" >&2; exit 1; }
 echo "$headers" | grep -qi '^x-cargo-filtered-by: *cargo-wasmfilter' \
-  || { echo "verify-minikube.sh: FAIL — missing x-cargo-filtered-by header (cargo-rust):" >&2; echo "$headers" >&2; exit 1; }
+  || { echo "verify-minikube.sh: FAIL, missing x-cargo-filtered-by header (cargo-rust):" >&2; echo "$headers" >&2; exit 1; }
 assert_eq "$EXPECTED_JSON" "$(cat "$tmp_rust_body")" "minikube GET $CARGO_PATH (x-cargo-tenant: acme) through istio gateway (cargo-rust)"
 
 echo "--- cargo-go, WITHOUT x-cargo-tenant -> expect 403 ---"
@@ -284,9 +284,9 @@ tmp_go_body="$(mktemp -t istio-go-body.XXXXXX)"
 register_cleanup "rm -f '$tmp_go_body'"
 headers="$(curl -sS -D - -o "$tmp_go_body" --max-time 8 -H "Host: $GO_ISTIO_HOST" -H 'x-cargo-tenant: acme' "$ISTIO_URL")"
 echo "$headers" | grep -qi '^HTTP/.* 200' \
-  || { echo "verify-minikube.sh: FAIL — expected 200 with x-cargo-tenant (cargo-go), got headers:" >&2; echo "$headers" >&2; exit 1; }
+  || { echo "verify-minikube.sh: FAIL, expected 200 with x-cargo-tenant (cargo-go), got headers:" >&2; echo "$headers" >&2; exit 1; }
 echo "$headers" | grep -qi '^x-cargo-filtered-by: *cargo-wasmfilter' \
-  || { echo "verify-minikube.sh: FAIL — missing x-cargo-filtered-by header (cargo-go):" >&2; echo "$headers" >&2; exit 1; }
+  || { echo "verify-minikube.sh: FAIL, missing x-cargo-filtered-by header (cargo-go):" >&2; echo "$headers" >&2; exit 1; }
 assert_eq "$EXPECTED_JSON" "$(cat "$tmp_go_body")" "minikube GET $CARGO_PATH (x-cargo-tenant: acme) through istio gateway (cargo-go)"
 
 step "Step 14: shim-OTel liveness — the shim exports traces under the assembled workload"
@@ -310,13 +310,13 @@ sleep 10
 shim_count="$(tempo_trace_count "$OTEL_POD" "$SHIM_SVC")"
 echo "verify-minikube.sh: Tempo trace count for '$SHIM_SVC' after the workload = $shim_count"
 if (( shim_count <= 0 )); then
-  echo "verify-minikube.sh: FAIL — no traces in Tempo for '$SHIM_SVC' after the assembled workload ran" >&2
+  echo "verify-minikube.sh: FAIL, no traces in Tempo for '$SHIM_SVC' after the assembled workload ran" >&2
   exit 1
 fi
-echo "verify-minikube.sh: ok — the shim exported $shim_count trace(s) for '$SHIM_SVC' into otel-lgtm (shim-OTel pipeline live under the final-project workload)"
+echo "verify-minikube.sh: ok, the shim exported $shim_count trace(s) for '$SHIM_SVC' into otel-lgtm (shim-OTel pipeline live under the final-project workload)"
 
 echo
-echo "PASS — part7-final-project on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION, Istio $([[ -n "${ISTIO_VERSION:-}" ]] && echo "$ISTIO_VERSION" || echo "1.31.2")):"
+echo "PASS: part7-final-project on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION, Istio $([[ -n "${ISTIO_VERSION:-}" ]] && echo "$ISTIO_VERSION" || echo "1.31.2")):"
 echo "  cargo-rust.wasm and cargo-go.wasm both run as Wasm Pods via the"
 echo "  containerd wasmtime shim and answer BYTE-IDENTICAL cargo JSON through"
 echo "  ingress-nginx (+ 404 on an unknown id); the ch25 proxy-wasm filter,"

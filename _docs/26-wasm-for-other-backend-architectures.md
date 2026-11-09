@@ -2,54 +2,47 @@
 title: "WebAssembly for Other Backend Architectures"
 order: 26
 part: "Deviations"
-description: "Place the containerd shim, the wasmCloud operator, SpinKube, and WasmEdge's own runwasi shim on one map, then run a Fermyon Spin app for the cargo domain through full SpinKube on minikube and a plain restricted-v2 container on OpenShift Local."
-duration: "19 min read"
+description: "Place the containerd shim, the wasmCloud operator, SpinKube and WasmEdge's runwasi shim on one map, then run a Spin app for the cargo domain through SpinKube on minikube and as a plain restricted-v2 container on OpenShift Local."
+duration: "15 min read"
 ---
 
 ## Learning objectives
 
 By the end of this chapter you can:
 
-- Place `containerd-shim-wasmtime`/runwasi, the wasmCloud operator, SpinKube, and WasmEdge's own runwasi shim on one map by what each schedules, what control-plane machinery it carries, and what kind of app each fits: the landscape the Wasm-on-Kubernetes chapter opened and named SpinKube a Part 6 topic for.
-- Read `examples/part6-deviations/spin/src/lib.rs` and name the one ABI fact that drives every deploy decision in this chapter: `spin-sdk = "=7.0.0"`'s `#[http_service]` macro exports `wasi:http/handler@0.3.0` (wasip3), not the `wasi:http/incoming-handler@0.2.x` world every earlier HTTP example in this book targets.
-- Read `spin.toml` and `build.sh` together and explain why the shipped manifest carries no `[component.cargo-spin.dependencies]` section even though the app imports `patterncatalyst:cargo`, and what the gitignored `spin-build.toml` does instead.
-- Trace the minikube path (`SpinApp` → `spin-operator` → `containerd-shim-spin` → `RuntimeClass wasmtime-spin-v2`) against the CRC path (`spin up` inside a plain `restricted-v2` `Deployment`), and state the constraint that forces the split: the same constraint the OpenShift Local (CRC) deployment path hit with the raw shim.
-- Decide, for a given backend, whether SpinKube, the wasmCloud operator, or the raw containerd shim is the right fit, based on what the app is already built against rather than preference.
+- Place `containerd-shim-wasmtime`, the wasmCloud operator, SpinKube and WasmEdge's runwasi shim on one map by what each schedules, what control plane it carries and what app shape it fits.
+- Name the ABI fact that drives every deploy decision for a Spin app: `spin-sdk = "=7.0.0"` exports `wasi:http/handler@0.3.0` (wasip3), not `wasi:http/incoming-handler@0.2.x`.
+- Explain why the shipped `spin.toml` has no `[component.cargo-spin.dependencies]` section, and what the generated `spin-build.toml` does instead.
+- Trace the minikube path (`SpinApp`, `spin-operator`, `containerd-shim-spin`, `RuntimeClass wasmtime-spin-v2`) against the OpenShift Local path (`spin up` in a plain `restricted-v2` `Deployment`), and state the constraint that forces the split.
+- Choose between SpinKube, the wasmCloud operator and the raw containerd shim by what the app is already built against.
 
 ## Why this matters
 
-The Wasm-on-Kubernetes chapter surveyed four ways to run a Wasm workload on Kubernetes and set one of them aside for later: "SpinKube... is a Part 6 survey topic, named here because it is frequently confused with the generic shim this chapter teaches." That chapter needed the distinction to keep its own scope clean: this book's components are built directly against the WIT contract from the Component Model and WIT chapter, with no Spin-specific packaging, so `containerd-shim-spin` was not a fit for anything in Part 5. This chapter is where that deferred topic gets a real example instead of a one-paragraph mention. `examples/part6-deviations/spin` is a Fermyon Spin HTTP component serving the same cargo domain every earlier chapter serves, composed with the unedited Part 2 Rust provider the same way every other Part 5/6 example composes it. `contracts/wit` is untouched; Spin's own tooling sits on top of the identical interface, not a fork of it.
+Running a component on Kubernetes through the generic containerd shim leaves SpinKube out: that shim runs components built directly against a WIT contract, with no framework packaging. `examples/part6-deviations/spin` is a Spin HTTP component serving the same cargo domain, composed with the unedited Part 2 Rust provider. `contracts/wit` is untouched; Spin's tooling sits on top of the same interface.
 
-The point of running this app is not "Spin is another way to build HTTP services." That much is obvious from `spin.toml`. The point is what happens when a framework's own ABI choice collides with a cluster's installed runtime version, and what happens when that cluster can't take the node-level install the framework's own Kubernetes integration wants. Both collisions are real in this chapter's example tree, not hypothetical: `spin-sdk = "=7.0.0"` exports an ABI only a Spin 4.1+ runtime understands, which pins the exact shim build minikube needs; and `containerd-shim-spin` needs the same kind of privileged node surgery that pushed the OpenShift Local (CRC) deployment path off the raw shim and onto the wasmCloud operator, which pushes this chapter off SpinKube and onto a plain container on CRC. Both halves of this chapter check the same behavior: the minikube SpinKube path (the SpinApp on `containerd-shim-spin` v0.26.0 / RuntimeClass `wasmtime-spin-v2`, through the nip.io ingress) and the CRC path (the Spin runtime in a restricted-v2 container, through an edge-TLS Route, CA-verified), each serving the exact cargo JSON and a 404.
+The lesson is what happens when a framework's ABI choice meets a cluster's installed runtime, and when the cluster refuses the node-level install the framework's Kubernetes integration wants. Both happen here. `spin-sdk = "=7.0.0"` exports an ABI only a Spin 4.1+ runtime understands, which pins the shim build minikube needs. `containerd-shim-spin` needs privileged node changes that `restricted-v2` on OpenShift Local does not allow, so that path runs the Spin runtime inside an ordinary container. Both paths serve the same cargo JSON and the same 404.
 
-## The server-side-Wasm backend landscape: when each fits
+## The backend landscape: when each fits
 
-Four different projects put a Wasm component inside a Kubernetes-shaped scheduling model, and none of them compete head-on: each answers a differently scoped question, and the right one depends on what the app is already built against and how much control-plane machinery a team is willing to run for it.
+Four projects put a Wasm component inside Kubernetes scheduling. They answer different questions, so the choice follows what the app is built against and how much control-plane machinery the team will run.
 
-`containerd-shim-wasmtime`, the mechanism the Wasm-on-Kubernetes chapter teaches and the minikube deployment chapter runs live, is the generic floor. It is a `runwasi`-scaffolded containerd shim plus a `RuntimeClass`: install the binary on a node (by a one-time script, as this book does, or a DaemonSet installer such as KWasm), register it in `/etc/containerd/config.toml`, and any Pod with `runtimeClassName: wasmtime` schedules onto it. It runs any component exporting a WASI world the shim's wasmtime embedding understands: `wasi:http/proxy`, `wasi:cli/run`, the shapes every component in Parts 2 through 5 of this book exports, with no framework-specific packaging step and no extra Kubernetes objects beyond the `RuntimeClass` itself. The operational surface is the smallest on this map: one shim binary per node, one `RuntimeClass`, ordinary `Deployment`/`Service`/`Ingress` manifests otherwise unchanged. It fits a team that built its component directly against a WIT contract and wants nothing more than a way to schedule it.
+| Option | What it schedules | Carries | Fits |
+|---|---|---|---|
+| `containerd-shim-wasmtime` (runwasi) | A Pod with `runtimeClassName: wasmtime` | One shim binary per node, one `RuntimeClass` | Any `wasi:http/proxy` or `wasi:cli/run` component built directly against WIT |
+| wasmCloud operator | A wasmCloud host as an ordinary Pod; `wadm` deploys component, provider and link onto that lattice | NATS, a host process and `wadm` as extra workloads; no `RuntimeClass`, no node change | Apps that want swappable capability providers, declarative links and self-healing, or a cluster where the raw shim hits a WASI feature gap |
+| SpinKube | A `SpinApp` custom resource that `spin-operator` reconciles into a `Deployment` and `Service` | `containerd-shim-spin` (embeds the Spin runtime), a `RuntimeClass`, the operator | Apps already packaged the Spin way: `spin.toml`, triggers, `spin-sdk`, Spin OCI artifacts |
+| WasmEdge and other runwasi shims | A Pod under the shim's `RuntimeClass` | Same node-install mechanics as the raw shim, with a different embedded runtime | Components that need that runtime's host-function extensions, such as image processing or WASI-NN |
 
-The wasmCloud operator, the mechanism the wasmCloud chapter introduces as a single-host lattice and the OpenShift Local (CRC) chapter runs on CRC, answers a different question entirely: not "how do I schedule this component" but "how do I run this component inside a lattice, inside Kubernetes." The operator schedules a wasmCloud host itself as an ordinary Pod (no `RuntimeClass`, no node-level change), and `wadm` then deploys an application onto that in-cluster lattice the same declarative way it deploys onto a local `wash up -d` lattice: a component, a capability provider, and a link between them. That buys a team the lattice properties already established for running wasmtime and wasmCloud together (capability providers swappable without rebuilding the component, declarative links, `wadm`'s self-healing reconcile loop) at the cost of carrying NATS, a host process, and `wadm` as additional Kubernetes workloads on top of the component itself. It fits a workload that already wants those lattice properties, or a cluster where the raw shim hits a real WASI feature gap and the lattice's wasmtime embedding absorbs it instead.
+The first and fourth rows share one contract: a component schedules like a container. A component built against the plain WASI worlds runs the same under either embedding, so the choice there is about the extension surface, not a different operating model. SpinKube is the sibling easiest to confuse with the raw shim, because `containerd-shim-spin` also registers under a `RuntimeClass`. It embeds the Spin runtime instead of a generic wasmtime, so it only runs applications packaged for Spin.
 
-SpinKube, this chapter's own topic, is the closest sibling to the raw shim and the easiest of the four to confuse with it. `containerd-shim-spin` is also a `runwasi`-scaffolded containerd shim registered under a `RuntimeClass`, but the shim embeds the **Spin runtime** itself, not a generic wasmtime embedding, so it only runs applications packaged Spin's way: a `spin.toml` manifest declaring triggers (HTTP, and others Spin supports beyond what this chapter exercises), components built against `spin-sdk`'s ergonomic layer rather than hand-rolled WASI host-import bindings, and Spin's own OCI packaging (`spin registry push`) rather than a generic container image. SpinKube adds one more piece on top of the shim that the raw path doesn't have: a `SpinApp` custom resource and a `spin-operator` controller that reconciles it into a `Deployment` and `Service`, so a Spin app is a first-class Kubernetes object instead of a bare `Deployment` with a `runtimeClassName` field a human wrote by hand. It fits a team already standardized on Spin's trigger model and SDK ergonomics that wants that framework's own object model in the cluster, not a team building directly against WIT with no interest in Spin's packaging.
+{% include excalidraw.html file="26-wasm-backend-landscape" alt="A four-row landscape table. Row 1, containerd-shim-wasmtime (runwasi): a generic shim plus RuntimeClass, smallest operational footprint, runs any wasi:http/proxy or wasi:cli component built directly against WIT. Row 2, wasmCloud operator: schedules a wasmCloud host as a Pod, wadm deploys component, provider and link onto that in-cluster lattice, brings NATS, host and wadm as extra workloads, fits apps wanting declarative links and self-healing. Row 3, SpinKube: containerd-shim-spin (embeds the Spin runtime) plus a SpinApp CRD and spin-operator, scoped to apps packaged with spin.toml and spin-sdk. Row 4, WasmEdge and other runwasi shims: same RuntimeClass pattern as row 1, different embedded runtime with extra host functions (image processing, WASI-NN). A footer band states: pick by what the app is already built against (raw WIT component, lattice-shaped app, or Spin-framework app) and how much control-plane machinery the team will run, not by preference." caption="Figure 26.1: Four ways to put a Wasm component inside Kubernetes scheduling, by what each schedules and what app shape it fits." %}
 
-WasmEdge, and any other `runwasi`-based shim, sits structurally beside `containerd-shim-wasmtime`: same `RuntimeClass` pattern, same node-install or DaemonSet-installer mechanics, same "a component schedules like a container" contract. What changes is the embedded runtime and the host functions it carries: WasmEdge ships additional host-function extensions (image processing, WASI-NN acceleration among them) that a stock wasmtime embedding does not. A component that specifically needs one of those extensions fits a WasmEdge shim; a component built against the plain WASI worlds this book targets runs identically under either embedding, so the choice there is about the extension surface, not a different operations model from the raw shim this book already teaches.
+## The Spin app: `spin-sdk`, composed dependencies and an ABI surprise
 
-{% include excalidraw.html file="26-wasm-backend-landscape" alt="A four-row landscape table. Row 1, containerd-shim-wasmtime (runwasi): a generic shim plus RuntimeClass, smallest operational footprint, runs any wasi:http/proxy or wasi:cli component built directly against WIT, this book's Part 5 mechanism. Row 2, wasmCloud operator: schedules a wasmCloud host as a Pod, wadm deploys component+provider+link onto that in-cluster lattice, brings NATS+host+wadm as extra workloads, fits apps wanting declarative links and self-healing. Row 3, SpinKube: containerd-shim-spin (embeds the Spin runtime itself) plus a SpinApp CRD and spin-operator, scoped to apps packaged with spin.toml and spin-sdk, this chapter's mechanism. Row 4, WasmEdge / other runwasi shims: same RuntimeClass pattern as row 1, different embedded runtime with extra host functions (image processing, WASI-NN), fits a component needing that specific extension surface. A footer band states: pick by what the app is already built against (raw WIT component, lattice-shaped app, or Spin-framework app) and how much control-plane machinery the team is willing to run, not by preference." caption="Figure 26.1: four ways to put a Wasm component inside Kubernetes's scheduling model, by what each schedules and what app shape it fits." %}
-
-## The Spin app: `spin-sdk`, a dependency Spin resolves itself, and a real ABI surprise
-
-`examples/part6-deviations/spin/src/lib.rs` is the Spin-native counterpart to `examples/part3-interfaces/http-rust`: the same route, `GET /cargo/{id}`, the same domain, the same book-then-get pattern, on a different host with a different entrypoint macro. Spin's `#[http_service]` attribute and the `spin_sdk::http::{Request, Response}` types are the framework's ergonomic layer over a component's HTTP ABI; a function signature and a `Response::builder()` call stand in for hand-written `wit-bindgen` `Guest` impls:
+`src/lib.rs` is the Spin counterpart of the Part 3 HTTP component: the same route, `GET /cargo/{id}`, the same book-then-get pattern. Spin's `#[http_service]` macro and `spin_sdk::http::{Request, Response}` replace hand-written `wit-bindgen` `Guest` impls:
 
 {% raw %}
 ```rust
-use spin_sdk::http::{IntoResponse, Request, Response};
-use spin_sdk::http_service;
-
-spin_sdk::dependencies!();
-
-use patterncatalyst::cargo::booking::{book_cargo, get_cargo};
-use patterncatalyst::cargo::types::{CargoError, Location, RouteSpec};
-
 #[http_service]
 async fn handle_cargo_spin(req: Request) -> anyhow::Result<impl IntoResponse> {
     let path = req.uri().path().to_string();
@@ -59,19 +52,16 @@ async fn handle_cargo_spin(req: Request) -> anyhow::Result<impl IntoResponse> {
             404,
             r#"{"error":"not found","hint":"GET /cargo/{id}"}"#.to_string(),
         );
-    };
-    // Known shape CARGO-{ORIGIN}-{DEST}: book (seed) then read back.
-    // Any other id is never booked, so get-cargo legitimately misses.
-    ...
-}
 ```
 {% endraw %}
 
-`spin.toml`'s trigger section is the entire routing table: one `[[trigger.http]]` entry with `route = "/..."` sends every path on the application to the `cargo-spin` component, and the component itself does the actual dispatch inside `handle_cargo_spin`: a known `CARGO-{ORIGIN}-{DEST}` id books then reads back, giving a cold component instance something to find; any other id legitimately misses and returns a 404, the same contract every earlier HTTP example in this book serves.
+Spin gives each request its own component instance, so a bare `get-cargo` on a cold instance always misses. A known `CARGO-{ORIGIN}-{DEST}` id therefore books first and then reads back; any other id is never booked and returns a 404. `spin.toml` routes every path to the one component and leaves dispatch to the handler.
 
-The import side is the more interesting mechanism. `spin_sdk::dependencies!()`, called once at the top of `lib.rs`, is Spin's own answer to the same problem `wac plug` solves everywhere else in this book: satisfying a component's import with another component's export. A manifest's `[component.cargo-spin.dependencies]` table names a path to the provider component; `spin build` reads that table, decodes the referenced component's exports, writes a `spin-dependencies.wit` file into the crate directory, and `spin_sdk::dependencies!()` bindgens it into ordinary Rust functions (`patterncatalyst::cargo::booking::book_cargo`, `get_cargo`), generated at the crate root rather than behind a `bindings::` module prefix. `spin up` and `spin registry push` can satisfy the same dependency at load time too, through the identical `wac`-based graph composition Spin runs internally, with no hand-run `wac plug` required for a `spin up`-only workflow.
+### Satisfying the import
 
-The shipped `spin.toml` carries none of that dependency machinery:
+`spin_sdk::dependencies!()` is Spin's answer to the problem `wac plug` solves elsewhere: satisfying a component's import with another component's export. A `[component.cargo-spin.dependencies]` table names the provider component. `spin build` decodes its exports, writes `spin-dependencies.wit` into the crate, and the macro generates ordinary Rust functions from it (`patterncatalyst::cargo::booking::book_cargo`, `get_cargo`) at the crate root. `spin up` can satisfy the same dependency at load time, so a local `spin up` needs no hand-run `wac plug`.
+
+The shipped manifest carries none of that:
 
 {% raw %}
 ```toml
@@ -80,7 +70,7 @@ spin_manifest_version = 2
 [application]
 name = "cargo-spin"
 version = "0.1.0"
-description = "Cargo domain HTTP front door as a Fermyon Spin component (ch26)."
+description = "Cargo domain HTTP front door as a Fermyon Spin component."
 
 [[trigger.http]]
 route = "/..."
@@ -92,13 +82,15 @@ allowed_outbound_hosts = []
 ```
 {% endraw %}
 
-`component.cargo-spin.source` points straight at `cargo-spin.wasm`, a single already-composed artifact, because `build.sh` runs two manifests rather than one. The first, a gitignored, generated `spin-build.toml`, declares `[component.cargo-spin.dependencies]` against the freshly built Part 2 provider, which is what makes `spin build` regenerate `spin-dependencies.wit` and compile the handler to `wasm32-wasip2`. The second step then runs `wac plug` by hand, the same tool and the same shape every other Part 5/6 example in this book uses, to compose that raw handler with the provider directly into one self-contained `cargo-spin.wasm` whose import is already satisfied:
+`source` points at `cargo-spin.wasm`, one already-composed artifact. `build.sh` runs `spin build` against a generated, gitignored `spin-build.toml` that does declare the dependency, then composes by hand:
 
 {% raw %}
 ```bash
 echo "spin/build.sh: [3/5] spin build (regenerates spin-dependencies.wit, compiles the handler) ..."
 spin build -f "$BUILD_MANIFEST"
 HANDLER="$SCRIPT_DIR/target/wasm32-wasip2/release/cargo_spin.wasm"
+[[ -s "$HANDLER" ]] || { echo "spin/build.sh: FAIL, handler component not produced" >&2; exit 1; }
+[[ -s "$SCRIPT_DIR/spin-dependencies.wit" ]] || { echo "spin/build.sh: FAIL, spin-dependencies.wit was not regenerated" >&2; exit 1; }
 
 echo "spin/build.sh: [4/5] composing cargo-spin.wasm (wac plug: provider -> handler) ..."
 wac plug --plug "$PROVIDER" "$HANDLER" -o "$OUT"
@@ -106,9 +98,13 @@ wasm-tools validate "$OUT"
 ```
 {% endraw %}
 
-The reason to bother composing by hand when Spin could satisfy the dependency itself at `spin up` time is packaging, not correctness: the CRC runtime image ships exactly two files, `spin.toml` and `cargo-spin.wasm`, the same "one pre-composed artifact" shape every other Part 5/6 runtime image in this book holds to, rather than a raw handler plus a provider file plus a dependency-aware manifest the runtime has to resolve at startup. `build.sh` asserts the composition closed the loop before it writes anything out: the export must be exactly `wasi:http/handler@0.3.0`, and every remaining import must be `wasi:*`, with no `patterncatalyst:*` import left unsatisfied by the plug.
+The reason to compose by hand is packaging. The CRC runtime image ships exactly two files, `spin.toml` and `cargo-spin.wasm`, instead of a raw handler, a provider and a dependency-aware manifest the runtime resolves at startup. Before writing anything out, `build.sh` checks that the export is exactly `wasi:http/handler@0.3.0` and that every remaining import is `wasi:*`, with no `patterncatalyst:*` import left open.
 
-That export name is the chapter's real teaching point: `spin-sdk = "=7.0.0"`'s `#[http_service]` macro targets `wasi:http@0.3.0/handler`, the **wasip3** async HTTP world, not `wasi:http/incoming-handler@0.2.x`, the ABI every other HTTP example in this book exports: `part3-interfaces/http-rust`, every Part 5 Kubernetes deploy target, the wasmCloud and Istio deviations. `cargo-spin.wasm` is correct and runnable; it simply requires a host that speaks wasip3's HTTP world. Spin's own `trigger-http` runs both ABIs natively, so `spin up` and SpinKube serve this component with no translation layer, but a `wasmtime serve` pipeline or any other 0.2.x-only host would not recognize its exports. That single ABI fact is why containerd-shim-spin needs to be `v0.26.0` or later: that version embeds Spin `4.1.0`, the first line that understands `wasi:http@0.3.0`, and it is why the CRC container runs the pinned Spin CLI `v4.2.4` rather than an arbitrary release: both deploy targets this chapter builds have to run a Spin runtime new enough for the ABI this SDK version emits, and `Cargo.toml` pins the SDK itself exact for the same reason:
+### The ABI
+
+`#[http_service]` in `spin-sdk = "=7.0.0"` targets `wasi:http@0.3.0/handler`, the wasip3 async HTTP world. Every other HTTP component here, including Part 3, every Part 5 deploy target and the wasmCloud and Istio deviations, exports `wasi:http/incoming-handler@0.2.x`. Spin's `trigger-http` runs both ABIs natively, so `spin up` and SpinKube serve the component with no translation. A `wasmtime serve` pipeline or any other 0.2.x-only host would not recognize its export.
+
+That one fact sets the runtime floor. `containerd-shim-spin` must be v0.26.0 or later, because that release embeds Spin 4.1.0, the first line that understands `wasi:http@0.3.0`. The CRC container runs Spin CLI v4.2.4 for the same reason, and `Cargo.toml` pins the SDK exactly:
 
 {% raw %}
 ```toml
@@ -121,11 +117,16 @@ crate-type = ["cdylib"]
 ```
 {% endraw %}
 
+## Running Spin without a node install
+
+`containerd-shim-spin` installs a node-level containerd plugin, and on RHCOS that needs a `MachineConfig` that restarts the node. A `restricted-v2` project cannot ask for that, which is also what pushed the raw shim off OpenShift Local in favor of the wasmCloud operator. Spin's CLI is the whole runtime a `cargo-spin.wasm` needs: `spin up` loads the component and serves its HTTP trigger, so a plain `Deployment` is enough, with no CRD and no controller. When a platform refuses a node-level runtime install, wrap the runtime itself in an ordinary container and let the platform's admission rules do the rest.
+
 ## Deploying Spin two ways
 
-The chapter runs the same artifact, `cargo-spin.wasm`, on both cluster paths this book always compares, by two different mechanisms, the identical constraint the OpenShift Local (CRC) deployment path's wasmCloud-operator substitution already established for the raw shim: `containerd-shim-spin` needs a privileged RHCOS node install that does not fit the `restricted-v2` posture the CRC chapters hold to.
+On **minikube**, the app runs through the full SpinKube platform. `install-spinkube.sh` lays down four pieces, each gated on observed state rather than a fixed sleep:
 
-On **minikube**, the app runs through the complete SpinKube platform. `install-spinkube.sh` lays down four pieces in order, each gated on real proof rather than a fixed sleep. First, cert-manager (a `spin-operator` webhook prerequisite), installed at `v1.21.2` and proven with a throwaway self-signed `Certificate` the webhook must admit, not just a Pod reporting `Ready`; a failed smoke test falls back to `v1.20.0` and the script reports on stdout which version is running. Second, the `runtime-class-manager` Helm chart (`v0.2.0`), which installs `containerd-shim-spin` (`v0.26.0`) on every node labeled `spin=true` and, once the shim is in place, provisions the `RuntimeClass` this chapter's Pod will reference:
+1. cert-manager v1.21.2, a `spin-operator` webhook prerequisite, proven with a throwaway self-signed `Certificate` the webhook must admit rather than by a Pod reporting `Ready`. A failed smoke test falls back to v1.20.0 and the script reports which one is running.
+2. The `runtime-class-manager` Helm chart (v0.2.0), which installs `containerd-shim-spin` on every node labeled `spin=true` and provisions the `RuntimeClass` once the shim is in place:
 
 {% raw %}
 ```bash
@@ -134,16 +135,18 @@ helm upgrade --install runtime-class-manager "$RUNTIME_CLASS_MANAGER_CHART" \
   --version "$RUNTIME_CLASS_MANAGER_VERSION" \
   --namespace "$RUNTIME_CLASS_MANAGER_NAMESPACE" --create-namespace \
   --wait --timeout 5m
+echo "install-spinkube.sh: runtime-class-manager $RUNTIME_CLASS_MANAGER_VERSION installed (namespace $RUNTIME_CLASS_MANAGER_NAMESPACE)"
 
 step "2b/4 Shim CR for containerd-shim-spin $SHIM_SPIN_VERSION + node labels ($SHIM_SPIN_NODE_LABEL)"
 kubectl apply -f "$SHIM_SPIN_MANIFEST_URL"
 kubectl label node --all "$SHIM_SPIN_NODE_LABEL" --overwrite
-
-wait_for_resource 300 "RuntimeClass '$SPIN_RUNTIMECLASS' present" runtimeclass "$SPIN_RUNTIMECLASS"
 ```
 {% endraw %}
 
-Third, `spin-operator` (`v0.6.1`): its CRDs, a `SpinAppExecutor` named `containerd-shim-spin` that tells the operator which `RuntimeClass` (`wasmtime-spin-v2`) to schedule a `SpinApp`'s Pod onto, and the operator chart itself. Fourth, a `ghcr-pull` image-pull secret for the private `ghcr.io/patterncatalyst/cargo-spin:spinkube` image, built from `gh auth token`, the same pattern every private `cargo-*` package in this book uses. The `SpinApp` custom resource itself is small precisely because the preceding four steps did the real work:
+3. `spin-operator` v0.6.1: its CRDs, a `SpinAppExecutor` named `containerd-shim-spin` that tells the operator which `RuntimeClass` (`wasmtime-spin-v2`) to schedule onto, and the operator chart.
+4. A `ghcr-pull` image-pull secret for the private `ghcr.io/patterncatalyst/cargo-spin:spinkube` image, built from `gh auth token`.
+
+The `SpinApp` is small because those steps did the work:
 
 {% raw %}
 ```yaml
@@ -152,6 +155,9 @@ kind: SpinApp
 metadata:
   name: cargo-spin
   namespace: part6-spin
+  labels:
+    app.kubernetes.io/name: cargo-spin
+    app.kubernetes.io/part-of: part6-spin
 spec:
   image: ghcr.io/patterncatalyst/cargo-spin:spinkube
   executor: containerd-shim-spin
@@ -161,25 +167,16 @@ spec:
 ```
 {% endraw %}
 
-`spin-operator` reconciles that `SpinApp` into a `Deployment` and a `Service`, both named `cargo-spin`, the `Service` listening on port 80: the same name and port pairing SpinKube's own quickstart documents, not something the Ingress manifest invents. `base/ingress.yaml` is the only externally reachable path in, patched live to `cargo-spin.<minikube-ip>.nip.io` the same `nip.io` convention every other Part 5 Ingress host in this book uses; the live request path runs host → Ingress → Service → Pod (`runtimeClassName: wasmtime-spin-v2`) → `containerd-shim-spin`'s own HTTP trigger → `cargo-spin.wasm`, with no port-forward, no NodePort, and no `minikube service` shortcut anywhere in the chain.
+`spin-operator` reconciles it into a `Deployment` and a `Service`, both named `cargo-spin`, with the `Service` on port 80. The only path in is `base/ingress.yaml`, patched live to `cargo-spin.<minikube-ip>.nip.io`: host, Ingress, Service, Pod (`runtimeClassName: wasmtime-spin-v2`), `containerd-shim-spin`'s HTTP trigger, `cargo-spin.wasm`. No port-forward and no NodePort.
 
-On **CRC**, the same artifact runs without any of that platform. `containerd-shim-spin` needs the same kind of privileged RHCOS node install (a node-level containerd plugin and a `MachineConfig` that restarts the node) that pushed the OpenShift Local (CRC) deployment path off the raw `containerd-shim-wasmtime` and onto the wasmCloud operator instead. Here the substitute is simpler than an operator, because Spin's own CLI *is* the whole runtime a `cargo-spin.wasm` component needs: `spin up` loads the component and serves its HTTP trigger directly, so an ordinary `Deployment` under `restricted-v2` is enough, with no CRD and no controller at all. `Dockerfile` packages the pinned `spin` `v4.2.4` binary on `debian:trixie-slim` (the smallest base in this book's rotation that already carries the glibc, libgcc, and libstdc++ the Spin binary links against), verified against its release checksum at image-build time:
+On **OpenShift Local**, the Dockerfile packages the pinned Spin CLI on `debian:trixie-slim`, the smallest base in rotation that already carries the glibc, libgcc and libstdc++ the Spin binary links against, and verifies the release checksum at image build. The runtime half is:
 
 {% raw %}
 ```dockerfile
-FROM debian:trixie-slim
-ARG SPIN_VERSION=v4.2.4
-ARG SPIN_SHA256=519ba201e0105dc83a17a4ea9ca6605c80286cbfaf40c1d7505d068bfea83cf1
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl libstdc++6 \
-    && curl -fsSL -o /tmp/spin.tar.gz "https://github.com/fermyon/spin/releases/download/${SPIN_VERSION}/spin-${SPIN_VERSION}-linux-amd64.tar.gz" \
-    && echo "${SPIN_SHA256}  /tmp/spin.tar.gz" | sha256sum -c - \
-    && tar -xzf /tmp/spin.tar.gz -C /tmp spin && install -m 0755 /tmp/spin /usr/local/bin/spin
-RUN groupadd --system --gid 10001 cargo-spin \
-    && useradd --system --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cargo-spin \
-    && mkdir -p /app/.cache && chown -R 10001:0 /app && chmod -R g=u /app
 WORKDIR /app
 COPY spin.toml /app/spin.toml
 COPY cargo-spin.wasm /app/cargo-spin.wasm
+
 ENV HOME=/app
 USER 10001
 EXPOSE 8080
@@ -187,19 +184,29 @@ ENTRYPOINT ["spin", "up", "--listen", "0.0.0.0:8080", "-f", "/app/spin.toml"]
 ```
 {% endraw %}
 
-`openshift/deployment.yaml` sets no `runAsUser`: the image's fixed numeric `USER 10001` already satisfies the `runAsNonRoot: true` admission check, and `restricted-v2` assigns its own uid from the project's allocated SCC range at admission time: pinning a uid in the manifest would fight that range instead of living inside it, the identical reasoning the wasmCloud host container in the OpenShift Local (CRC) chapter already applies. `allowPrivilegeEscalation: false`, every capability dropped, and `seccompProfile: RuntimeDefault` cover the rest of the posture explicitly, with no `anyuid` exception requested anywhere. `openshift/route.yaml` fronts the Service with the same edge-TLS pattern every CRC chapter in this book uses (the router terminates TLS and forwards plain HTTP to the Service's `http` port), and every assertion in `verify-crc.sh` goes through that Route with a CA-verified `curl`, never `-k`, never a port-forward.
+`openshift/deployment.yaml` sets no `runAsUser`. The numeric `USER 10001` already satisfies `runAsNonRoot: true`, and `restricted-v2` assigns its own uid from the project's range; pinning one would fight that range. `/app` is group-0 writable (`chmod g=u`) for the arbitrary uid, with `.cache` pre-created for Spin's compilation cache. Privilege escalation is off, every capability is dropped and the seccomp profile is `RuntimeDefault`, with no `anyuid` exception. `openshift/route.yaml` fronts the Service with an edge-TLS Route that terminates TLS and forwards plain HTTP to the Service's `http` port.
 
-| | minikube (SpinKube) | CRC (Spin runtime in a container) |
+| | minikube (SpinKube) | OpenShift Local (Spin in a container) |
 |---|---|---|
 | Runtime | `containerd-shim-spin` v0.26.0, node-level | Spin CLI v4.2.4, in-container |
 | Kubernetes object | `SpinApp` (`core.spinkube.dev/v1alpha1`) | plain `Deployment` |
 | Controller | `spin-operator` v0.6.1 | none |
 | Scheduling | `RuntimeClass wasmtime-spin-v2` | ordinary Pod, no `RuntimeClass` |
-| Node change | shim binary + containerd config, via a Helm-installed DaemonSet-style installer | none |
-| Entry point | `cargo-spin.wasm` image Spin's trigger loads directly | `spin up -f spin.toml`, the container's `ENTRYPOINT` |
+| Node change | shim binary and containerd config, installed by a Helm-installed installer | none |
+| Entry point | image Spin's trigger loads directly | `spin up -f spin.toml` as the container `ENTRYPOINT` |
 | Edge | ingress-nginx, `nip.io` host | edge-TLS Route, `apps-crc.testing` host |
 
-What differs between the two paths is entirely the same thing the Istio-and-WebAssembly chapter already established for Istio's community build versus OSSM3: the control-plane depth underneath an identical component, driven by what each platform will let a privileged node change touch, not a difference in the component itself or in what it serves.
+The component and what it serves are identical. Only the control-plane depth underneath changes, set by what each platform lets a privileged node change touch.
+
+> **Decision**
+>
+> Use SpinKube when the app is already a Spin application (`spin-sdk`, `spin.toml`, a Spin OCI artifact) and the cluster accepts a node-level shim install, so a `SpinApp` is a first-class object with its own operator. Use the wasmCloud operator when the workload wants lattice properties (declarative links, swappable providers, `wadm` self-healing) regardless of how the component was packaged. Use the raw `containerd-shim-wasmtime` when the component is a plain WIT artifact and the cluster permits a node install; it carries the least machinery. When no install fits (`restricted-v2`, a managed node image, no privileged role), run the runtime in an ordinary container.
+
+> **🤖 Explore with your agent**
+>
+> "In examples/part6-deviations/spin, the handler exports wasi:http/handler@0.3.0. Add a GET /health route to src/lib.rs that returns {\"status\":\"ok\"} with a 200, rebuild with ./build.sh, and tell me which of the minikube SpinKube path and the OpenShift Local spin up container needs a different Spin runtime version because of the ABI, and which one needs a node-level install."
+>
+> Check: build.sh prints the exports and imports and still lists exactly `wasi:http/handler@0.3.0`; the reply names containerd-shim-spin v0.26.0 for minikube and says the CRC container needs no node change.
 
 ## Build, run, observe
 
@@ -208,17 +215,20 @@ cd examples/part6-deviations/spin && ./build.sh
 cd ../spinkube && ./verify-spinkube-minikube.sh
 ```
 
-`spin/build.sh` compiles the handler against `spin-sdk = "=7.0.0"`, runs `spin build` to regenerate `spin-dependencies.wit` against the freshly built Part 2 provider, then `wac plug`-composes the two into the single self-contained `cargo-spin.wasm`, asserting the export is exactly `wasi:http/handler@0.3.0` with no unsatisfied `patterncatalyst:*` import. `spinkube/verify-spinkube-minikube.sh` starts or reuses the Part 5 minikube profile, pushes the Spin OCI artifact, installs cert-manager, `runtime-class-manager` (which installs `containerd-shim-spin` and the `wasmtime-spin-v2` `RuntimeClass`), and `spin-operator`, applies the `SpinApp` overlay, patches the Ingress to a live `nip.io` host, then asserts a real HTTP 200 with the exact cargo JSON and a 404 for an unknown cargo id through the ingress-nginx edge, with no port-forward. `--keep` leaves the profile up for inspection. `spinkube/openshift/verify-crc.sh` runs the equivalent proof on CRC through the Spin CLI running directly inside a `restricted-v2` container, behind a CA-verified edge-TLS Route. `spinkube/capture-evidence.sh` and `spinkube/openshift/capture-evidence.sh` write the `evidence/<date>/` files for each path, scrubbed of credential material; `spin/README.md` documents the local `spin up` workflow and `spinkube/README.md` documents the full platform install.
+`build.sh` compiles the handler, regenerates `spin-dependencies.wit`, composes `cargo-spin.wasm` with `wac plug` and fails unless the export is `wasi:http/handler@0.3.0` with no open `patterncatalyst:*` import. `verify-spinkube-minikube.sh` starts or reuses the Part 5 minikube profile, installs cert-manager, `runtime-class-manager` and `spin-operator`, applies the `SpinApp`, patches the Ingress to a live `nip.io` host, and passes on an HTTP 200 with the cargo JSON plus a 404 for an unknown id through ingress-nginx. `--keep` leaves the profile up. `spinkube/openshift/verify-crc.sh` runs the same checks against the container behind the Route with a CA-verified `curl`, never `-k`. The `capture-evidence.sh` scripts write scrubbed `evidence/<date>/` files; `spin/README.md` covers local `spin up` and `spinkube/README.md` the platform install.
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Reach for SpinKube when the app is already a Spin application (built against <code>spin-sdk</code>, packaged as a <code>spin.toml</code> manifest, pushed as a Spin OCI artifact) and the cluster will accept a node-level shim install (a cluster you fully control, or a managed node image with a DaemonSet-style installer such as <code>runtime-class-manager</code>); the payoff is a <code>SpinApp</code> as a first-class object with its own operator reconciling it, instead of a bare <code>Deployment</code> a human wrote by hand. Reach for the wasmCloud operator instead when the workload wants the lattice's own properties (declarative links, swappable capability providers, <code>wadm</code>'s self-healing reconcile) on top of running in Kubernetes, independent of what packaging format built the component. Reach for the raw <code>containerd-shim-wasmtime</code> path when the component is a plain WIT-built artifact with no framework packaging at all, and the cluster permits a node-level install; it carries the least machinery of the three live options. When none of those installs fits the platform (<code>restricted-v2</code>, a managed node image, no privileged role), the fallback is the same for every one of these mechanisms: wrap the runtime itself in an ordinary container and let the platform's standard admission rules do the rest, the way this chapter's CRC Deployment and the OpenShift Local (CRC) chapter's wasmCloud host both do.</p></div>
+Experiments:
+
+- Run the component under `wasmtime serve`: the 0.2.x-only host does not recognize the `wasi:http/handler@0.3.0` export.
+- Use a `containerd-shim-spin` older than v0.26.0: the embedded Spin does not understand the wasip3 world.
 
 ## For deeper coverage
 
-- [Spin documentation](https://spinframework.dev/): the `spin.toml` manifest, trigger model, and `spin-sdk` ergonomics `src/lib.rs` is built against.
-- [SpinKube documentation](https://www.spinkube.dev/): the `SpinApp` CRD, `spin-operator`, and `runtime-class-manager`'s installation of `containerd-shim-spin`, this chapter's minikube mechanism.
-- [`fermyon/spin-sdk-rs`](https://github.com/fermyon/spin-rust-sdk): the `#[http_service]` macro and `spin_sdk::dependencies!()` composition helper this chapter's handler crate depends on.
-- [WasmEdge documentation](https://wasmedge.org/): the runwasi-based shim and host-function extension surface named in this chapter's landscape section as the fourth entry on the map.
-- The wasmCloud chapter and the wasmtime-and-wasmCloud-together chapter: the lattice properties they establish are what this chapter's landscape section weighs against SpinKube's operator model.
-- The Wasm-on-Kubernetes chapter: the four-project landscape this chapter extends, and the paragraph that named SpinKube a Part 6 topic in the first place.
-- The minikube deployment chapter and the OpenShift Local (CRC) deployment chapter: the raw shim and the wasmCloud-operator substitution this chapter's own minikube/CRC split mirrors, for a Spin app instead of a plain WIT component.
-- The Istio-and-WebAssembly chapter: the same same-component-different-control-plane-depth framing this chapter's minikube/CRC comparison table applies a second time.
+- [Spin documentation](https://spinframework.dev/): the `spin.toml` manifest, trigger model and `spin-sdk`.
+- [SpinKube documentation](https://www.spinkube.dev/): the `SpinApp` CRD, `spin-operator` and `runtime-class-manager`.
+- [`fermyon/spin-sdk-rs`](https://github.com/fermyon/spin-rust-sdk): the `#[http_service]` macro and `spin_sdk::dependencies!()`.
+- [WasmEdge documentation](https://wasmedge.org/): the runwasi shim and its host-function extensions.
+- wasmCloud, and wasmtime and wasmCloud together: the lattice properties weighed against SpinKube's operator model.
+- Wasm on Kubernetes: the deployment-path landscape this map extends.
+- Deploying on minikube and on OpenShift Local (CRC): the raw shim and the wasmCloud-operator substitution that the Spin minikube and CRC split mirrors.
+- Istio and WebAssembly: the same component under a different control-plane depth.

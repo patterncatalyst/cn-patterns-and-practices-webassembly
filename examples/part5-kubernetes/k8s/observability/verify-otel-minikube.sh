@@ -36,7 +36,7 @@ done
 step "Step 0: tool + version checks"
 mk_ver="$(minikube version --short 2>/dev/null || echo v0.0.0)"
 [[ "$(printf '%s\n%s\n' "$MINIKUBE_MIN" "$mk_ver" | sort -V | head -1)" == "$MINIKUBE_MIN" ]] \
-  || { echo "verify-otel-minikube.sh: FAIL — minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
+  || { echo "verify-otel-minikube.sh: FAIL, minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
 echo "verify-otel-minikube.sh: minikube $mk_ver OK; otel-lgtm 0.33.1; shim $SHIM_VERSION"
 
 step "Step 1: minikube profile '$PROFILE' up (docker driver, containerd, Kubernetes $KUBERNETES_VERSION)"
@@ -97,7 +97,7 @@ while (( waited < 90 )); do
   fi
   sleep 2; waited=$(( waited + 2 ))
 done
-[[ "$ok" -eq 1 ]] || { echo "verify-otel-minikube.sh: FAIL — ingress never routed Host $CARGO_HOST within 90s" >&2; exit 1; }
+[[ "$ok" -eq 1 ]] || { echo "verify-otel-minikube.sh: FAIL, ingress never routed Host $CARGO_HOST within 90s" >&2; exit 1; }
 wait_for_200 "http://$CARGO_HOST$VALID_PATH" 90
 
 step "Step 7: generate traffic (the signal the shim will emit telemetry about)"
@@ -155,7 +155,7 @@ echo "$loki_json"
 assert_contains '"values":[' "$loki_json" "Loki query_range returned at least one stream"
 
 echo
-echo "PASS — ch24 on-cluster observability (minikube):"
+echo "PASS: ch24 on-cluster observability (minikube):"
 echo "  otel-lgtm (0.33.1) received OTLP from the containerd wasmtime shim"
 echo "  ($SHIM_VERSION); a real trace is in Tempo, a real metric series"
 echo "  (otelcol_receiver_accepted_spans_total) is in Prometheus, and a real"

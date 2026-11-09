@@ -99,10 +99,10 @@ wait_for_resource() {
   local waited=0
   until kubectl get "$@" >/dev/null 2>&1; do
     if (( waited >= timeout )); then
-      echo "lib.sh: FAIL — timed out after ${timeout}s waiting for $what" >&2
+      echo "lib.sh: FAIL, timed out after ${timeout}s waiting for $what" >&2
       return 1
     fi
     sleep 5; waited=$(( waited + 5 ))
   done
-  echo "lib.sh: ok — $what (after ${waited}s)" >&2
+  echo "lib.sh: ok, $what (after ${waited}s)" >&2
 }

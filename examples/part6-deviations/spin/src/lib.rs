@@ -1,4 +1,4 @@
-// HTTP front door for the cargo domain, as a Fermyon Spin component (ch26).
+// HTTP front door for the cargo domain, as a Fermyon Spin component.
 //
 // This is the Spin-native counterpart to `examples/part3-interfaces/http-rust`:
 // same route (`GET /cargo/{id}`), same domain, same book-then-get pattern, on

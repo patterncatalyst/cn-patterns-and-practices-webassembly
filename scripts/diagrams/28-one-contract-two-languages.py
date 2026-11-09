@@ -32,10 +32,10 @@ nodes = [
 
     # Rust column
     {"x": 100, "y": 150, "w": 400, "h": 80,
-     "lines": ["Part 2: Rust cargo provider", "implements contracts/wit"],
+     "lines": ["Rust cargo provider", "implements contracts/wit"],
      "style": "box"},
     {"x": 100, "y": 270, "w": 400, "h": 80,
-     "lines": ["Part 3: http-rust component", "wasi:http/incoming-handler"],
+     "lines": ["http-rust component", "wasi:http/incoming-handler"],
      "style": "box"},
     {"x": 100, "y": 390, "w": 400, "h": 60,
      "lines": ["wac plug --plug provider http-rust"],
@@ -46,10 +46,10 @@ nodes = [
 
     # Go column
     {"x": 900, "y": 150, "w": 400, "h": 80,
-     "lines": ["Part 2: Go cargo provider", "implements contracts/wit"],
+     "lines": ["Go cargo provider", "implements contracts/wit"],
      "style": "box"},
     {"x": 900, "y": 270, "w": 400, "h": 80,
-     "lines": ["Part 3: http-go component (TinyGo)", "wasi:http/incoming-handler"],
+     "lines": ["http-go component (TinyGo)", "wasi:http/incoming-handler"],
      "style": "box"},
     {"x": 900, "y": 390, "w": 400, "h": 60,
      "lines": ["wac plug --plug provider http-go"],
@@ -59,10 +59,10 @@ nodes = [
      "style": "accent"},
 
     {"x": 55, "y": 670, "w": 310, "h": 110,
-     "lines": ["containerd-shim-wasmtime", "Part 5: RuntimeClass: wasmtime"],
+     "lines": ["containerd-shim-wasmtime", "RuntimeClass: wasmtime"],
      "style": "box"},
     {"x": 385, "y": 670, "w": 310, "h": 110,
-     "lines": ["Istio gateway filter", "Part 6: proxy-wasm"],
+     "lines": ["Istio gateway filter", "proxy-wasm"],
      "style": "box"},
     {"x": 715, "y": 670, "w": 310, "h": 110,
      "lines": ["shim OTel → otel-lgtm", "Tempo traces"],
@@ -72,7 +72,7 @@ nodes = [
      "style": "box"},
 
     {"x": 20, "y": 890, "w": 1360, "h": 70,
-     "lines": ["One WIT contract; every part of the book plugs into it."],
+     "lines": ["One WIT contract; every deploy target plugs into it."],
      "style": "ink"},
 ]
 

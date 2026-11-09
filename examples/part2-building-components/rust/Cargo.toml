@@ -9,7 +9,7 @@ wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
 [lib]
 crate-type = ["cdylib"]
 
-# The component targets the repository's shared WIT contract directly — the
+# The component targets the repository's shared WIT contract directly: the
 # crate does NOT copy the WIT. `target.path` points at contracts/wit (relative
 # to this Cargo.toml) and `target.world` selects the provider-side `cargo`
 # world, whose three exported interfaces (types, booking, handling) this crate

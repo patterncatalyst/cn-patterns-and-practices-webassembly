@@ -18,15 +18,15 @@ Part 3 artifact, composes, serves/curls/round-trips, and asserts.
 
 | Dir | Chapter | What it is |
 | --- | --- | --- |
-| `http-rust/` | ch11 | Rust `wasi:http/incoming-handler` component (cargo-component). Imports the cargo `booking` interface; serves `GET /cargo/{id}`. |
-| `http-go/` | ch11 | The same in TinyGo (wit-bindgen-go + reactor pipeline). |
-| `proto/cargo.proto` | ch12 | Shared protobuf contract (messages + `CargoService`). |
-| `proto-component/proto-rust/` | ch12 | Component that uses **prost inside the sandbox** to decode/encode protobuf (`codec.get-cargo(list<u8>) -> list<u8>`). |
-| `proto-component/proto-host/` | ch12 | Native host that drives the protobuf round trip and asserts the fields. Language-agnostic: drives both the Rust and the TinyGo codec. |
-| `proto-go/` | ch12 | TinyGo codec component using a **reflection-free protobuf wire codec** (`wire.go`). |
-| `grpc-bridge/` | ch12 | Native **tonic** gRPC server that terminates gRPC and dispatches each RPC to the unchanged Part 2 Rust provider over WIT. |
-| `sockets-rust/` | ch13 | Rust `wasi:sockets` outbound TCP client with reconnect + exponential backoff with jitter; capability-scoped. |
-| `sockets-go/` | ch13 | TinyGo `wasi:sockets` client (reactor). Builds + validates; runtime gap documented below. |
+| `http-rust/` | Chapter 11 | Rust `wasi:http/incoming-handler` component (cargo-component). Imports the cargo `booking` interface; serves `GET /cargo/{id}`. |
+| `http-go/` | Chapter 11 | The same in TinyGo (wit-bindgen-go + reactor pipeline). |
+| `proto/cargo.proto` | Chapter 12 | Shared protobuf contract (messages + `CargoService`). |
+| `proto-component/proto-rust/` | Chapter 12 | Component that uses **prost inside the sandbox** to decode/encode protobuf (`codec.get-cargo(list<u8>) -> list<u8>`). |
+| `proto-component/proto-host/` | Chapter 12 | Native host that drives the protobuf round trip and asserts the fields. Language-agnostic: drives both the Rust and the TinyGo codec. |
+| `proto-go/` | Chapter 12 | TinyGo codec component using a **reflection-free protobuf wire codec** (`wire.go`). |
+| `grpc-bridge/` | Chapter 12 | Native **tonic** gRPC server that terminates gRPC and dispatches each RPC to the unchanged Part 2 Rust provider over WIT. |
+| `sockets-rust/` | Chapter 13 | Rust `wasi:sockets` outbound TCP client with reconnect + exponential backoff with jitter; capability-scoped. |
+| `sockets-go/` | Chapter 13 | TinyGo `wasi:sockets` client (reactor). Builds + validates; runtime gap documented below. |
 
 Vendored under each component's `wit/deps/` is a pinned **wasi 0.2.x** WIT set.
 The Rust HTTP/sockets crates vendor the internally-consistent **0.2.8** set from
@@ -40,7 +40,7 @@ same wasmtime v50 reactor adapter the Part 2 Go provider uses.
 
 ## Exact recipes
 
-### ch11: wasi-http (`wasmtime serve`)
+### Chapter 11: wasi-http (`wasmtime serve`)
 
 ```bash
 # Rust
@@ -72,7 +72,7 @@ request, so a cold `get-cargo` always misses. Any id that is not a
 `CARGO-{ORIGIN}-{DEST}` triple is never booked, so it maps to
 `cargo-error::not-found` → HTTP 404.
 
-### ch12: protobuf-in-Wasm and the gRPC bridge
+### Chapter 12: protobuf-in-Wasm and the gRPC bridge
 
 ```bash
 # prost inside the component (Rust), driven by the native host
@@ -84,14 +84,14 @@ wac plug --plug <rust provider> \
 proto-component/proto-host/target/release/cargo-proto-host composed-proto-rust.wasm
 # host: encoded GetCargoRequest (19 bytes) ...
 # host: received 91 bytes of protobuf response
-# host: ASSERT OK — prost round trip through Wasm: tracking_id=CARGO-USNYC-DEHAM ... price=1500.00 USD
+# host: ASSERT OK, prost round trip through Wasm: tracking_id=CARGO-USNYC-DEHAM ... price=1500.00 USD
 
 # reflection-free protobuf inside the component (TinyGo), SAME host
 bash proto-go/build.sh
 wac plug --plug <go provider> proto-go/cargo-proto-go.wasm -o composed-proto-go.wasm
 proto-component/proto-host/target/release/cargo-proto-host composed-proto-go.wasm   # byte-identical 91-byte response
 
-# gRPC bridge (tonic) — in-process client round trip
+# gRPC bridge (tonic): in-process client round trip
 ( cd grpc-bridge && cargo test --release -- --nocapture )
 # grpc-bridge: tonic client round trip OK (GetCargo + BookCargo through Wasm)
 # run the server for manual use / grpcurl:
@@ -103,11 +103,11 @@ bridge generate code from `proto/cargo.proto` at build time. Pinned versions:
 **prost 0.14.4**, **tonic 0.14.6** (tonic 0.14 split the prost integration into
 `tonic-prost` / `tonic-prost-build`). Cargo.lock is committed for every crate.
 
-The split ch12 makes: **gRPC-the-transport** needs the host bridge (there is no
+The split Chapter 12 makes: **gRPC-the-transport** needs the host bridge (there is no
 in-component gRPC server), but **Protobuf-the-serialization** runs fully
 server-side inside a component.
 
-### ch13: wasi-sockets reconnect
+### Chapter 13: wasi-sockets reconnect
 
 ```bash
 ( cd sockets-rust && cargo component build --release )

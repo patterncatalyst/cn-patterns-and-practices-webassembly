@@ -2,8 +2,8 @@
 #
 # examples/part6-deviations/istio/install-ossm.sh
 #
-# Install OpenShift Service Mesh 3 (the Sail operator's distribution of Istio
-# 1.31.2) on OpenShift Local (CRC) and prepare the istio-ingressgateway to run
+# Install OpenShift Service Mesh 3 (the Sail operator's distribution of Istio,
+# pinned to v1.26.2 below) on OpenShift Local (CRC) and prepare the istio-ingressgateway to run
 # the ch25 proxy-wasm filter. This is the CRC counterpart to ./istio-install.sh.
 # Pinned CSV, Manual approval, approve ONLY the named InstallPlan — the house
 # OperatorHub convention (see the lgtm-crc skill and

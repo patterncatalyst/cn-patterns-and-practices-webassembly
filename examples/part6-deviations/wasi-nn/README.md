@@ -28,8 +28,8 @@ build wasmtime.
 
 ## The teaching point: a pre-1.0 WASI proposal, version-exact to one host
 
-Every earlier Part 2–5 example in this book imports `patterncatalyst:cargo`,
-a WIT contract this book owns and controls. `wasi:nn` is different: it is a
+Every earlier Part 2 to Part 5 example in the repository imports `patterncatalyst:cargo`,
+a WIT contract the repository owns and controls. `wasi:nn` is different: it is a
 **pre-1.0, release-candidate** WASI proposal
 (`wasi:nn@0.2.0-rc-2024-10-28`: note the `-rc-<date>` suffix, not a stable
 `0.2.x`), and unlike `wasi:cli`/`wasi:filesystem`/`wasi:clocks` it ships
@@ -82,7 +82,7 @@ in `src/main.rs` needs, in its own `<layer>` and `<meta_data>` elements:
 | Input tensor name | `"input"` | `<layer id="0" name="input" type="Parameter">` |
 | Shape | `[1, 3, 224, 224]` (NCHW) | same layer: `<data shape="1,3,224,224"/>`; Model Optimizer's own NHWC→NCHW conversion (`disable_nhwc_to_nchw=False` in `<meta_data>`); the fixture's download URL name, `tensor-1x224x224x3-f32.bgr`, describes the *original* TensorFlow NHWC shape, not what the compiled OpenVINO graph reads |
 | Channel order | BGR | `<meta_data><cli_parameters><reverse_input_channels value="True">`: a Model Optimizer flag used exactly when an RGB-trained model is fed BGR input and the reversal is folded into the graph |
-| Normalization | none (raw 0–255 as `f32`) | `mean_values = input[127.5,127.5,127.5]` and `scale_values = input[127.5]` in the same metadata are implemented as `Multiply`/`Add` nodes immediately after the input layer; the graph normalizes, so the guest must not normalize twice |
+| Normalization | none (raw 0 to 255 as `f32`) | `mean_values = input[127.5,127.5,127.5]` and `scale_values = input[127.5]` in the same metadata are implemented as `Multiply`/`Add` nodes immediately after the input layer; the graph normalizes, so the guest must not normalize twice |
 | Output width | 1001 (1000 ImageNet classes + background at index 0) | output layer's `<dim>1001</dim>`; the TF-Slim/Google Inception-family convention for this exact model family |
 
 The BGR/NCHW/no-normalization combination is also exactly what
@@ -173,7 +173,7 @@ no `patterncatalyst:*`, confirming this crate classifies a photo rather than
 touching the booking/handling domain. Prints the component's sha256.
 
 `target/` is gitignored; `Cargo.lock` is committed for reproducible builds;
-`src/bindings.rs` is committed too, matching this book's convention for
+`src/bindings.rs` is committed too, matching the repository's convention for
 cargo-component-generated bindings (see
 `examples/part2-building-components/consumer-rust/src/bindings.rs`);
 regenerate it by re-running `./build.sh` after any `wit/` change, never hand-edit it.
@@ -251,5 +251,5 @@ wasm-tools component wit target/wasm32-wasip1/release/cargo-wasi-nn.wasm | grep 
 
 This confirms the component is well-formed and its ABI surface is exactly
 what chapter 27 claims. It does not, and cannot, confirm the classification is
-correct; that needs the live OpenVINO run above, which is this book's
+correct; that needs the live OpenVINO run above, which is the repository's
 reader's step, not this script's.

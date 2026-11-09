@@ -53,11 +53,11 @@ case "$iv" in
   *"$ISTIO_VERSION"*) ;;
   *) echo "istio-install.sh: WARNING — istioctl binary does not report $ISTIO_VERSION; 'istioctl install' below still pins the CONTROL PLANE image tag via --set tag=$ISTIO_VERSION, but prefer a matching istioctl binary (see lgtm feedback: upgrade the local tool, never downgrade the pin)." >&2 ;;
 esac
-kubectl get nodes >/dev/null || { echo "istio-install.sh: FAIL — minikube profile '$PROFILE' is not reachable" >&2; exit 1; }
+kubectl get nodes >/dev/null || { echo "istio-install.sh: FAIL, minikube profile '$PROFILE' is not reachable" >&2; exit 1; }
 
 step "1. istioctl x precheck (the Istio<->Kubernetes skew gate, see header note)"
 istioctl x precheck --context "$PROFILE" \
-  || { echo "istio-install.sh: FAIL — precheck reported a blocker; re-pin minikube's Kubernetes version into Istio 1.31's supported 1.32-1.36 window and retry (see header note)" >&2; exit 1; }
+  || { echo "istio-install.sh: FAIL, precheck reported a blocker; re-pin minikube's Kubernetes version into Istio 1.31's supported 1.32-1.36 window and retry (see header note)" >&2; exit 1; }
 echo "istio-install.sh: precheck OK"
 
 step "2. istioctl install (pinned $ISTIO_VERSION, profile=$ISTIO_PROFILE)"

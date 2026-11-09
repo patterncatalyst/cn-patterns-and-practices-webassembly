@@ -13,7 +13,7 @@ prost = { version = "=0.14.4", default-features = false, features = ["derive"] }
 
 [build-dependencies]
 # prost-build invokes protoc at build time to turn proto/cargo.proto into Rust
-# message structs. Messages only — the service in the .proto is ignored by this
+# message structs. Messages only: the service in the .proto is ignored by this
 # messages-only generator (the gRPC service is handled by the tonic bridge).
 prost-build = "=0.14.4"
 

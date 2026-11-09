@@ -1,16 +1,16 @@
-# ch26: SpinKube (Spin on Kubernetes, via the full platform)
+# Chapter 26: SpinKube (Spin on Kubernetes, via the full platform)
 
-Deploys the ch26 Spin app (`../spin`) onto minikube through the complete
+Deploys the Chapter 26 Spin app (`../spin`) onto minikube through the complete
 SpinKube stack: cert-manager, runtime-class-manager, the
 `containerd-shim-spin` node shim, and the spin-operator, rather than Part 5's
 manual containerd-shim-wasmtime RuntimeClass or Part 4's wasmCloud host. Same
 minikube profile as Part 5 (`part5`, docker driver, containerd runtime); this
-is a second, independent workload layered onto it, the way ch25's Istio
+is a second, independent workload layered onto it, the way Chapter 25's Istio
 deviation shares the profile instead of standing up a second cluster.
 
 ## Why a different shim
 
-The ch26 app (`../spin/cargo-spin.wasm`) is built with `spin-sdk = "=7.0.0"`
+The Chapter 26 app (`../spin/cargo-spin.wasm`) is built with `spin-sdk = "=7.0.0"`
 and exports `wasi:http/handler@0.3.0` (wasip3), a newer ABI than the
 `wasi:http/incoming-handler@0.2.x` world Parts 2-5's Component Model app
 targets. `containerd-shim-spin` embeds Spin itself as its runtime, and only

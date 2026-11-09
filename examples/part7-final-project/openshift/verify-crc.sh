@@ -67,7 +67,7 @@ ok "cargo-rust : https://$RUST_HOST"
 ok "cargo-go   : https://$GO_HOST"
 
 echo
-echo "PASS — Part 7 final project, reduced OpenShift Local (CRC) pass:" \
+echo "PASS: Part 7 final project, reduced OpenShift Local (CRC) pass:" \
      "both language composites deployed by the wasmCloud operator to one" \
      "in-cluster host, each served the exact cargo JSON and a 404 through its" \
      "own edge-TLS Route (CA-verified against the cluster's own ingress CA," \

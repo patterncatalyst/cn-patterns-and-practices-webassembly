@@ -2,7 +2,7 @@
 title: "Composing Components and WIT Worlds"
 order: 8
 part: "Building Components in Rust & Go"
-description: "Compose a Rust or Go consumer component with a Rust or Go provider component using wac, and run the result directly under wasmtime with no native host."
+description: "Plug a Rust or Go consumer component into a Rust or Go provider with wac, and run the result under wasmtime with no native host."
 duration: "26 min read"
 ---
 
@@ -10,48 +10,39 @@ duration: "26 min read"
 
 By the end of this chapter you can:
 
-- Explain the socket/plug model `wac plug` uses: the consumer (imports) is the socket, the provider (exports) is the plug, and matching happens by WIT identifier, never by source language.
-- Build a `cargo-component` **command** component (Rust) and a TinyGo **command** component (Go), each importing the cargo interfaces and exporting `wasi:cli/run`, so the composed result needs no native host.
-- Diagnose and fix the command-adapter-plus-heap-`cabi_realloc` trap that makes a Go command component abort during its own startup, with a static bump-arena allocator.
-- Run all four consumer x provider compositions (`wac plug` then `wasmtime run`) and explain why composed bytes are non-deterministic while runtime output is not.
-- State when `wac plug`'s single-pair recipe is enough and when a multi-component graph calls for `wac compose` and a `.wac` script instead.
+- Explain the socket and plug model of `wac plug`: the consumer (imports) is the socket, the provider (exports) is the plug, and matching is by WIT identifier, never by source language.
+- Build a `cargo-component` command component (Rust) and a TinyGo command component (Go), each importing the cargo interfaces and exporting `wasi:cli/run`, so the composed result needs no native host.
+- Fix the trap that aborts a Go command component during startup when `cabi_realloc` allocates from the heap, using a static bump arena.
+- Run all four consumer and provider compositions with `wac plug` and `wasmtime run`, and explain why composed bytes are non-deterministic while runtime output is not.
+- Choose between `wac plug` for one pair and `wac compose` with a `.wac` script for a larger graph.
 
 ## Why this matters
 
-The Rust cargo provider and the Go cargo provider, built against the identical WIT contract, ran into a working compiler that `go build` couldn't be today. Both ended the same way: a native Rust host, built once against `world cargo`, calling either component and getting byte-identical results. That proved the two providers are interchangeable from a caller's point of view. It did not prove anything about what happens when the caller itself is a WebAssembly component rather than native code, and that is exactly the gap `examples/part2-building-components/consumer-rust/` and `consumer-go/` close.
+A native host that calls a component proves the component works. It doesn't show what happens when the caller is itself a component. Two consumer components close that gap. They import `patterncatalyst:cargo/{types,booking,handling}` instead of exporting them and run one deterministic scenario as the caller. Composed with either provider by `wac plug`, each becomes a single `.wasm` file that `wasmtime run` executes directly, with no host binary.
 
-These two new components do the opposite job: instead of exporting `patterncatalyst:cargo/{types,booking,handling}`, they import those three interfaces and run the same deterministic scenario as callers. Composed with either provider using `wac plug`, each becomes a single, self-contained `.wasm` file that `wasmtime run` executes directly, with no host binary at all. Four consumer x provider combinations exist (Rust consumer with Rust provider, Rust consumer with Go provider, Go consumer with Rust provider, Go consumer with Go provider), and `verify.sh`'s Step 8 runs all four and asserts they print the identical normalized summary line. Two of those four pairs cross a language boundary at composition time: a WIT world is a boundary two independently built pieces of code can agree on without either one reading the other's source, and composition matches by WIT identifier, not by source language. These four binaries, built independently in two languages, run together on that identifier match alone.
+That gives four consumer and provider pairs: Rust with Rust, Rust with Go, Go with Rust and Go with Go. Two of them cross a language boundary at composition time, and all four print the same summary line. A WIT world is a boundary that two independently built pieces of code agree on without reading each other's source.
 
-{% include excalidraw.html file="08-wac-plug-socket-and-plug" alt="A consumer-rust.wasm or consumer-go.wasm box, labeled SOCKET, imports patterncatalyst:cargo types, booking, and handling and exports wasi:cli/run. A rust or go provider box, labeled PLUG, exports the same three interfaces. Both feed into a wac plug --plug provider consumer -o composed.wasm command box, which produces a composed.wasm box described as self-contained, run directly by wasmtime run composed.wasm with no native host required. A dashed arrow from composed.wasm points to a ghost box listing wasi:cli, wasi:io, and wasi:clocks imports left unresolved, satisfied by wasmtime's own WASI implementation at instantiation. A caption states composition matches by WIT identifier, not by source language." caption="Figure 8.1: wac plug: the consumer is the socket, the provider is the plug, and WASI stays the runtime's job." %}
+{% include excalidraw.html file="08-wac-plug-socket-and-plug" alt="A consumer-rust.wasm or consumer-go.wasm box, labeled SOCKET, imports patterncatalyst:cargo types, booking, and handling and exports wasi:cli/run. A rust or go provider box, labeled PLUG, exports the same three interfaces. Both feed into a wac plug --plug provider consumer -o composed.wasm command box, which produces a composed.wasm box described as self-contained, run directly by wasmtime run composed.wasm with no native host required. A dashed arrow from composed.wasm points to a ghost box listing wasi:cli, wasi:io, and wasi:clocks imports left unresolved, satisfied by wasmtime's own WASI implementation at instantiation. A caption states composition matches by WIT identifier, not by source language." caption="Figure 8.1: wac plug. The consumer is the socket, the provider is the plug, and WASI stays the runtime's job." %}
 
 ## The socket and the plug
 
-`wac plug` takes exactly two components and one piece of vocabulary worth getting right before touching either consumer's source: which one is the **plug** and which one is the **socket**. `verify.sh`'s own comment states it directly:
+`wac plug` takes exactly two components. The provider, whose exports satisfy someone else's unmet imports, is the `--plug`. The consumer, which has an unresolved import for `patterncatalyst:cargo/booking@0.1.0` and its siblings, is the socket and is the positional argument.
 
 ```bash
-# wac plug: the PROVIDER (exports cargo) is the --plug; the CONSUMER (imports
-# cargo, exports wasi:cli/run) is the socket. The composed component needs no
-# native host — wasmtime runs it directly. Assert RUNTIME stdout, never bytes.
+RUSTP=rust/target/wasm32-wasip1/release/cargo_rust.wasm
+RUSTC=consumer-rust/target/wasm32-wasip1/release/cargo-consumer-rust.wasm
+wac plug --plug "$RUSTP" "$RUSTC" -o /tmp/rustC-rustP.wasm && wasmtime run /tmp/rustC-rustP.wasm
 ```
 
-The provider is the `--plug` argument because it is the thing being plugged *into* something else: it supplies exports that satisfy someone else's unmet imports. The consumer is the positional socket argument because it is the thing with a socket-shaped hole in it: an unresolved import for `patterncatalyst:cargo/booking@0.1.0` and friends, which the WIT package identifier alone would describe without naming who happens to fill it. The recipe end to end, for one pairing out of the four:
+`wac` matches the interface identifiers `patterncatalyst:cargo/types@0.1.0`, `booking@0.1.0` and `handling@0.1.0` between what the consumer imports and what the provider exports. By then both files are Component Model binaries whose only visible shape is their WIT, so the matching never sees a source language. A Rust consumer has no opinion about whether its provider was built in Rust or Go. Its import names an interface, not a language.
 
-```bash
-wac plug --plug "$RUST_WASM" "$RUST_CONSUMER" -o /tmp/rustC-rustP.wasm
-wasmtime run /tmp/rustC-rustP.wasm
-```
+## Two consumers, two homes for the world
 
-`wac` resolves that plug entirely by matching WIT interface identifiers (`patterncatalyst:cargo/types@0.1.0`, `patterncatalyst:cargo/booking@0.1.0`, `patterncatalyst:cargo/handling@0.1.0`) between what the consumer imports and what the provider exports. Nothing in that matching step inspects which language either binary was compiled from, because by the time `wac` sees either `.wasm` file, the language is already gone: both are Component Model binaries whose only externally visible shape is their WIT interface, the identical constraint that governs composition in the abstract and that the Rust and Go providers already proved on the provider side. A consumer built in Rust has no opinion about whether the provider satisfying its import was built in Rust or Go, because its import statement never named a language in the first place. It named `patterncatalyst:cargo/booking@0.1.0`, and that is the only thing `wac` has to find a match for.
+Both consumers run the same scenario: book `USNYC` to `DEHAM` at 1200.5 kg, fetch the cargo, request routes, assign one, register three handling events, list them, then construct a `cargo-tracker` and read its ID, status and history. They differ in where the world that names their imports lives, and both choices are valid.
 
-## Two consumers, one contract, two WIT homes
-
-Both consumers run the identical scenario: book `USNYC → DEHAM` at 1200.5 kg, fetch the cargo, request routes, assign one, register three handling events, list them, construct a `cargo-tracker`, and read back its tracking ID, current status, and history. Both print the identical normalized summary line. Where they differ is where each one gets its WIT imports from, and both answers are legitimate.
-
-The Rust consumer defines its own local world, `consumer-rust/wit/world.wit`, rather than reusing anything the contract already ships:
+The Rust consumer declares a local world in its own crate:
 
 ```wit
-package patterncatalyst:cargo-consumer-rust@0.1.0;
-
 world cargo-cli {
     import patterncatalyst:cargo/types@0.1.0;
     import patterncatalyst:cargo/booking@0.1.0;
@@ -59,7 +50,7 @@ world cargo-cli {
 }
 ```
 
-This world lives inside the consumer's own crate, not inside `contracts/wit/`, and `Cargo.toml` supplies the `patterncatalyst:cargo` package those three `import` lines reference as a **path dependency** pointing straight at the shared contract:
+The `patterncatalyst:cargo` package those imports reference comes from `Cargo.toml` as a path dependency on the shared contract:
 
 ```toml
 [package.metadata.component.target]
@@ -70,9 +61,9 @@ world = "cargo-cli"
 "patterncatalyst:cargo" = { path = "../../../contracts/wit" }
 ```
 
-The contract directory itself is never copied and never edited, the same discipline the Rust provider was built around, but the world that names the shape of *this particular consumer's* imports belongs to the consumer, not to the shared contract. That separation matters once a consumer wants to add anything of its own: a real client might eventually want a fourth import, or a local type the contract doesn't define, and a local world absorbs that without touching `contracts/wit/` at all.
+The contract directory is never copied or edited. A local world leaves room for a consumer to add an import or a type of its own without touching `contracts/wit/`.
 
-The Go consumer takes the other legitimate path: it reuses a world the contract already defines, `cargo-consumer`, rather than declaring its own. `build.sh` names it directly in the `wit-bindgen-go generate` invocation:
+The Go consumer reuses `cargo-consumer`, a world the contract already defines, and names it in the `wit-bindgen-go` invocation:
 
 ```bash
 wit-bindgen-go generate -o internal/cargo \
@@ -80,24 +71,20 @@ wit-bindgen-go generate -o internal/cargo \
   --world cargo-consumer "$CONTRACT_DIR"
 ```
 
-Both are correct, and the choice is about ownership, not capability: a local world keeps the contract pristine while giving a consumer room to grow its own vocabulary later; reusing the contract's own consumer-side world is the cleaner recipe when a consumer wants nothing beyond exactly what the contract already promises an importer. Neither Rust nor Go is tied to one approach: the Rust consumer could have targeted `cargo-consumer` directly, and the Go consumer could have carried its own local world. The two examples demonstrate both options once each.
+| World | Use it when |
+| --- | --- |
+| Local to the consumer | The consumer may grow imports or types the contract doesn't define |
+| `cargo-consumer` from the contract | The consumer wants exactly what the contract promises an importer |
 
-## Building the Rust consumer: a command, not a library
+Neither language is tied to one choice.
 
-The Rust and Go providers were both built as **reactor** components: no `main`, instantiated once, called repeatedly by a host across the life of a process. `consumer-rust` is built as the opposite shape: a `[[bin]]` crate with an ordinary `fn main`, which makes it a cargo-component **command** rather than a reactor. That distinction is what makes `wac plug`'s output directly runnable:
+## Building a command component
+
+The providers are **reactor** components: no `main`, instantiated once and called repeatedly by a host. A consumer that `wasmtime run` can execute must be a **command**, which exports `wasi:cli/run`.
+
+In Rust that means a `[[bin]]` crate with an ordinary `fn main`. `cargo-component` synthesizes the `wasi:cli/run` export around it, the export `wasmtime run` looks for when handed a `.wasm` file with no other instructions. Inside `run()`, calls to the imports read like local calls because the generated bindings hide the Canonical ABI; they are the mirror image of the provider's `impl BookingGuest for Component`:
 
 ```rust
-// Composed with ANY component that exports `cargo` (the Rust or the Go
-// provider in ../rust and ../go) via `wac plug`, the result is directly
-// `wasmtime run`-able — no native host required.
-```
-
-Because the crate has a real `fn main`, `cargo-component` synthesizes the `wasi:cli/run` export that wraps it, the same export a WASI command-line program exports, and the same export `wasmtime run` looks for when it is handed a `.wasm` file with no other instructions. `main` itself reads like an ordinary CLI program that happens to call imported functions instead of local ones:
-
-```rust
-fn run() -> Result<String, String> {
-    let spec = RouteSpec { origin, destination, arrival_deadline: ARRIVAL_DEADLINE.to_string() };
-
     // book-cargo
     let b = booking::book_cargo(&spec, WEIGHT_KG).map_err(|e| cargo_error_str(&e))?;
 
@@ -105,23 +92,24 @@ fn run() -> Result<String, String> {
     let cargo = booking::get_cargo(&b.cargo_id).map_err(|e| cargo_error_str(&e))?;
 
     // request-possible-routes -> assign-route
-    let routes = booking::request_possible_routes(&b.booking_id).map_err(|e| cargo_error_str(&e))?;
-    let itinerary = routes.into_iter().next().ok_or_else(|| "no candidate itineraries".to_string())?;
-    let leg = itinerary.legs.first().cloned().ok_or_else(|| "itinerary has no legs".to_string())?;
-    let assigned = booking::assign_route(&b.booking_id, &itinerary).map_err(|e| cargo_error_str(&e))?;
+    let routes =
+        booking::request_possible_routes(&b.booking_id).map_err(|e| cargo_error_str(&e))?;
+    let itinerary = routes
+        .into_iter()
+        .next()
+        .ok_or_else(|| "no candidate itineraries".to_string())?;
+    let leg = itinerary
+        .legs
+        .first()
+        .cloned()
+        .ok_or_else(|| "itinerary has no legs".to_string())?;
+    let assigned =
+        booking::assign_route(&b.booking_id, &itinerary).map_err(|e| cargo_error_str(&e))?;
+```
 
-    // register-handling-event x3, then list-handling-events, then the cargo-tracker resource
-    // ...
+`main` is an ordinary CLI entry point that prints the one summary line or exits non-zero:
 
-    Ok(format!(
-        "booking={}|cargo={}|weight={}|price={} {}|status={}|itinerary={} {} {}|assigned={}|events={}|tracker={} {} {}|history={}",
-        b.booking_id, cargo.tracking_id, cargo.weight_kg, b.price.amount, b.price.currency,
-        routing_status_str(b.status), itinerary.booking_id, leg.voyage_id, transport_status_str(leg.status),
-        routing_status_str(assigned.status), events.len(), t_id, transport_status_str(t_status),
-        t_history.len(), history_str(&t_history),
-    ))
-}
-
+```rust
 fn main() {
     match run() {
         Ok(line) => println!("{line}"),
@@ -133,7 +121,7 @@ fn main() {
 }
 ```
 
-`booking::book_cargo`, `booking::get_cargo`, and the rest resolve to generated bindings for *imported* functions rather than `Guest` trait methods implemented over local state, the mirror image of the Rust provider's `impl BookingGuest for Component`. Calling an import reads exactly like calling a local function because the generated bindings make it look that way; the Canonical ABI call across the eventual component boundary is invisible from this file, the same way it was invisible from `host/src/main.rs` in the Rust provider build, except here the caller is itself a `.wasm` binary rather than native code. Building it uses the same one command the provider used:
+It builds with the command the provider used:
 
 ```bash
 cd consumer-rust
@@ -141,34 +129,25 @@ cargo component build --release
 # -> target/wasm32-wasip1/release/cargo-consumer-rust.wasm
 ```
 
-## Building the Go consumer: the command adapter, and a trap at startup
-
-The Go consumer's `main.go` is just as unremarkable as the Rust one: plain calls against generated bindings, the identical scenario, the identical normalized line, byte-for-byte, printed with `fmt.Println`:
-
-```go
-return fmt.Sprintf(
-    "booking=%s|cargo=%s|weight=%s|price=%s %s|status=%s|itinerary=%s %s %s|assigned=%s|events=%d|tracker=%s %s %d|history=%s",
-    b.BookingID, cargo.TrackingID, weight, b.Price.Amount, b.Price.Currency, b.Status.String(),
-    itinerary.BookingID, leg.VoyageID, leg.Status.String(), assigned.Status.String(),
-    len(events.Slice()), tID, tStatus.String(), len(tHistory), strings.Join(history, ","),
-), nil
-```
-
-The build recipe looks almost identical to the Go provider's build, with one flag changed and one adapter swapped:
+In Go, dropping `-buildmode=c-shared` makes `tinygo build` produce a command core module that exports `_start`. The wasip1 to wasip2 translation then needs the **command** adapter, not the reactor adapter the Go provider used. The two are not interchangeable: a reactor core given the wrong adapter panics the first time an export is called, and the same mismatch fails in the other direction.
 
 ```bash
 tinygo build -target=wasip1 -o core.wasm .
+
+echo "build.sh: [3/4] embedding the cargo-consumer world ..."
 wasm-tools component embed "$CONTRACT_DIR" --world cargo-consumer core.wasm -o embedded.wasm
+
+echo "build.sh: [4/4] creating the command component (wasip1 -> wasip2 via command adapter) ..."
 wasm-tools component new embedded.wasm \
   --adapt "wasi_snapshot_preview1=$ADAPTER" \
   -o "$OUT"
 ```
 
-Dropping `-buildmode=c-shared` here is not an oversight: a plain `tinygo build` produces a **command** core module (it exports `_start`, runs `main()` once), which is exactly what a `wasi:cli/run`-exporting consumer needs to be, the mirror of the Rust consumer's `cargo-component` command. That also means a different adapter has to do the wasip1-to-wasip2 translation: `consumer-go/adapters/wasi_snapshot_preview1.command.wasm`, not the reactor adapter the Go provider used. The two adapters are not interchangeable: a reactor core given the wrong adapter panics the first time an export is called; the consumer's own mismatch produces the same class of failure in the opposite direction.
+### The startup trap and the bump arena
 
-Getting the adapter and the build mode right is not sufficient on its own. The command adapter does something a reactor adapter never has to do: it fetches the process's own argv by calling the module's exported `cabi_realloc` function **from inside `_start`**, before the TinyGo runtime has finished its own startup sequence. The provider's `cabi_realloc` (`go/cabi_realloc.go`) allocates from the Go heap via `make`, which is correct for a reactor: `_initialize` always finishes running before any exported function is ever called, so the heap and the garbage collector are fully up by the time anything touches `cabi_realloc`. A command has no such guarantee: its `_start` *is* the first thing that runs, and the call chain the adapter triggers goes `runtime.run` → `os.Args` → `args_sizes_get` → back into the adapter → back into `cabi_realloc`, all before TinyGo's own runtime init has necessarily settled. A heap-backed realloc re-enters `make([]...)` partway through that sequence, and the adapter aborts with `assertion failed at adapter line 2857` rather than running at all.
+The right adapter isn't enough. The command adapter fetches the process arguments by calling the module's exported `cabi_realloc` from inside `_start`, before the TinyGo runtime has finished starting. The call chain is `runtime.run`, `os.Args`, `args_sizes_get`, the adapter, and back into `cabi_realloc`. The provider's `cabi_realloc` allocates from the Go heap with `make`. That is correct for a reactor, where `_initialize` finishes before any export runs. In a command, a heap allocation re-enters `make` before the collector is ready, and the adapter aborts with `assertion failed at adapter line 2857`.
 
-The fix, in `consumer-go/cabi_realloc.go`, replaces the heap allocator with a static bump-arena that never touches the Go heap:
+The consumer's `cabi_realloc.go` replaces the heap allocator with a static arena:
 
 ```go
 const cabiArenaSize = 1 << 20
@@ -179,6 +158,7 @@ var cabiOffset uintptr
 //export cabi_realloc
 func cabiRealloc(ptr unsafe.Pointer, size, align, newsize uintptr) unsafe.Pointer {
 	if newsize == 0 {
+		// Free / shrink-to-zero: the return value is ignored by the ABI.
 		return unsafe.Pointer(&cabiArena[0])
 	}
 	if align == 0 {
@@ -186,6 +166,8 @@ func cabiRealloc(ptr unsafe.Pointer, size, align, newsize uintptr) unsafe.Pointe
 	}
 	off := (cabiOffset + align - 1) &^ (align - 1)
 	if off+newsize > cabiArenaSize {
+		// Out of arena: returning nil signals allocation failure to the ABI
+		// rather than silently corrupting memory.
 		return nil
 	}
 	newptr := unsafe.Pointer(&cabiArena[off])
@@ -197,19 +179,22 @@ func cabiRealloc(ptr unsafe.Pointer, size, align, newsize uintptr) unsafe.Pointe
 }
 ```
 
-A fixed `[1 MiB]byte` global and a monotonically advancing offset, no frees, ever. It touches no Go heap, so it is safe to call before the GC is ready, and TinyGo's non-moving collector keeps that global array exactly where it is while the host reads lifted strings and lists back out of it after the call returns. The component runs the scenario once and exits, so never freeing the arena costs nothing: 1 MiB is far larger than the few kilobytes of data this scenario ever lifts across the boundary in one run. A reactor never hits this failure at all, which is precisely why the provider in `go/` gets to keep the simpler heap-backed version and the consumer in `consumer-go/` cannot.
+The arena never touches the Go heap, so it's safe during early init, and TinyGo's non-moving collector keeps the array in place while the host reads lifted strings and lists out of it. Nothing is ever freed. That costs nothing here because the component runs the scenario once and exits, and 1 MiB is far more than the few kilobytes it lifts. A reactor never hits this failure, which is why the provider keeps the simpler heap version.
 
-TinyGo 0.43's one-shot `tinygo build -target=wasip2 -wit-package ... -wit-world cargo-consumer` flag combination would skip the manual embed-then-adapt dance, but its bundled adapter pins WASI `0.2.0` while the rest of this toolchain produces `0.2.12` WASI imports; running it produces `failed to resolve import wasi:cli/environment@0.2.0` during the bundled component step. The explicit `-target=wasip1` plus `wasm-tools component embed` plus `component new --adapt ...=command.wasm` pipeline that `consumer-go/build.sh` runs matches the WASI minor version this toolchain produces.
+TinyGo 0.43 can skip the manual embed and adapt steps with `tinygo build -target=wasip2 -wit-package ... -wit-world cargo-consumer`. Its bundled adapter pins WASI `0.2.0` while the rest of the toolchain produces `0.2.12` imports, and the build fails with `failed to resolve import wasi:cli/environment@0.2.0`. The explicit `wasip1`, `component embed`, `component new --adapt` pipeline matches the WASI minor version in use.
 
-## WASI version skew composes fine
+## WASI version skew composes
 
-The Rust provider and the Go components import different minor versions of WASI: `wasm-tools component wit` against the Rust provider shows `wasi:cli/environment@0.2.3`, while the Go provider and both Go/Rust consumers resolve against `0.2.12` (TinyGo's bundled adapters and `wit-bindgen-go`'s current release both track the newer minor). That skew looks like a mismatch that would block a cross-language composition. It doesn't: `wac plug` only resolves the `patterncatalyst:cargo/*` imports it was asked to satisfy; it leaves every WASI import on the composed component exactly as it found it, unresolved, regardless of which minor version each side names. `wasmtime run` satisfies those imports at instantiation, through semver-compatible component linking: any `0.2.x` WASI import is satisfied by wasmtime's single built-in `0.2.x` implementation, so a Rust consumer naming `0.2.3` and a Go provider naming `0.2.12` link against the identical runtime surface with no version shim anywhere in the pipeline. The same tool that proved the Rust and Go providers' export surfaces confirms it directly: `wasm-tools component wit composed.wasm` against any of the four composed artifacts shows the WASI imports still present, unresolved, exactly as they were on each half before composition; `wac plug` touched only the `patterncatalyst:cargo/*` identifiers it was told to connect.
+The Rust provider imports `wasi:cli/environment@0.2.3`. The Go provider and both consumers resolve against `0.2.12`. That doesn't block a cross-language composition. `wac plug` resolves only the `patterncatalyst:cargo/*` imports it was asked to satisfy and leaves every WASI import unresolved on the composed component. `wasmtime run` satisfies them at instantiation through semver-compatible linking: any `0.2.x` import is served by the runtime's single built-in `0.2.x` implementation. `wasm-tools component wit composed.wasm` shows the WASI imports still present, exactly as they were before composition.
 
-## Composing and running all four combinations
+## Composing and running all four pairs
 
-With both consumers and both providers built, `verify.sh`'s Step 8 runs the full 2x2 matrix in one function, called four times with each pairing:
+`verify.sh` runs the full two-by-two matrix with one function called four times:
 
 ```bash
+# wac plug: the PROVIDER (exports cargo) is the --plug; the CONSUMER (imports
+# cargo, exports wasi:cli/run) is the socket. The composed component needs no
+# native host: wasmtime runs it directly. Assert RUNTIME stdout, never bytes.
 compose_run_assert() {
   local name="$1" consumer="$2" provider="$3"
   local composed="$COMPOSE_DIR/composed-$name.wasm"
@@ -230,15 +215,28 @@ All four print this line, character for character:
 booking=BOOKING-USNYC-DEHAM|cargo=CARGO-USNYC-DEHAM|weight=1200.5|price=1500.00 USD|status=not-routed|itinerary=BOOKING-USNYC-DEHAM VOY-001 planned|assigned=routed|events=3|tracker=CARGO-USNYC-DEHAM in-transit 3|history=received@USNYC,loaded@USNYC,unloaded@DEHAM
 ```
 
-Two of those four pairs (`rustC-goP` and `goC-rustP`) cross the language boundary at the moment of composition, and both print exactly what the two same-language pairs print. That cross-language agreement, not the same-language pairs, is the headline: `wac` never asked which language built either half, because the only thing it had to match was a WIT identifier shared by all four binaries from the start.
+{% include excalidraw.html file="08-polyglot-composition-matrix" alt="A grid with two provider columns, rust and go, each labeled exports cargo, and two consumer rows, rust and go, each labeled imports cargo exports wasi:cli/run. The four intersection cells read rustC x rustP, rustC x goP, goC x rustP, and goC x goP, each annotated wac plug --plug provider consumer. All four cells feed down into one shared banner: wasmtime run composed wasm, identical normalized summary across all four combos, booking equals cargo equals weight 1200.5 events 3 tracker in-transit 3. A caption notes that matching happens by WIT identifier, not by source language, so the two cross-language cells behave exactly like the two same-language cells." caption="Figure 8.2: Four compositions, two of them crossing a language boundary, one identical runtime output." %}
 
-{% include excalidraw.html file="08-polyglot-composition-matrix" alt="A grid with two provider columns, rust and go, each labeled exports cargo, and two consumer rows, rust and go, each labeled imports cargo exports wasi:cli/run. The four intersection cells read rustC x rustP, rustC x goP, goC x rustP, and goC x goP, each annotated wac plug --plug provider consumer. All four cells feed down into one shared banner: wasmtime run composed wasm, identical normalized summary across all four combos, booking equals cargo equals weight 1200.5 events 3 tracker in-transit 3. A caption notes that matching happens by WIT identifier, not by source language, so the two cross-language cells behave exactly like the two same-language cells." caption="Figure 8.2: the 2x2 polyglot matrix: four compositions, two of them crossing a language boundary, one identical runtime output." %}
+Compare runtime output, not the composed files. [wac#216](https://github.com/bytecodealliance/wac/issues/216) documents that the same `wac plug` command on the same inputs can produce two different, equally valid `.wasm` files, so a byte comparison of artifacts is flaky for a reason unrelated to whether the composition works.
 
-Why does `verify.sh` diff `wasmtime run`'s stdout rather than comparing the four `composed-*.wasm` files byte for byte? Because the composed artifact's bytes are not deterministic: [wac#216](https://github.com/bytecodealliance/wac/issues/216) documents that running the identical `wac plug` command twice against the identical inputs can produce two different, equally valid `.wasm` files. Asserting on artifact bytes would make this test flaky for a reason that has nothing to do with whether the composition works; asserting on `wasmtime run`'s observable output is the check that answers the question Step 8 is asking.
+## wac plug or wac compose
 
-## wac plug versus wac compose and a .wac script
+| Tool | Graph it handles |
+| --- | --- |
+| `wac plug` | One consumer, one provider, one import set satisfied by one export set |
+| `wac compose` with a `.wac` script | Three or more components, imports split across several providers, or imports left for the host to supply |
 
-`wac plug` is the right tool for exactly the shape this chapter builds: one consumer, one provider, one import set satisfied by one export set. It is not the only tool in `wac`'s toolbox, and it is worth knowing where its ceiling is before reaching for it on a larger graph. `wac compose` takes a `.wac` script, a small declarative language naming multiple component instances and the specific connections between their imports and exports, and is the escape hatch once a composition stops being a single pair: three or more components wired together, a component whose imports are satisfied by two or more different providers split across interfaces, or a graph where some imports are left unresolved so the host can supply them later. Nothing in this chapter's example needs that: one consumer, one provider, one WIT package connecting them, four times over. A pipeline of several components (an HTTP front end, a transform, a cargo provider, chained together) is exactly the point a `.wac` file starts paying for itself over a `wac plug` invocation that would need its own ad hoc chaining logic layered on top.
+A pipeline of an HTTP front end, a transform and a cargo provider is where a `.wac` script pays for itself over chained `wac plug` calls.
+
+> **Decision**
+>
+> Compose with a native host when the caller needs capabilities a sandboxed component can't have, such as arbitrary filesystem access, a long-running server loop, or conditional orchestration across unrelated components, or when the caller isn't distributed as WebAssembly. Compose with `wac plug` when the caller is a component whose imports are exactly one provider's exports: the result is one self-contained file that runs with `wasmtime run`, the right shape for a CLI or a plugin. Move to `wac compose` and a `.wac` script at three components, or when one `--plug` can't express the connections.
+
+> **🤖 Explore with your agent**
+>
+> "In examples/part2-building-components, compose consumer-go with the Rust provider using `wac plug --plug`, run it with `wasmtime run`, and compare the output to the line in verify.sh. Then explain, using `wasm-tools component wit` on the composed file, which imports `wac plug` resolved (the patterncatalyst:cargo interfaces) and which it left for wasmtime (the wasi:cli imports), and say whether this pair needs `wac compose` instead."
+>
+> Check: the printed line matches the expected summary exactly, and the composed component still lists `wasi:cli` imports.
 
 ## Build, run, observe
 
@@ -246,13 +244,15 @@ Why does `verify.sh` diff `wasmtime run`'s stdout rather than comparing the four
 cd examples/part2-building-components && ./verify.sh
 ```
 
-`verify.sh` builds both consumer components (the `cargo-component` command crate in `consumer-rust/` and the TinyGo command build in `consumer-go/`) alongside the already-built Rust and Go providers. It then composes all four consumer x provider pairs with `wac plug` (the provider as `--plug`, the consumer as the socket) and runs each composed artifact directly under `wasmtime run`, asserting that every one of the four, including the two pairs that cross the Rust/Go language boundary at composition time, prints the identical normalized summary line byte for byte. Expect `PASS` once every assertion holds; see `examples/part2-building-components/README.md` for the full walkthrough.
+The script builds both consumers next to the providers, composes the four pairs with `wac plug` (provider as `--plug`, consumer as the socket), runs each under `wasmtime run`, and ends with `PASS` when all four print the identical line, including the two cross-language pairs. The README in that directory has the step-by-step build.
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Compose with a native host (the pattern used for the Rust and Go providers) when the caller needs capabilities a sandboxed component can't have on its own, such as arbitrary filesystem access, a long-running server loop, or orchestration across several unrelated components with conditional logic between calls, or when the caller isn't going to be distributed as WebAssembly at all. Compose with <code>wac plug</code> when the caller itself is a component that imports exactly what one provider exports: the result is a single self-contained artifact runnable with nothing but <code>wasmtime run</code>, no native binary to build or ship alongside it, which is the right shape for a CLI, a plugin, or any unit of behavior that should travel as one file. Reach for <code>wac plug</code> specifically, not <code>wac compose</code>, when the graph is exactly one plug into exactly one socket; reach for a <code>.wac</code> script and <code>wac compose</code> the moment the graph has three or more components, a provider split across multiple consumers, or connections a single <code>--plug</code> flag can't express. This example's four compositions are all <code>wac plug</code> because each one is exactly one provider satisfying exactly one consumer's imports, the simplest case the tool was built for, run four times over two languages in both directions.</p></div>
+- Swap the Go consumer's `cabi_realloc.go` for the provider's heap version and rebuild: the component aborts at startup with `assertion failed at adapter line 2857`.
+- Run `wac plug` twice on the same inputs and compare the files: the bytes may differ, the `wasmtime run` output does not.
+- Replace the Go consumer's explicit pipeline with `tinygo build -target=wasip2 -wit-package ../../../contracts/wit -wit-world cargo-consumer`: the bundled component step fails with `failed to resolve import wasi:cli/environment@0.2.0`.
 
 ## For deeper coverage
 
-- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): component composition and the Canonical ABI mechanics underlying `wac plug`'s import/export matching.
-- Shashank Jain, *WebAssembly for Cloud* (Apress): cross-language composition patterns and the operational trade-offs between a native host and a composed, self-contained component.
-- [WebAssembly Component Model documentation](https://component-model.bytecodealliance.org/): the canonical description of composition, worlds, and the plug/socket terminology this chapter's examples build on directly.
-- [wac: WebAssembly Composition tool](https://github.com/bytecodealliance/wac): `wac plug` and `wac compose` reference, including the `.wac` language this chapter's closing section points toward for multi-component graphs.
+- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): component composition and the Canonical ABI mechanics underlying `wac plug`'s import and export matching.
+- Shashank Jain, *WebAssembly for Cloud* (Apress): cross-language composition patterns and the trade-offs between a native host and a composed, self-contained component.
+- [WebAssembly Component Model documentation](https://component-model.bytecodealliance.org/): composition, worlds, and the plug and socket terminology.
+- [wac: WebAssembly Composition tool](https://github.com/bytecodealliance/wac): `wac plug` and `wac compose` reference, including the `.wac` language for multi-component graphs.

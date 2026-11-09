@@ -122,6 +122,13 @@ permissions:
   contents: read
 
 jobs:
+  wordcount:
+    name: Word-count cap (2,500 words, no floor)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: GATE=1 bash scripts/wordcount.sh
+
   validate:
     name: Validate the WIT contract
     runs-on: ubuntu-latest

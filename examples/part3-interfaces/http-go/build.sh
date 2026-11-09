@@ -28,13 +28,13 @@ OUT="cargo-http-go.wasm"
 
 for tool in tinygo wasm-tools wit-bindgen-go go; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
 
 if [[ ! -f "$ADAPTER" ]]; then
-  echo "build.sh: FAIL — vendored reactor adapter missing: $ADAPTER" >&2
+  echo "build.sh: FAIL, vendored reactor adapter missing: $ADAPTER" >&2
   exit 1
 fi
 

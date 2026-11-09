@@ -39,7 +39,7 @@ nodes = [
      "style": "accent"},
 
     {"x": 55, "y": 500, "w": 135, "h": 140,
-     "lines": ["OpenVINO", "this chapter"], "style": "accent"},
+     "lines": ["OpenVINO", "exercised here"], "style": "accent"},
     {"x": 205, "y": 500, "w": 135, "h": 140,
      "lines": ["ONNX", "Runtime"], "style": "user"},
     {"x": 355, "y": 500, "w": 135, "h": 140,

@@ -68,7 +68,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 440, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Two separate clusters, two separate backends: don't assume one chapter's OTel pipeline describes the other substrate."},
+     "text": "Two separate clusters, two separate backends: don't assume one OTel pipeline describes the other substrate."},
 ]
 
 gd.emit("24-otel-two-emitters-pipeline", W, H, bands=bands, nodes=nodes, edges=edges, notes=notes)

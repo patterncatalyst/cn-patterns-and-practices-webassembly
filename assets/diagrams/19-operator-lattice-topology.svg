@@ -61,6 +61,6 @@
 <path d="M720,480 L780,480" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="756.0" y="474.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">daemonscaler -&gt; Service</text>
 <text x="756.0" y="474.0" font-size="11" fill="#b8650a" text-anchor="middle">daemonscaler -&gt; Service</text>
-<text x="590" y="560" font-size="12" fill="#555555" text-anchor="middle">deploy.sh then puts an edge-TLS Route in front of the operator-created Service; Figure 19.1 traces that live request.</text>
+<text x="590" y="560" font-size="12" fill="#555555" text-anchor="middle">deploy.sh then puts an edge-TLS Route in front of the operator-created Service; the request path is traced separately.</text>
 <text x="590" y="578" font-size="12" fill="#555555" text-anchor="middle">Verified live 2026-10-21 (CRC 2.64.0 / OCP 4.22.14 / wasmcloud host 1.9.1).</text>
 </svg>

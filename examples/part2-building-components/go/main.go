@@ -29,8 +29,8 @@ const (
 )
 
 // trapSentinel is a documented tracking id that makes GetCargo PANIC, so the
-// host (and the debugging/error chapter) can show a genuine wasm TRAP — the
-// whole instance is torn down — as distinct from a recoverable domain
+// host (and the debugging and error examples) can show a genuine wasm TRAP, where the
+// whole instance is torn down, as distinct from a recoverable domain
 // cargo-error. Kept in LOCKSTEP with the Rust provider (rust/src/lib.rs
 // TRAP_SENTINEL) and deliberately NOT used by the main scenario, so the
 // byte-identical cross-language summary is unaffected.
@@ -160,7 +160,7 @@ func init() {
 
 	booking.Exports.GetCargo = func(trackingID string) cargoResult {
 		if trackingID == trapSentinel {
-			// A panic unwinds to a wasm trap at the component boundary — the host
+			// A panic unwinds to a wasm trap at the component boundary. The host
 			// observes an error from the CALL itself, not an Ok(Err(..)) domain
 			// result. This is the "unrecoverable" side of the error taxonomy.
 			panic("__TRAP__ sentinel: deliberate trap for the debugging/error chapter")
@@ -230,6 +230,6 @@ func init() {
 }
 
 // main is required by the Go toolchain for the module build, but a reactor
-// component never runs it — the host instantiates the component and calls the
+// component never runs it: the host instantiates the component and calls the
 // exported functions directly.
 func main() {}

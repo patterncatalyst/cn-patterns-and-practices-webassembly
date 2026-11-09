@@ -1,7 +1,7 @@
 # Part 7: the final project's buildable core
 
 Two deployable composites of the same cargo domain, one per language, proving
-the book's two-language-one-contract thesis end to end:
+the repository's two-language-one-contract thesis end to end:
 
 ```
 part2 rust cargo provider  ─┐

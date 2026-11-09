@@ -34,13 +34,13 @@ bands = [
 nodes = [
     # --- minikube band ---
     {"x": 60, "y": 90, "w": 230, "h": 70,
-     "lines": ["Part 2 provider", "exports patterncatalyst:cargo/*"],
+     "lines": ["cargo provider", "exports patterncatalyst:cargo/*"],
      "style": "box"},
     {"x": 330, "y": 90, "w": 230, "h": 70,
      "lines": ["sidecar-filter", "imports+exports cargo", "embargo + log"],
      "style": "accent"},
     {"x": 600, "y": 90, "w": 230, "h": 70,
-     "lines": ["Part 3 http-rust", "imports cargo, exports wasi:http"],
+     "lines": ["http-rust", "imports cargo, exports wasi:http"],
      "style": "box"},
     {"x": 870, "y": 90, "w": 260, "h": 70,
      "lines": ["app-filtered.wasm", "wac plug x2, ONE Pod", "containerd wasmtime shim"],

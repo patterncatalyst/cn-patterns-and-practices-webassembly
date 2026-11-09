@@ -186,3 +186,6 @@ echo "  (0.33.1); a real trace landed in Tempo, a real metric series"
 echo "  (otelcol_receiver_accepted_spans_total) landed in Prometheus, a real"
 echo "  log line landed in Loki — all read via kubectl exec, no port-forward."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"
