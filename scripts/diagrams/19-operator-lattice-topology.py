@@ -83,7 +83,7 @@ edges = [
 
 notes = [
     {"x": 590, "y": 560, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "deploy.sh then puts an edge-TLS Route in front of the operator-created Service; Figure 19.1 traces that live request."},
+     "text": "deploy.sh then puts an edge-TLS Route in front of the operator-created Service; the request path is traced separately."},
     {"x": 590, "y": 578, "size": 12, "color": "#555555", "anchor": "middle",
      "text": "Verified live 2026-10-21 (CRC 2.64.0 / OCP 4.22.14 / wasmcloud host 1.9.1)."},
 ]

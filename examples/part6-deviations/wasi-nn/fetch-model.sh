@@ -60,7 +60,7 @@ for entry in "${ARTIFACTS[@]}"; do
   mv "$dest.part" "$dest"
 
   if ! verify "$dest" "$expected_sha"; then
-    echo "fetch-model.sh: FAIL — sha256 mismatch for $dest" >&2
+    echo "fetch-model.sh: FAIL, sha256 mismatch for $dest" >&2
     echo "fetch-model.sh: expected $expected_sha" >&2
     echo "fetch-model.sh: got      $(sha256sum "$dest" | awk '{print $1}')" >&2
     rm -f "$dest"

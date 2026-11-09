@@ -204,3 +204,6 @@ echo "  heavy load, so CPU-based HPA does not scale it — ch23 scales it on req
 echo "  concurrency instead; the CRC half shows the wadm spreadscaler."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
 echo "  run ../teardown.sh to leave the box clean."
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

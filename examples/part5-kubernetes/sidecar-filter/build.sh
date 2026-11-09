@@ -45,7 +45,7 @@ done
 
 for tool in cargo cargo-component wac wasm-tools; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "sidecar-filter/build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "sidecar-filter/build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -53,17 +53,17 @@ done
 echo "sidecar-filter/build.sh: [1/4] building the Part 2 Rust cargo provider (reused) ..."
 ( cd "$PART2/rust" && cargo component build --release )
 PROVIDER="$(find "$PART2/rust/target" -name cargo_rust.wasm -not -path '*/deps/*' | head -1)"
-[[ -s "$PROVIDER" ]] || { echo "sidecar-filter/build.sh: FAIL — provider not produced" >&2; exit 1; }
+[[ -s "$PROVIDER" ]] || { echo "sidecar-filter/build.sh: FAIL, provider not produced" >&2; exit 1; }
 
 echo "sidecar-filter/build.sh: [2/4] building the sidecar-filter interposer ..."
 cargo component build --release
 FILTER="$(find "$SCRIPT_DIR/target" -name cargo_filter_rust.wasm -not -path '*/deps/*' | head -1)"
-[[ -s "$FILTER" ]] || { echo "sidecar-filter/build.sh: FAIL — filter not produced" >&2; exit 1; }
+[[ -s "$FILTER" ]] || { echo "sidecar-filter/build.sh: FAIL, filter not produced" >&2; exit 1; }
 
 echo "sidecar-filter/build.sh: [3/4] building the Part 3 http-rust front door (reused) ..."
 ( cd "$PART3/http-rust" && cargo component build --release )
 HTTP="$(find "$PART3/http-rust/target" -name cargo_http_rust.wasm -not -path '*/deps/*' | head -1)"
-[[ -s "$HTTP" ]] || { echo "sidecar-filter/build.sh: FAIL — http-rust not produced" >&2; exit 1; }
+[[ -s "$HTTP" ]] || { echo "sidecar-filter/build.sh: FAIL, http-rust not produced" >&2; exit 1; }
 
 echo "sidecar-filter/build.sh: [4/4] composing app-filtered.wasm (wac plug: provider -> filter -> http) ..."
 TMP_PF="$(mktemp -t provider-filter.XXXXXX.wasm)"
@@ -82,7 +82,7 @@ echo "sidecar-filter/build.sh: exports:"
 wasm-tools component wit "$OUT" | grep -E '^\s*export' | head
 
 if [[ "$BUILD_IMAGE" -eq 1 ]]; then
-  command -v docker >/dev/null 2>&1 || { echo "sidecar-filter/build.sh: FAIL — docker not found" >&2; exit 1; }
+  command -v docker >/dev/null 2>&1 || { echo "sidecar-filter/build.sh: FAIL, docker not found" >&2; exit 1; }
   echo "sidecar-filter/build.sh: packaging OCI image '$IMAGE' (FROM scratch) ..."
   docker build --provenance=false -t "$IMAGE" -f "$SCRIPT_DIR/Dockerfile" "$SCRIPT_DIR"
   echo "sidecar-filter/build.sh: built image $IMAGE"

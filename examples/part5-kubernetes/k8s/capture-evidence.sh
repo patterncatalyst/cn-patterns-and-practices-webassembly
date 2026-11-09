@@ -176,3 +176,6 @@ echo "  wasmtime shim (RuntimeClass '$SHIM_HANDLER'); GET $VALID_PATH through"
 echo "  ingress-nginx returned the exact cargo JSON and /cargo/NOPE returned 404."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
 echo "  run ./teardown.sh to leave the box clean."
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

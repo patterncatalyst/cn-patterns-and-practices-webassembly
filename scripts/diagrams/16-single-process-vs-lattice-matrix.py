@@ -28,14 +28,14 @@ nodes = [
 
     {"x": 20, "y": 300, "w": 260, "h": 80, "lines": ["Resilience"], "style": "sub"},
     {"x": 300, "y": 300, "w": 330, "h": 80, "lines": ["no built-in restart;", "whatever supervises the process"], "style": "box"},
-    {"x": 650, "y": 300, "w": 330, "h": 80, "lines": ["SpreadScaler self-heals;", "scale-to-0 recovered in ~2s (ch15)"], "style": "box"},
+    {"x": 650, "y": 300, "w": 330, "h": 80, "lines": ["SpreadScaler self-heals;", "scale-to-0 recovered in ~2s"], "style": "box"},
 
     {"x": 20, "y": 400, "w": 260, "h": 80, "lines": ["Scale"], "style": "sub"},
     {"x": 300, "y": 400, "w": 330, "h": 80, "lines": ["more processes, your orchestration"], "style": "box"},
     {"x": 650, "y": 400, "w": 330, "h": 80, "lines": ["multi-host lattice scale-out,", "built into the platform"], "style": "box"},
 
     {"x": 300, "y": 510, "w": 680, "h": 90,
-     "lines": ["Part 5 adds a THIRD, orthogonal axis: Kubernetes schedules",
+     "lines": ["Kubernetes adds a THIRD, orthogonal axis: it schedules",
                "either runtime as a pod: same choice, one layer up"],
      "style": "ink"},
 ]

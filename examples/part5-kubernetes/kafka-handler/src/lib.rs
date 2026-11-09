@@ -141,7 +141,7 @@ impl HandlerGuest for Component {
         })?;
 
         // Demo simplification: the Kafka wire format carries only the
-        // UN/LOCODE, not a full location lookup — name/country both default to
+        // UN/LOCODE, not a full location lookup: name/country both default to
         // the code itself. The cargo provider (Part 2) is authoritative for any
         // display-quality location data; this handler's job is to record that
         // a handling event happened, not to enrich it.

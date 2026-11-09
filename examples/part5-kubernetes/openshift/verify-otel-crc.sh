@@ -91,7 +91,7 @@ echo "$FILE_SAMPLE" | grep -q 'wasmcloud_host.handle_rpc_message.duration' \
 ok "file exporter (/data/otel-output.json) independently confirms the metric"
 
 echo
-echo "PASS — ch24 on-cluster observability (CRC, restricted-v2, no SCC exception):"
+echo "PASS: ch24 on-cluster observability (CRC, restricted-v2, no SCC exception):"
 echo "  the wasmCloud host (1.9.1) exported OTLP to a rootless"
 echo "  otel-collector-contrib; a real trace, the"
 echo "  wasmcloud_host.handle_rpc_message.duration metric series, and a real"

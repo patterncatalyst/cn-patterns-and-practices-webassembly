@@ -2,91 +2,70 @@
 title: "Deploying on minikube"
 order: 18
 part: "Deploying to Kubernetes"
-description: "Running the same cargo wasi:http component as a real Pod on minikube, scheduled onto the runwasi containerd-shim-wasmtime shim by a RuntimeClass, and proved live through ingress-nginx."
-duration: "17 min read"
+description: "Running the cargo wasi:http component as a Pod on minikube, scheduled onto the containerd-shim-wasmtime shim by a RuntimeClass and reached through ingress-nginx."
+duration: "15 min read"
 ---
 
 ## Learning objectives
 
 By the end of this chapter you can:
 
-- Trace the packaging pipeline that turns `app.wasm` into a schedulable Kubernetes workload: `wac plug` recompose, a `FROM scratch` OCI image built with `docker build --provenance=false`, and `minikube image load` standing in for a registry push/pull.
-- Explain what a `RuntimeClass` with `handler: wasmtime` does, and how `install-shim.sh` wires the matching `io.containerd.wasmtime.v1` runtime registration into the node's `/etc/containerd/config.toml` before any Pod can reference it.
-- State why `minikube ssh` piped a heredoc hangs, and why copying a script in with `minikube cp` and running `sudo bash <file>` is the fix.
-- Name the ordering constraint between installing the shim and enabling the ingress addon, and what breaks if it's skipped.
-- Explain why a rollout reporting `Ready` is not proof a Wasm Pod is serving traffic, and what signal `verify-minikube.sh` waits on instead.
-- Walk the live request path from a `curl` against a `nip.io` hostname through ingress-nginx, a Service, a Pod, and the containerd shim into `app.wasm`'s `wasi:http/incoming-handler` export, with no port-forward anywhere in the chain.
+- Package `app.wasm` as a `FROM scratch` OCI image built with `docker build --provenance=false`, and load it with `minikube image load` instead of a registry.
+- Wire a `RuntimeClass` with `handler: wasmtime` to the shim that `install-shim.sh` registers in the node's containerd config.
+- Copy a node script in with `minikube cp` instead of piping a heredoc over `minikube ssh`, and say why.
+- Order the shim install before the ingress addon, and say what breaks otherwise.
+- Gate readiness on a real HTTP 200 behind an affinity cookie rather than on a rollout reporting `Ready`.
+- Trace a `curl` against a `nip.io` host through ingress-nginx, a Service, a Pod and the shim into `app.wasm`, with no port-forward.
 
 ## Why this matters
 
-The Wasm-on-Kubernetes mechanism described, in the abstract, how a Wasm-aware container runtime and a `RuntimeClass` let a component run as a Kubernetes Pod without a Linux userland in its image. This chapter is where that description becomes a live cluster. The exact `app.wasm` this site has carried since Part 2 (the Rust `cargo` provider, wac-plugged under the Part 3 `http-rust` front door, sha256 `eff7f5ee…`, the identical bytes that ran under `wasmtime serve` and that deployed to a wasmCloud lattice) now runs as one Pod on a real minikube cluster, reached through a real ingress-nginx edge, with zero lines of that component changed.
+The component doesn't change here. The `app.wasm` built from the Rust `cargo` provider plugged under the `http-rust` front door (sha256 prefix `eff7f5ee`) is the same bytes that ran under `wasmtime serve` and on a wasmCloud lattice. What needs to exist is everything around it before Kubernetes schedules a ~290 KiB Wasm binary like a container image: an OCI image with nothing else in it, a shim that gives containerd a second way to run a workload, and a `RuntimeClass` that tells the scheduler which Pods want it.
 
-What's new here isn't the component; it's everything that has to exist around it before Kubernetes will schedule a `~290 KiB` Wasm binary the same way it schedules a container image. That means a packaging step that wraps the component in an OCI image with nothing else in it, a shim that teaches containerd a second way to run a workload besides `runc`, and a `RuntimeClass` that tells the scheduler which Pods want that second way. None of that infrastructure is wasmCloud's lattice: there's no NATS, no `wadm`, no capability provider, no link. This is the more vendor-neutral of the two paths this site's Part 5 covers, a raw containerd shim plus a `RuntimeClass`, the same mechanism any Wasm workload on any containerd-backed cluster can use, with no additional control plane required.
+No NATS, `wadm`, capability provider or link is involved. This is the vendor-neutral path: a raw containerd shim plus a `RuntimeClass`, usable on any containerd-backed cluster with no extra control plane.
 
-Every claim below is cited against `examples/part5-kubernetes/` and against a live, headless run captured on 2026-10-21: `examples/part5-kubernetes/k8s/evidence/2026-10-21/*.txt`. The versions, the exact `curl` output, and the exact pod state quoted here are that run's real output, not a description of what minikube and containerd are supposed to do.
+| Tool | Version |
+| --- | --- |
+| minikube | v1.39.0, docker driver, containerd runtime |
+| Kubernetes | v1.37.1 |
+| containerd (in the node) | v2.3.4 |
+| runwasi `containerd-shim-wasmtime` | v0.6.1 |
+| ingress-nginx (minikube addon) | controller v1.15.1 |
 
-{% include excalidraw.html file="18-minikube-request-path" alt="A curl request to cargo.192.168.49.2.nip.io resolving via public nip.io DNS, then flowing through the ingress-nginx controller, a ClusterIP Service, a Pod labeled runtimeClassName wasmtime, into the containerd-shim-wasmtime process running a hyper server on 0.0.0.0:8080, and finally into app.wasm's wasi:http/incoming-handler export. A note states no port-forward, no NodePort, no minikube service anywhere in this path." caption="Figure 18.1: the live request path on minikube, host to nip.io Ingress to Service to Pod to the containerd wasmtime shim to app.wasm, with no tunnel anywhere in the chain." %}
+The output quoted below comes from a headless run recorded under `examples/part5-kubernetes/k8s/evidence/2026-10-21/`.
 
-## The same app.wasm, wrapped for a scheduler instead of a process
+{% include excalidraw.html file="18-minikube-request-path" alt="A curl request to cargo.192.168.49.2.nip.io resolves through public nip.io DNS, then flows through the ingress-nginx controller, a ClusterIP Service, and a Pod with runtimeClassName wasmtime into the containerd-shim-wasmtime process running a hyper server on 0.0.0.0:8080, and finally into the wasi:http/incoming-handler export of app.wasm. A note says there is no port-forward, NodePort or minikube service anywhere in the path." caption="Figure 18.1: The live request path on minikube: host to nip.io Ingress to Service to Pod to the containerd wasmtime shim to app.wasm, with no tunnel." %}
 
-`examples/part5-kubernetes/build.sh` does not rebuild the component from scratch or fork any upstream crate. It reuses the exact Part 2/Part 3 recipe this site has used since serving HTTP from a component: the Part 2 Rust `cargo` provider, built with `cargo component build --release`, wac-plugged under the Part 3 `http-rust` front door:
+## Wrap the component for a scheduler
 
-```
-part2 rust provider  (exports patterncatalyst:cargo/*)
-     +                 -> wac plug ->  app.wasm  (exports wasi:http/incoming-handler)
-part3 http-rust       (imports patterncatalyst:cargo/*, exports wasi:http)
-```
-
-That single `app.wasm` is the artifact every runtime in Part 4 and Part 5 shares. `k8s/evidence/2026-10-21/06-sha256.txt` records the exact hash from this run:
-
-```
-$ sha256sum .../examples/part5-kubernetes/app.wasm
-eff7f5ee81db5f9fd4c444470d385f46e8d0aaba3302759028be90cb4c9909b3  .../app.wasm
-```
-
-That's the same prefix the wasmtime-and-wasmCloud byte-identity proof cites for wasmtime and wasmCloud. The component crossing into Kubernetes here is not a Kubernetes-specific rebuild; it's the identical file, wrapped in a new container around it.
-
-That wrapping is the entire job of `build.sh`'s image step and the `Dockerfile` next to it. The Dockerfile is about as thin as an OCI image gets:
+`build.sh` doesn't rebuild or fork anything. It reuses the recipe that produced the component earlier: build the `cargo` provider with `cargo component build --release`, then `wac plug` it under the `http-rust` front door. The OCI image around it is as thin as an image gets:
 
 ```dockerfile
 FROM scratch
 COPY app.wasm /app.wasm
+# The shim uses the OCI command/args to locate the module in the rootfs. The
+# Deployment overrides this with an explicit `command: ["/app.wasm"]`, but we
+# set it here too so `ctr run <image> <id>` (the go/no-go smoke test) works with
+# no extra args.
 ENTRYPOINT ["/app.wasm"]
 ```
 
-`FROM scratch` means there is no base layer at all: no glibc, no shell, no package manager, nothing a Wasm component needs because it never runs as a Linux process in the traditional sense. The runwasi shim mounts this image's rootfs, reads the OCI config's command, and loads whatever file that command points to as a Wasm component directly. The whole image is the ~290 KiB component plus OCI metadata, which is the entire point of running a component instead of a container with a language runtime baked in: there's no userland to patch, scan, or carry forward between releases, because there isn't one.
+`FROM scratch` means no base layer: no glibc, no shell, no package manager. The shim mounts the rootfs, reads the OCI command, and loads that file as a Wasm component directly. There is no userland to patch, scan or carry between releases.
 
-Building that image is one `docker build` call, but one flag on it changes whether the next step works at all:
+Building it is one call, and one flag decides whether the next step works:
 
 ```bash
-docker build --provenance=false -t "$IMAGE" -f "$SCRIPT_DIR/Dockerfile" "$SCRIPT_DIR"
+  docker build --provenance=false -t "$IMAGE" -f "$SCRIPT_DIR/Dockerfile" "$SCRIPT_DIR"
 ```
 
-By default, BuildKit attaches a provenance attestation manifest and turns a single-image build into a manifest list with more than one entry. The shim doesn't need that attestation data, and a manifest list complicates exactly the step that comes next: `minikube image load`'s and `ctr run`'s platform resolution, which expects one plain manifest to pick from, not a list it has to disambiguate. `--provenance=false` keeps the build at a single manifest, and that's what makes the load step below unambiguous.
+BuildKit by default attaches a provenance attestation and turns the build into a manifest list. The shim doesn't need it, and `minikube image load` and `ctr run` resolve a platform from one plain manifest more reliably than from a list.
 
-With the image built, `minikube image load "$IMAGE" -p "$PROFILE"` copies it directly into the node's containerd image store. There is no registry anywhere in this path: no push, no pull, no credentials to manage. `k8s/overlays/minikube/kustomization.yaml` retags the Deployment's image to `:minikube` (the exact tag `build.sh` produces and `minikube image load` loads) and patches `imagePullPolicy` to `Never`, so the kubelet never attempts a pull for an image that exists only in that one cluster's local store. Skip either half, the retag or the pull policy, and the Deployment sits in `ImagePullBackOff` indefinitely, because the kubelet's default pull policy would try, and fail, to find `cargo-http-wasm:minikube` on any registry.
+`minikube image load "$IMAGE" -p "$PROFILE"` then copies the image into the node's containerd store, with no registry, push, pull or credentials. The `minikube` overlay retags the Deployment's image to `:minikube` and patches `imagePullPolicy` to `Never`, so the kubelet never looks for the image on a registry. Skip either half and the Deployment sits in `ImagePullBackOff`.
 
-## RuntimeClass and the containerd shim: a second way to run a Pod
+{% include excalidraw.html file="18-build-package-load-deploy" alt="A pipeline: the Rust cargo provider and the http-rust front door feed a wac plug step that produces app.wasm; a docker build with provenance disabled produces a single-manifest scratch OCI image; minikube image load copies it into the node's containerd store with no registry. In parallel, install-shim.sh downloads and verifies the shim, registers the runtime, restarts containerd and applies the RuntimeClass, before the ingress addon is enabled. kubectl apply -k overlays/minikube then schedules a Pod with runtimeClassName wasmtime onto the installed shim. A final note says readiness is a real HTTP 200, not a rollout Ready, because the ingress default backend answers 404 for an unmatched host while its configuration reloads." caption="Figure 18.2: Build, package, load and deploy: the wac plug recompose wrapped for a scheduler instead of a process, with the shim installed before the ingress addon." %}
 
-A vanilla minikube node only knows how to run one kind of workload: a container, scheduled onto `runc`. Running a Wasm component as a Pod means giving containerd a second runtime it can hand a Pod to, and giving the scheduler a way to say which Pods want it. That's exactly what a `RuntimeClass` is for. `k8s/base/runtimeclass.yaml` is four lines of substance:
+## RuntimeClass and the shim
 
-```yaml
-apiVersion: node.k8s.io/v1
-kind: RuntimeClass
-metadata:
-  name: wasmtime
-handler: wasmtime
-```
-
-The `handler` field has to match, verbatim, the runtime key `install-shim.sh` registers in the node's `/etc/containerd/config.toml`. `k8s/evidence/2026-10-21/02-runtimeclass.txt` captures both halves of that match from the live run: the applied `RuntimeClass`, and the containerd config entry it points at.
-
-```yaml
-apiVersion: node.k8s.io/v1
-handler: wasmtime
-kind: RuntimeClass
-metadata:
-  name: wasmtime
-```
+A stock minikube node runs one kind of workload, a container on `runc`. The `RuntimeClass` in `k8s/base/runtimeclass.yaml` (`name: wasmtime`, `handler: wasmtime`) names the second runtime, and its `handler` has to match the runtime key `install-shim.sh` registers in `/etc/containerd/config.toml`. The recorded node shows both halves of the match:
 
 ```
 # containerd runtime registration on the node (config.toml)
@@ -94,7 +73,7 @@ metadata:
           runtime_type = "io.containerd.wasmtime.v1"
 ```
 
-containerd resolves a CRI runtime of type `io.containerd.wasmtime.v1` to a binary named `containerd-shim-wasmtime-v1` on its `PATH`. `install-shim.sh` downloads that exact binary, the runwasi `containerd-shim-wasmtime` release pinned at `v0.6.1`, checksum-verified against the SHA256 published in the release's own `SHA256SUMS` before anything is installed, and puts it at `/usr/bin/containerd-shim-wasmtime-v1` on the node. `k8s/evidence/2026-10-21/00-versions.txt` shows the binary in place after the run:
+containerd resolves that runtime type to `containerd-shim-wasmtime-v1` on its `PATH`. `install-shim.sh` downloads the pinned release, verifies it against the SHA256 in the release's `SHA256SUMS`, and installs it at `/usr/bin`:
 
 ```
 $ minikube ssh -- containerd --version ; shim binary on node
@@ -102,46 +81,44 @@ containerd containerd v2.3.4 db8809540e1a7a9da5d518876894933ff55692ab
 -rwxr-xr-x. 1 root root 32724488 Oct 21 14:17 /usr/bin/containerd-shim-wasmtime-v1
 ```
 
-Once that binary exists and the runtime is registered, a Deployment that sets `runtimeClassName: wasmtime` gets scheduled onto the shim instead of `runc`. `k8s/base/deployment.yaml`'s `command: ["/app.wasm"]` is the module path inside the scratch rootfs that the shim loads, the same path `ENTRYPOINT` sets in the Dockerfile, kept in both places so a plain `ctr run <image> <id>` smoke test works with no extra arguments too. Readiness and liveness probes are plain `tcpSocket` checks on port 8080, not an HTTP probe, because the component answers `GET /` with a 404 (only `/cargo/{id}` is a route); a TCP probe is the correct liveness signal here, and the real HTTP assertion lives in the verification script, covered below.
+A Deployment with `runtimeClassName: wasmtime` now lands on the shim instead of `runc`. Its `command: ["/app.wasm"]` is the module path in the scratch rootfs, the same path the Dockerfile's `ENTRYPOINT` sets, so a plain `ctr run <image> <id>` works too. The shim detects the `wasi:http/proxy` world and serves it behind a hyper server on `0.0.0.0:8080`, the behavior `wasmtime serve` provides as a standalone process.
 
-The shim itself detects that `app.wasm` targets the `wasi:http/proxy` world and runs it behind a built-in hyper server listening on `0.0.0.0:8080` inside the Pod, the identical behavior `wasmtime serve` provides as a standalone process under wasmtime. The component doesn't know, and doesn't need to know, that the process serving it this time is a containerd shim instead of a CLI invocation.
+Probes are `tcpSocket` checks on 8080, not HTTP probes, because the component answers `GET /` with a 404; only `/cargo/{id}` is a route.
 
-The shim binary is a containerd shim, not a CLI tool: invoking it with `--version`, or any flag it doesn't define, panics with `flag provided but not defined`. `install-shim.sh` confirms the binary is in place with `ls`, not `--version`, and treats the running Pod as proof the installation worked.
+The shim binary is not a CLI. `--version`, or any undefined flag, panics with `flag provided but not defined`. `install-shim.sh` confirms the binary with `ls` and treats the running Pod as the proof.
 
-## Copying a script in, not piping it over SSH
+## Copy the node script in, don't pipe it
 
-`install-shim.sh`'s containerd config edit has to run as root inside the minikube node. Piping a heredoc through `minikube ssh -p "$PROFILE" -- "sudo bash -s" <<'EOF' ... EOF` hangs: `minikube ssh` allocates a PTY for the session, and a heredoc piped to `sudo bash -s` over that PTY never receives an EOF signal once the work finishes, so the session never returns. `install-shim.sh` instead copies the node script in as a real file with `minikube cp`, then runs `sudo bash /tmp/register-wasmtime-runtime.sh` against that file instead of streaming a script over stdin.
+The containerd config edit must run as root inside the node. Piping a heredoc through `minikube ssh -- "sudo bash -s"` hangs: `minikube ssh` allocates a PTY, and a heredoc fed to `sudo bash -s` over it never receives EOF, so the session never returns. `install-shim.sh` copies the script in as a file and runs that:
 
 ```bash
 minikube cp "$NODE_SCRIPT" "$PROFILE:/tmp/register-wasmtime-runtime.sh" -p "$PROFILE"
 minikube ssh -p "$PROFILE" -- "sudo bash /tmp/register-wasmtime-runtime.sh && sudo rm -f /tmp/register-wasmtime-runtime.sh"
 ```
 
-The node script itself is idempotent: it `grep`s the config for `containerd.runtimes.wasmtime]` before editing anything, so re-running `install-shim.sh` against a cluster that already has the runtime registered is a no-op rather than a duplicate block. When it does need to edit, it backs up the config file with a timestamped suffix first, inserts the new runtime block right after the CRI runtimes table header with `awk`, then restarts containerd and polls `ctr version` for up to 30 seconds to confirm the daemon came back before returning control to the caller.
+The node script is idempotent. It checks the config for `containerd.runtimes.wasmtime]` before editing, and if the runtime is registered it leaves the config alone and doesn't restart containerd. Otherwise it backs the file up with a timestamped suffix, inserts the runtime block after the CRI runtimes table header with `awk`, restarts containerd, and polls `ctr version` for up to 30 seconds until the daemon answers.
 
-{% include excalidraw.html file="18-build-package-load-deploy" alt="A pipeline diagram: the Part 2 Rust cargo provider and Part 3 http-rust front door feed into a wac plug step producing app.wasm; app.wasm feeds into a docker build with provenance disabled producing a single-manifest scratch OCI image; that image feeds into minikube image load, which copies it straight into the node's containerd store with no registry; in parallel, install-shim.sh downloads and verifies the shim, registers the runtime, restarts containerd, and applies the RuntimeClass, explicitly before the ingress addon is enabled; kubectl apply -k overlays/minikube then schedules a Pod with runtimeClassName wasmtime onto the installed shim; a final note states readiness is a real HTTP 200, not a rollout Ready, because the ingress default backend answers 404 for an unmatched host during its asynchronous config reload." caption="Figure 18.2: the build, package, load, and deploy pipeline, the same wac-plug recompose Part 3 used, now wrapped for a scheduler instead of a process, with shim install ordered before the ingress addon." %}
+## Install the shim before enabling ingress
 
-## Ordering: install the shim before you enable ingress
+A containerd restart bounces every Pod on the node. `verify-minikube.sh` installs the shim and applies the `RuntimeClass` in Step 3, and enables the `ingress` addon in Step 3b, after the restart has settled. Reverse that and the ingress-nginx controller that just started is bounced moments later and has to come up again, adding a flaky reconciliation window exactly where the script needs the controller stable.
 
-`install-shim.sh`'s containerd restart doesn't just affect the one Pod being newly scheduled. Restarting containerd bounces every Pod already running on the node, because the container runtime underneath all of them momentarily disappears and comes back. `verify-minikube.sh` orders its steps around that fact: it installs the shim and applies the `RuntimeClass` in Step 3, and only enables the `ingress` minikube addon in Step 3b, after the restart has already happened and settled.
+## Readiness is a real 200
 
-Reverse that order, enabling ingress first and installing the shim second, and the ingress-nginx controller Pod that just finished starting gets bounced by the containerd restart moments later, forcing it to come back up a second time before it's ready to route anything. It's not a fatal ordering mistake, but it adds a flaky extra reconciliation window right where the verification script needs the controller to be stable, for no benefit. Doing the disruptive thing (installing the shim) before the thing that depends on a quiet node (bringing up the ingress controller) avoids that churn entirely.
+A rollout reporting `successfully rolled out` and an Ingress with a non-empty `ADDRESS` both look like done. Neither proves the component answers. ingress-nginx reloads its configuration asynchronously, and until it does, a request for a host it doesn't yet know goes to the default backend, which answers with its own `404`. A check that only looks for a completed, non-5xx response takes that for the application.
 
-## Readiness is a real HTTP 200, not a rollout reporting Ready
-
-The signal worth internalizing here is which one to trust. A Kubernetes rollout reporting `deployment "cargo-http" successfully rolled out` and an Ingress reporting a non-empty `ADDRESS` column both look like "done." Neither one, by itself, proves the component is answering requests through the full path.
-
-The reason is ingress-nginx's own default-backend behavior. Its configuration reload is asynchronous, typically a matter of seconds after an Ingress is applied or patched, and during that window any request for a host it doesn't yet recognize gets routed to the controller's generic default backend, which answers with its own `404`. To a plain `curl` checking only for a non-5xx response or a connection that completes, that looks like a legitimate completed response from the real application, not a sign that the real routing rule hasn't taken effect yet.
-
-`verify-minikube.sh` closes that gap with a deterministic signal instead of a fixed sleep. `k8s/base/ingress.yaml` sets a session-affinity cookie:
+The Ingress sets a session-affinity cookie to close the gap:
 
 ```yaml
-annotations:
-  nginx.ingress.kubernetes.io/affinity: "cookie"
-  nginx.ingress.kubernetes.io/session-cookie-name: "part5-cargo-affinity"
+  annotations:
+    # Deterministic "my rule actually matched" signal: ingress-nginx stamps
+    # this cookie only on responses that went through THIS Ingress rule, never
+    # on its generic default-backend 404; verify-minikube.sh waits for it
+    # before trusting the Ingress (a config reload is asynchronous).
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "part5-cargo-affinity"
 ```
 
-That cookie is stamped only on responses that went through this Ingress's own matched rule; it's never set by the default backend's look-alike 404. So the script polls for the cookie first, and only trusts a subsequent `200` once it sees that cookie confirming the real rule is live:
+ingress-nginx stamps that cookie only on responses that matched this Ingress's own rule, never on the default backend's look-alike 404. `verify-minikube.sh` polls for the cookie first and only then trusts a `200`:
 
 ```bash
 while (( waited < 90 )); do
@@ -152,11 +129,11 @@ while (( waited < 90 )); do
 done
 ```
 
-Only after that gate passes does the script call `wait_for_200`, which polls until the URL returns an actual `200`, not merely a response. That two-stage gate, first the affinity cookie proving the rule matched, then a real `200` proving the component answered, is what "readiness" means in this example, and it's a stricter bar than `kubectl rollout status` checks for on its own.
+Once the cookie shows, `wait_for_200` polls until the URL returns an actual `200`. Cookie first, then a real 200, is a stricter bar than `kubectl rollout status`.
 
 ## The request path, live
 
-The whole chain this chapter builds toward is one `curl`, and `k8s/evidence/2026-10-21/05-http.txt` is the live transcript of it going all the way through:
+One `curl` exercises the whole chain:
 
 ```
 # request path: host -> ingress-nginx -> Service cargo-http:8080 -> Pod -> shim -> app.wasm
@@ -166,28 +143,23 @@ $ curl -s -o /dev/null -w %{http_code} http://cargo.192.168.49.2.nip.io/cargo/NO
 404
 ```
 
-That's the same JSON shape and the same `404`-for-an-unbooked-id behavior this site's domain has produced since Part 2, now served from a Pod reached through a real ingress edge rather than a local process. `cargo.192.168.49.2.nip.io` is not a placeholder: `192.168.49.2` is the real IP `minikube ip -p part5` returned on this run (`k8s/evidence/2026-10-21/01-nodes.txt` confirms the node's `INTERNAL-IP` matches), and `nip.io` is a public wildcard DNS service that resolves `<anything>.<ip>.nip.io` straight to `<ip>` with no record to provision. The URL's own authority is simultaneously a real, publicly resolvable hostname and the exact host rule the Ingress is matching on: no `/etc/hosts` edit, no `minikube tunnel`, no NodePort, and no `minikube service` shortcut anywhere in this verification. House convention on this site is that an ingress path gets proven through the ingress, not around it.
+`192.168.49.2` is the IP `minikube ip -p part5` returned, and `nip.io` is a public wildcard DNS service that resolves `<anything>.<ip>.nip.io` to `<ip>`. The URL's authority is therefore both a resolvable hostname and the host rule the Ingress matches: no `/etc/hosts` edit, no `minikube tunnel`, no NodePort, no `minikube service`. An ingress path gets proven through the ingress, not around it.
 
-`k8s/evidence/2026-10-21/04-pods.txt` shows the Pod on the other end of that chain, scheduled onto the shim exactly as designed:
+The Pod on the other end shows it ran under the shim:
 
 ```
 $ kubectl get pods -n part5-kubernetes -o wide
 NAME                          READY   STATUS    RESTARTS   AGE   IP           NODE    NOMINATED NODE   READINESS GATES
 cargo-http-6f4fc58fbb-ns28x   1/1     Running   0          7s    10.244.0.6   part5   <none>           <none>
-
-$ kubectl describe pod (RuntimeClass + node)
-Name:                cargo-http-6f4fc58fbb-ns28x
-Runtime Class Name:  wasmtime
-Node:                part5/192.168.49.2
-Status:              Running
-    Image:         cargo-http-wasm:minikube
-      Started:      Wed, 21 Oct 2026 10:17:53 -0400
-    Ready:          True
 ```
 
-`Runtime Class Name: wasmtime` on a `1/1 Running` Pod is the direct confirmation that this specific Pod is running under the shim, not `runc`: the mechanism this whole chapter exists to wire up, stated back by `kubectl` itself.
+`kubectl describe pod` on that Pod reports `Runtime Class Name: wasmtime` and `Ready: True`.
 
-OpenShift Local (CRC) runs the identical component through a different operator-managed story for getting a Wasm-aware runtime onto the node, with a Route in place of this chapter's Ingress.
+OpenShift Local runs the same component with a different, operator-managed way of getting a Wasm-aware runtime onto the node, and a Route in place of the Ingress.
+
+> **Decision**
+>
+> Package a component as `FROM scratch` with one `COPY`: it has no language runtime or userland to carry, and `--provenance=false` keeps the manifest single so image loading is unambiguous. Install the shim before enabling the ingress addon, because the containerd restart bounces every Pod on the node. Treat `Ready` and an Ingress address as necessary, not sufficient: trust a real 200 behind a signal the default backend can't fake, here the affinity cookie.
 
 ## Build, run, observe
 
@@ -195,17 +167,20 @@ OpenShift Local (CRC) runs the identical component through a different operator-
 cd examples/part5-kubernetes/k8s && ./verify-minikube.sh
 ```
 
-`verify-minikube.sh` starts the `part5` minikube profile (docker driver, containerd runtime), builds and loads the component image, installs the `containerd-shim-wasmtime` shim, applies the overlay with `runtimeClassName: wasmtime`, patches the Ingress to a live `nip.io` host, then asserts a real HTTP 200 with the exact cargo JSON through the ingress-nginx edge and a 404 for an unknown cargo id, with no port-forward and no NodePort. Expect `PASS` once both assertions hold. `--keep` leaves the profile up for inspection with `kubectl`, `capture-evidence.sh` writes the `evidence/<date>/` files, and the README records the version matrix each run confirms.
+Stop CRC first; one cluster runs at a time. The script starts the `part5` minikube profile, builds and loads the image, installs the shim, applies the overlay, patches the Ingress to a live `nip.io` host, and asserts a real 200 with the exact cargo JSON plus a 404 for an unknown id. Expect `PASS`. `--keep` leaves the profile up for `kubectl`, `./capture-evidence.sh` writes the `evidence/<date>/` files, and `./teardown.sh` deletes the profile (`--app-only` keeps it).
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Two choices in this chapter's scripts exist to answer a question a container-image workflow never has to ask. First, the packaging path: a component has no language runtime and no OS userland to carry, so wrapping it in a full multi-stage container build would be solving a problem that doesn't exist here. A <code>FROM scratch</code> image with one <code>COPY</code> is the correct amount of packaging for a ~290 KiB artifact, and <code>--provenance=false</code> exists only because BuildKit's default attestation manifest complicates the one thing that matters afterward: unambiguous platform resolution for <code>minikube image load</code> and the shim. Second, the shim-install ordering: install-shim.sh's containerd restart bounces every Pod on the node, so it runs before the ingress addon is enabled rather than after, trading a theoretical few seconds of idle time for avoiding a second, flaky ingress-controller reconciliation right when the verification script needs that controller stable. The third and most important lesson generalizes past this one example: a rollout reporting <code>Ready</code> and an Ingress reporting an address are necessary conditions, not sufficient ones, because ingress-nginx's default backend can mimic a real response during an asynchronous config reload. The only thing worth trusting is a real HTTP 200 behind a signal, here a cookie that is never stamped by the default backend, that proves the right rule, not a look-alike, matched.</p></div>
+- Drop the retag or the `imagePullPolicy: Never` patch: the Deployment sits in `ImagePullBackOff` looking for `cargo-http-wasm:minikube` on a registry.
+- Build without `--provenance=false`: the manifest list complicates image loading and platform resolution.
+- Enable the ingress addon before installing the shim: the controller is bounced by the containerd restart and comes up twice.
+- Check only for a non-5xx response instead of the cookie: the default backend's 404 can pass for the application during the reload.
 
 ## For deeper coverage
 
-- Bilgin Ibryam & Roland Huß, *Kubernetes Patterns*, 2nd ed. (O'Reilly, 2023): the `RuntimeClass`, Deployment, and readiness-probe vocabulary this chapter's manifests build on, and the general pattern of making a scheduler aware of a workload's special requirements.
-- Brendan Burns, Joe Beda, Kelsey Hightower & Lachlan Evenson, *Kubernetes: Up and Running*, 3rd ed. (O'Reilly, 2022): the CRI/containerd runtime-shim model this chapter's `RuntimeClass` and `install-shim.sh` depend on, and how the kubelet resolves a Pod's `runtimeClassName` to a concrete runtime.
-- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the Component Model treatment of why a single component built once can run unmodified under a containerd shim, a standalone `wasmtime serve` process, and a wasmCloud lattice.
-- Shashank Jain, *WebAssembly for Cloud* (Apress): deployment-topology coverage for running Wasm workloads on container-orchestration platforms, the same ground covered here for minikube specifically.
-- [runwasi](https://github.com/containerd/runwasi): the containerd-shim-wasmtime project this chapter pins at `v0.6.1`, including the shim's `wasi:http/proxy`-world detection this chapter's hyper-server behavior depends on.
-- [containerd RuntimeClass documentation](https://kubernetes.io/docs/concepts/containers/runtime-class/): the canonical description of how a `RuntimeClass`'s `handler` field maps to a CRI runtime registration, the mechanism this chapter's `02-runtimeclass.txt` evidence confirms end to end.
-- Wasm on Kubernetes: the conceptual treatment of a Wasm-aware container runtime and RuntimeClass this chapter puts on a real cluster.
-- OpenShift Local (CRC): the same component, the same contract, a different operator-managed path to a Wasm-aware runtime and a Route in place of this chapter's Ingress.
+- Bilgin Ibryam and Roland Huß, *Kubernetes Patterns*, 2nd ed. (O'Reilly, 2023): the `RuntimeClass`, Deployment and readiness-probe vocabulary the manifests build on, and making a scheduler aware of a workload's special requirements.
+- Brendan Burns, Joe Beda, Kelsey Hightower and Lachlan Evenson, *Kubernetes: Up and Running*, 3rd ed. (O'Reilly, 2022): the CRI and containerd shim model, and how kubelet resolves a Pod's `runtimeClassName` to a runtime.
+- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): why one component built once runs unmodified under a containerd shim, `wasmtime serve` and a wasmCloud lattice.
+- Shashank Jain, *WebAssembly for Cloud* (Apress): deployment topologies for Wasm workloads on container orchestration platforms.
+- [runwasi](https://github.com/containerd/runwasi): the `containerd-shim-wasmtime` project, including its `wasi:http/proxy` world detection.
+- [Kubernetes RuntimeClass documentation](https://kubernetes.io/docs/concepts/containers/runtime-class/): how a `RuntimeClass` `handler` maps to a CRI runtime registration.
+- Wasm on Kubernetes: the shim and `RuntimeClass` mechanism this deploy puts on a real cluster.
+- OpenShift Local (CRC): the same component and contract, deployed through an operator-managed host and a Route.

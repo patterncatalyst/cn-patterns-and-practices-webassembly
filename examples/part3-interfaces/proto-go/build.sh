@@ -14,9 +14,9 @@ ADAPTER="adapters/wasi_snapshot_preview1.reactor.wasm"
 OUT="cargo-proto-go.wasm"
 
 for tool in tinygo wasm-tools wit-bindgen-go go; do
-  command -v "$tool" >/dev/null 2>&1 || { echo "build.sh: FAIL — '$tool' not on PATH" >&2; exit 1; }
+  command -v "$tool" >/dev/null 2>&1 || { echo "build.sh: FAIL, '$tool' not on PATH" >&2; exit 1; }
 done
-[[ -f "$ADAPTER" ]] || { echo "build.sh: FAIL — reactor adapter missing: $ADAPTER" >&2; exit 1; }
+[[ -f "$ADAPTER" ]] || { echo "build.sh: FAIL, reactor adapter missing: $ADAPTER" >&2; exit 1; }
 
 echo "build.sh: [1/4] generating Go bindings from the local WIT tree ..."
 wit-bindgen-go generate -o internal/proto \

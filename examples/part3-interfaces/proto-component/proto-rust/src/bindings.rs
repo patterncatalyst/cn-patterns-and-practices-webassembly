@@ -1769,11 +1769,11 @@ pub mod patterncatalyst {
 pub mod exports {
     pub mod patterncatalyst {
         pub mod cargo_proto {
-            /// Protobuf codec for the cargo domain, as a WebAssembly component (ch12).
+            /// Protobuf codec for the cargo domain, as a WebAssembly component.
             ///
             /// The `codec` interface takes protobuf REQUEST bytes and returns protobuf
             /// RESPONSE bytes. The encode/decode happens with prost entirely inside the
-            /// Wasm sandbox — this is Protobuf-the-serialization running server-side, as
+            /// Wasm sandbox: this is Protobuf-the-serialization running server-side, as
             /// distinct from gRPC-the-transport (which the grpc-bridge terminates natively).
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod codec {

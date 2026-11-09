@@ -2,7 +2,7 @@
 title: "First Component in Rust"
 order: 6
 part: "Building Components in Rust & Go"
-description: "Build and run the first cargo-domain component in Rust with cargo-component, from WIT binding generation to a running wasmtime instance."
+description: "Implement the cargo world as a Rust component with cargo-component, from binding generation to a running Wasmtime instance."
 duration: "24 min read"
 ---
 
@@ -10,23 +10,23 @@ duration: "24 min read"
 
 By the end of this chapter you can:
 
-- Point `cargo-component` at `contracts/wit/` from a crate's `Cargo.toml` using `[package.metadata.component.target]`, with no WIT file copied into the crate.
-- Read the `Guest` traits `cargo-component` generates from `world cargo` and implement all three (`BookingGuest`, `HandlingGuest`, and `GuestCargoTracker`) over plain in-memory state.
-- Explain how a Rust `Result<Booking, CargoError>` return type lowers into the WIT `result<booking, cargo-error>` the contract declares, and why the function signature never changes to accommodate that.
-- Build the crate with `cargo component build --release`, find the resulting `.wasm` under `target/wasm32-wasip1/release/`, and say why that path says `wasip1` rather than `wasip2`.
-- Use `wasm-tools component wit` to confirm the built artifact exports exactly `world cargo`, then run it against a real scenario through the native host in `host/`.
+- Point `cargo-component` at `contracts/wit/` from `[package.metadata.component.target]`, with no WIT file copied into the crate.
+- Read the traits `cargo-component` generates from `world cargo` and implement all three (`BookingGuest`, `HandlingGuest` and `GuestCargoTracker`) over in-memory state.
+- Explain how a Rust `Result<Booking, CargoError>` lowers into the WIT `result<booking, cargo-error>` without changing the function signature.
+- Build with `cargo component build --release`, find the `.wasm` under `target/wasm32-wasip1/release/`, and say why the path says `wasip1`.
+- Confirm with `wasm-tools component wit` that the artifact exports exactly `world cargo`, then run it through the native host in `host/`.
 
 ## Why this matters
 
-A WIT world is not executable; a toolchain reads it and generates the types and function signatures a language's source code has to satisfy. The shared cargo domain fixed the vocabulary those signatures are built from: `patterncatalyst:cargo@0.1.0`'s three interfaces, the records and enums in `types`, the four functions in `booking`, the two functions and the `cargo-tracker` resource in `handling`. Neither one ran a build. This one does: `examples/part2-building-components/rust/` is a complete, buildable `cargo-component` crate that implements `world cargo` end to end, built with `cargo component build --release` into a real `.wasm` component, inspected with `wasm-tools`, and exercised through a native wasmtime host that calls every exported function and constructs the `cargo-tracker` resource.
+A WIT world isn't executable. A toolchain reads it and generates the types and signatures the source has to satisfy. `examples/part2-building-components/rust/` is a complete `cargo-component` crate that implements `world cargo` end to end, and `host/` is a native Wasmtime binary that calls every exported function and constructs the `cargo-tracker` resource.
 
-The crate stays this small by design: one `Cargo.toml`, one `src/lib.rs`, a generated `bindings.rs` neither you nor this chapter writes by hand. That smallness is the point. Everything interesting in this chapter is the handful of places where the generated bindings and the hand-written implementation meet: the `[package.metadata.component.target]` block that tells `cargo-component` which WIT world to generate against, the `Guest` trait `impl` blocks the crate supplies, and the one line at the bottom of `src/lib.rs` that wires the implementation back into the generated export machinery. The same domain gets written in Go against the identical contract next, and the two get composed together after that. The goal here is to get one working component on the ground first, in the language whose toolchain generates the contract closest to ordinary application code.
+The crate is small: one `Cargo.toml`, one `src/lib.rs`, and a generated `bindings.rs` nobody writes by hand. The interesting parts are where generated code and hand-written code meet: the `target` block that selects the world, the trait `impl` blocks, and the one line at the bottom that wires the implementation into the generated exports.
 
-{% include excalidraw.html file="06-rust-build-pipeline" alt="contracts/wit feeding cargo-component, which reads Cargo.toml's package.metadata.component.target and generates bindings.rs with a Guest trait per interface and GuestCargoTracker for the resource. src/lib.rs implements those traits, returning Result<Booking, CargoError>, which generated code lowers to the WIT result<booking, cargo-error>. cargo component build --release produces a wasm32-wasip1 core module, adapted internally into target/wasm32-wasip1/release/cargo_rust.wasm, which exports world cargo." caption="Figure 6.1: one cargo component build --release, from the shared WIT contract to a component that exports world cargo." %}
+{% include excalidraw.html file="06-rust-build-pipeline" alt="contracts/wit feeding cargo-component, which reads Cargo.toml's package.metadata.component.target and generates bindings.rs with a Guest trait per interface and GuestCargoTracker for the resource. src/lib.rs implements those traits, returning Result<Booking, CargoError>, which generated code lowers to the WIT result<booking, cargo-error>. cargo component build --release produces a wasm32-wasip1 core module, adapted internally into target/wasm32-wasip1/release/cargo_rust.wasm, which exports world cargo." caption="Figure 6.1: One cargo component build --release, from the shared WIT contract to a component that exports world cargo." %}
 
 ## Pointing the crate at the shared contract
 
-Nothing under `examples/part2-building-components/rust/` copies a `.wit` file. The crate's `Cargo.toml` names the shared contract directly:
+No `.wit` file lives in the crate. `Cargo.toml` names the shared contract:
 
 ```toml
 [package]
@@ -40,7 +40,7 @@ wit-bindgen-rt = { version = "0.44.0", features = ["bitflags"] }
 [lib]
 crate-type = ["cdylib"]
 
-# The component targets the repository's shared WIT contract directly — the
+# The component targets the repository's shared WIT contract directly: the
 # crate does NOT copy the WIT. `target.path` points at contracts/wit (relative
 # to this Cargo.toml) and `target.world` selects the provider-side `cargo`
 # world, whose three exported interfaces (types, booking, handling) this crate
@@ -55,23 +55,16 @@ world = "cargo"
 [package.metadata.component.dependencies]
 ```
 
-Three things in that file carry the whole chapter's setup. `crate-type = ["cdylib"]` is unremarkable on its own (any crate building a dynamic library needs it), but it is what `cargo component build` expects to find rather than the ordinary `rlib` an ordinary `cargo build` produces; the Component Model's binary format has no relationship to a Rust `rlib`, and `cargo-component` compiles the crate to a `cdylib` core module as its own intermediate step. `[package.metadata.component.target]`'s two keys are the part that reaches across the repository: `path = "../../../contracts/wit"` is a relative path from this `Cargo.toml` up three directories to the repository's one shared contract, and `world = "cargo"` selects the provider world, the one that exports `types`, `booking`, and `handling` rather than importing them. Change that single string to `"cargo-consumer"` and the same crate would generate import bindings instead, the shape a caller rather than an implementer needs; nothing else in the file would have to change, because the world selection is the only place direction is stated. `[package.metadata.component.dependencies]` is present and empty: this crate depends on no other WIT package, only on the one it targets, so the table names that absence directly rather than configuring anything.
-
-The `package = "patterncatalyst:cargo"` line under `[package.metadata.component]` is worth separating from the `target` block beneath it: it names the WIT package identity this crate's own build artifact will claim, matching `contracts/wit/world.wit`'s `package patterncatalyst:cargo@0.1.0;` declaration. A mismatch here (building against a `target.path` whose package identity disagrees with this field) is exactly the kind of error `cargo-component` catches at build time, before a mismatched component ever reaches a host that would otherwise have to fail at instantiation instead.
+- `crate-type = ["cdylib"]` is what `cargo component build` expects. `cargo-component` compiles the crate to a core module and wraps it, and a Rust `rlib` has no relationship to the Component Model's binary format.
+- `path` is relative to this `Cargo.toml`, three directories up to the repository's one contract. `world = "cargo"` selects the provider world, which exports `types`, `booking` and `handling`. Changing it to `"cargo-consumer"` generates import bindings instead; the world selection is the only place direction is stated.
+- `package = "patterncatalyst:cargo"` is the identity the artifact claims and must match `package patterncatalyst:cargo@0.1.0;` in the contract. A mismatch fails at build time, not at instantiation on a host.
+- `[package.metadata.component.dependencies]` is empty because the crate depends on no other WIT package.
 
 ## What cargo-component generates
 
-Running `cargo component build` (covered fully below) produces `src/bindings.rs`, a file the crate declares with `mod bindings;` and never hand-edits; its header makes the rule explicit, opening with a `DO NOT EDIT!` banner that names `wit-bindgen` 0.41.0 as the generator. The file mirrors the WIT package's structure one module per interface, nested under `exports::patterncatalyst::cargo::`, with a Rust `struct` generated for every WIT `record` and a Rust `enum` for every WIT `enum`:
+`cargo component build` writes `src/bindings.rs`, declared with `mod bindings;` and never edited by hand; its header opens with a `DO NOT EDIT!` banner naming `wit-bindgen` 0.41.0 as the generator. It mirrors the package one module per interface under `exports::patterncatalyst::cargo::`: a Rust `struct` for every WIT `record`, an `enum` for every WIT `enum`, and a `Guest` trait for each interface that declares functions. `BookingGuest` has a method per function in `booking`. `HandlingGuest` has one per function in `handling` plus an associated type for the `cargo-tracker` resource. WIT `string` becomes Rust's `String` through the `wit-bindgen-rt` runtime crate.
 
-```rust
-pub struct Location {
-    pub unlocode: _rt::String,
-    pub name: _rt::String,
-    pub country: _rt::String,
-}
-```
-
-That `Location` struct is the generated twin of `contracts/wit/types.wit`'s `record location`, field for field, with WIT's `string` becoming `_rt::String`, a re-export of Rust's own `String` through the `wit-bindgen-rt` runtime crate, not a new type the domain code has to learn. The `booking` and `handling` interfaces generate a `Guest` trait apiece instead of a plain struct, because those two interfaces declare functions, not just data: `BookingGuest` has one method per function in `interface booking`, and `HandlingGuest` has one method per function in `interface handling`, plus an associated type for the `cargo-tracker` resource. This chapter doesn't reproduce `bindings.rs` in full (it runs to hundreds of lines once every record, enum, and trait method is spelled out) because the point of a generated file is that you read the trait signatures it produces, not the generation machinery that produced them. `src/lib.rs`'s imports show exactly which signatures the crate's own code needs:
+Both traits are named `Guest`, so `src/lib.rs` aliases them on import:
 
 ```rust
 use bindings::exports::patterncatalyst::cargo::booking::Guest as BookingGuest;
@@ -84,16 +77,13 @@ use bindings::exports::patterncatalyst::cargo::types::{
 };
 ```
 
-Both `booking::Guest` and `handling::Guest` get aliased on import, as `BookingGuest` and `HandlingGuest`, because WIT names every interface's function-carrying trait `Guest`, and a crate implementing more than one interface needs distinct names to `impl` against. That aliasing is a crate-level naming choice, not something `cargo-component` forces; the generated trait is named `Guest` in both `booking`'s and `handling`'s generated modules; only the Rust `use ... as` syntax resolves the collision.
+State is a `thread_local!` `RefCell` holding three `HashMap`s (cargos, bookings, per-cargo event lists). A component runs single-threaded in its own linear memory, so there is nothing for a lock to guard.
 
 ## Implementing the Guest traits
 
-`src/lib.rs` opens with a file-level comment that states the chapter's thesis in two sentences: `cargo-component` generates `bindings` from the shared contract, and this file implements the three exported interfaces over simple in-memory state. The state itself is a `thread_local!` `RefCell` holding three `HashMap`s (cargos, bookings, and per-cargo event lists), which is sufficient because a WebAssembly component runs single-threaded inside its own linear memory; there is no concurrent access to guard against with a lock, only the ordinary aliasing discipline `RefCell` already enforces at runtime.
-
-`impl BookingGuest for Component` supplies the four methods `interface booking` declares. `book_cargo` is the one worth reading in full, because it shows the validation, the deterministic ID derivation, and the state write together:
+`book_cargo` shows validation, deterministic ID derivation and the state write together:
 
 ```rust
-impl BookingGuest for Component {
     fn book_cargo(spec: RouteSpec, weight_kg: f64) -> Result<Booking, CargoError> {
         if spec.origin.unlocode.is_empty() || spec.destination.unlocode.is_empty() {
             return Err(CargoError::InvalidLocation(
@@ -133,16 +123,13 @@ impl BookingGuest for Component {
         });
         Ok(booking)
     }
-    // ...
-}
 ```
 
-The function's signature, `fn book_cargo(spec: RouteSpec, weight_kg: f64) -> Result<Booking, CargoError>`, is fixed by the generated trait, not a choice this file makes, and it is the exact point where the Component Model's lowering claim becomes visible in real code. `contracts/wit/bookings.wit` declares `book-cargo: func(spec: route-spec, weight-kg: f64) -> result<booking, cargo-error>;`. `cargo-component` turns that WIT `result<T, E>` into the Rust `std::result::Result<T, E>` the standard library already defines, which means this implementation writes `Ok(booking)` and `Err(CargoError::InvalidLocation(...))` exactly the way any other fallible Rust function would, with no manual encoding of a success/failure tag anywhere in this file. The generated export machinery handles converting that `Result` back into the WIT `result` shape a caller on the other side of the component boundary receives: a Rust idiom in, a WIT idiom out, with the conversion itself invisible to this code.
+The generated trait fixes the signature, and the WIT `result<T, E>` becomes `std::result::Result<T, E>`. The body writes `Ok(booking)` and `Err(CargoError::InvalidLocation(...))` like any fallible Rust function, with no hand-written success or failure tag. The export glue converts the `Result` back to the WIT shape the caller receives.
 
-`get_cargo` and the `cargo-tracker` resource's `current_status` method show the same `Result`-mapping pattern used for lookups:
+Lookups use the same mapping. `Option::ok_or_else` turns a missing entry into a typed error:
 
 ```rust
-    fn get_cargo(tracking_id: String) -> Result<Cargo, CargoError> {
         STATE.with(|s| {
             s.borrow()
                 .cargos
@@ -150,21 +137,15 @@ The function's signature, `fn book_cargo(spec: RouteSpec, weight_kg: f64) -> Res
                 .cloned()
                 .ok_or_else(|| CargoError::NotFound(format!("no cargo {tracking_id}")))
         })
-    }
 ```
 
-`Option::ok_or_else` is the ordinary Rust pattern for turning a missing-value `None` into a typed error, and it reads here exactly as it would in any Rust codebase with no WIT involved at all. `CargoError::NotFound` is a generated variant arm, carrying the `String` payload `contracts/wit/types.wit`'s `variant cargo-error` declared for that case, but constructing it is indistinguishable from constructing any other Rust enum variant. That is the generated bindings doing their job well: the places where this file touches the Component Model directly are the function signatures and the `use` statements pulling in generated types, and everywhere else is ordinary application Rust.
+`CargoError::NotFound` is a generated variant arm carrying the `string` payload the contract declares, built like any other Rust enum variant. The same function panics on the sentinel tracking ID `__TRAP__`, so the host can tell a recoverable `cargo-error` (an `Err` inside a successful call) from a trap that tears the instance down.
 
 ## The cargo-tracker resource
 
-`interface handling` declares one construct with no equivalent among records, enums, and variants: the `cargo-tracker` `resource`. A resource generates differently from everything else in the package: not a trait method on `Guest` itself, but an associated type plus a second trait, `GuestCargoTracker`, whose methods take `&self` the way an ordinary Rust object's methods would:
+A resource generates a second trait beside `Guest`. `impl HandlingGuest for Component` sets `type CargoTracker = Tracker;`, which tells the export machinery which Rust type backs the WIT resource. `GuestCargoTracker` has methods that take `&self`:
 
 ```rust
-impl HandlingGuest for Component {
-    type CargoTracker = Tracker;
-    // ...
-}
-
 // The `cargo-tracker` resource. It holds only its tracking id; `history` and
 // `current-status` read the live shared event state by that id, so a tracker
 // constructed before events are registered still reflects them when queried.
@@ -204,39 +185,35 @@ impl GuestCargoTracker for Tracker {
 }
 ```
 
-`type CargoTracker = Tracker;` on `impl HandlingGuest for Component` is the line that connects the two traits: it tells the generated export machinery which concrete Rust type backs the WIT resource, so a caller's `constructor(tracking-id: string)` call produces a `Tracker` under the hood. `Tracker` itself holds exactly one field (the tracking ID it was constructed with) and nothing else, by design: the comment above the struct states the reason directly. `history` and `current_status` read the same shared `STATE.events` map every handling-event call writes to, keyed by that one stored tracking ID, rather than caching a snapshot at construction time. That means a `Tracker` built before any handling events exist for its cargo still reports the right answer once events arrive later: the resource is a live view keyed by identity, not a value frozen at the moment it was constructed, which is exactly the distinction between a resource and an ordinary record.
+`Tracker` holds only its tracking ID. `history` and `current_status` read the shared event map by that ID, so a tracker constructed before any event exists still reflects events registered later: a resource is a live view keyed by identity, not a snapshot. `status_from_last_event` maps `received` to `planned`, `loaded`, `unloaded` and `customs` to `in-transit`, `claimed` to `completed`, and no events to `unspecified`.
 
-`status_from_last_event` is the one piece of domain logic this file adds beyond pass-through storage: it maps the most recent `HandlingEventType` to a `TransportStatus`, matching `received` to `planned`, `loaded`/`unloaded`/`customs` to `in-transit`, and `claimed` to `completed`, with no events at all defaulting to `TransportStatus::Unspecified`, the explicit zero value the shared cargo domain uses for exactly this situation: "no leg has reported a status yet" rather than a silent, wrong default.
-
-The file's last line is the piece that makes everything above reachable from outside the component:
+The last line of `src/lib.rs` makes everything above reachable:
 
 ```rust
 bindings::export!(Component with_types_in bindings);
 ```
 
-`bindings::export!` is a macro the generated `bindings.rs` itself defines, and this is the one place `src/lib.rs` calls into the generated code rather than the other way around. It registers `Component` (the unit struct every `impl BookingGuest for Component` and `impl HandlingGuest for Component` block above targets) as the concrete type backing every exported function in the component's table. Without this line, the crate would compile as an ordinary Rust library implementing two traits nobody ever instantiates against; with it, `cargo-component`'s build step knows exactly which type's methods to wire into the `.wasm` binary's export table.
+`export!` is a macro the generated `bindings.rs` defines. It registers `Component`, the unit struct every `impl` targets, as the type behind the component's export table. Without it the crate compiles as a library implementing two traits nobody instantiates.
 
-## Building the component
-
-With the traits implemented, building is one command from the crate root:
+## Building and inspecting the component
 
 ```bash
 cargo component build --release
 ```
 
-The artifact lands at `target/wasm32-wasip1/release/cargo_rust.wasm`, not under `wasm32-wasip2/`, even though WASI Preview 2 is the API surface this whole site targets. `cargo-component` 0.21 compiles the crate to a `wasm32-wasip1` core module as an internal build step, then adapts that core module into a real Preview 2 component using a bundled adapter, entirely inside the one `cargo component build` invocation. Nothing about the crate's source or its `Cargo.toml` names `wasip1` anywhere; it is purely where the toolchain's intermediate artifact happens to live before the adapt step turns it into the component this chapter builds everything else around. Knowing that path in advance saves a search the first time a build succeeds and the expected `wasm32-wasip2/` directory isn't there.
-
-A built component is not self-describing at a glance; it is a binary. `wasm-tools`, the Bytecode Alliance's reference tool for inspecting components, is how you confirm the build did what `Cargo.toml`'s `target.world = "cargo"` asked for:
+The artifact lands at `target/wasm32-wasip1/release/cargo_rust.wasm`, not under `wasm32-wasip2/`. `cargo-component` compiles a `wasm32-wasip1` core module, then adapts it into a WASI Preview 2 component inside the same invocation. Nothing in the crate names `wasip1`; it is where the intermediate artifact lives.
 
 ```bash
 wasm-tools component wit target/wasm32-wasip1/release/cargo_rust.wasm
 ```
 
-Run against a correctly built `cargo_rust.wasm`, this prints the same resolved WIT shape `contracts/wit` itself resolves to, with one difference that matters: it is derived from the compiled binary's own embedded component type, not read back from the source `.wit` files. Seeing `export patterncatalyst:cargo/types`, `export patterncatalyst:cargo/booking`, and `export patterncatalyst:cargo/handling` in that output is the build's own proof that `cargo component build` produced a component satisfying `world cargo`'s export list exactly, the same check a host or a composition step performs before trusting this artifact at all, just run here by hand instead of by a linker.
+This prints the world derived from the binary's embedded component type, not from the source `.wit` files. `export patterncatalyst:cargo/types`, `booking` and `handling` in the output confirm the build satisfies `world cargo` exactly. A host or a composition step runs the same check before trusting the artifact.
+
+`cargo-component` replaces what the Go build does by hand with `wit-bindgen-go` and separate `wasm-tools component embed` and `component new` steps. It folds WIT resolution, binding generation, the `wasip1` compile and the Preview 2 adapt into one command driven by `Cargo.toml`. The cost is a Rust-specific tool with its own release cadence, which stock `cargo build` can't replace.
 
 ## Running it through the host
 
-A component sitting on disk, confirmed to export the right world, still hasn't done anything yet: it has no `main`, nothing to call it. `host/src/main.rs` is a native Rust binary built independently of the component, using wasmtime's own code generation macro to get typed accessors for the world this component exports:
+The component has no `main`; something has to call it. `host/src/main.rs` is a native Rust binary that reads the same contract:
 
 ```rust
 wasmtime::component::bindgen!({
@@ -245,48 +222,68 @@ wasmtime::component::bindgen!({
 });
 ```
 
-That `bindgen!` call is the host's own binding-generation step, reading the identical WIT contract the component was built against, but generating wasmtime's *caller*-side types instead of `cargo-component`'s *implementer*-side traits, the same distinction between `world cargo`'s exports and `world cargo-consumer`'s imports drawn earlier, expressed here as two different tools reading one file for two different purposes. The host loads the component, builds a `Linker` with WASI support, instantiates it, and gets back typed handles for each interface:
+This generates Wasmtime's caller-side types, where `cargo-component` generated implementer-side traits: one file read for two purposes, the same split as `world cargo` exports against `world cargo-consumer` imports. The host builds a `Linker` with WASI, instantiates the component and gets typed handles per interface:
 
 ```rust
-let cargo = Cargo::instantiate(&mut store, &component, &linker)
-    .wc("instantiating cargo world")?;
+    let cargo = Cargo::instantiate(&mut store, &component, &linker)
+        .wc("instantiating cargo world")?;
 
-let booking_api = cargo.patterncatalyst_cargo_booking();
-let handling_api = cargo.patterncatalyst_cargo_handling();
+    let booking_api = cargo.patterncatalyst_cargo_booking();
+    let handling_api = cargo.patterncatalyst_cargo_handling();
 ```
 
-From there, every call reads like an ordinary method call on a local object, even though each one crosses the component boundary into the `.wasm` binary's own linear memory and back:
+Each call then reads like a method call on a local object while crossing into the component's linear memory:
 
 ```rust
-let booking = booking_api
-    .call_book_cargo(&mut store, &spec, fixture.input.weight_kg)
-    .wc("call book-cargo")?
-    .map_err(|e| anyhow::anyhow!("book-cargo returned error: {e:?}"))?;
+    let booking = booking_api
+        .call_book_cargo(&mut store, &spec, fixture.input.weight_kg)
+        .wc("call book-cargo")?
+        .map_err(|e| anyhow::anyhow!("book-cargo returned error: {e:?}"))?;
 ```
 
-Note the double unwrap: `.wc(...)?` handles a wasmtime-level failure (the call itself failing to execute: a trap, a resource limit, a host-side error), and the following `.map_err(...)` handles the WIT-level `Err` arm of the `result<booking, cargo-error>` this function can legitimately return as a successful call whose answer happens to be a validation failure. Those are two different failure modes at two different layers, and the host's error handling keeps them visibly separate rather than collapsing both into one generic error path, a distinction this chapter's component code enforces on the implementation side and the host's code enforces again on the calling side.
+The result has two layers. `.wc(...)?` handles a Wasmtime-level failure: a trap, a resource limit, a host error. `.map_err(...)` handles the WIT `Err` arm, a successful call whose answer is a validation failure. The host keeps them separate, as the component does.
 
-The `cargo-tracker` resource crosses the same boundary with its own calling convention: a constructor call, then method calls against the handle it returns, then an explicit drop:
+The `cargo-tracker` resource crosses with its own convention: a constructor call, method calls on the returned handle, then an explicit drop.
 
 ```rust
-let tracker_api = handling_api.cargo_tracker();
-let tracker: ResourceAny = tracker_api
-    .call_constructor(&mut store, &booking.cargo_id)
-    .wc("call cargo-tracker constructor")?;
-let t_id = tracker_api
-    .call_tracking_id(&mut store, tracker)
-    .wc("call tracking-id")?;
-// ...
-tracker
-    .resource_drop(&mut store)
-    .wc("drop cargo-tracker resource")?;
+    let tracker_api = handling_api.cargo_tracker();
+    let tracker: ResourceAny = tracker_api
+        .call_constructor(&mut store, &booking.cargo_id)
+        .wc("call cargo-tracker constructor")?;
+    let t_id = tracker_api
+        .call_tracking_id(&mut store, tracker)
+        .wc("call tracking-id")?;
+    assert_eq_ctx!(&fixture.expected.tracker.tracking_id, &t_id, "tracker.tracking-id");
+    let t_status = tracker_api
+        .call_current_status(&mut store, tracker)
+        .wc("call current-status")?;
+    assert_eq_ctx!(fixture.expected.tracker.current_status.as_str(), transport_status_str(t_status), "tracker.current-status");
+    let t_history = tracker_api
+        .call_history(&mut store, tracker)
+        .wc("call history")?;
+    assert_eq_ctx!(fixture.expected.tracker.history_count, t_history.len(), "tracker.history.count");
+    tracker
+        .resource_drop(&mut store)
+        .wc("drop cargo-tracker resource")?;
 ```
 
-`ResourceAny` is wasmtime's handle type for any resource whose concrete shape the host doesn't need to know beyond its WIT type: the host never sees `Tracker`'s Rust fields, only an opaque handle it passes back into every subsequent `cargo-tracker` method call. `resource_drop` is not optional cleanup the host happens to remember to call; a resource's lifetime on the component side is tied to an explicit drop on the host side, and skipping it would leak the handle's slot in the component's resource table for the lifetime of the `Store`.
+`ResourceAny` is Wasmtime's opaque handle for a resource whose shape the host doesn't need to know. `resource_drop` is required: skipping it leaks the handle's slot in the component's resource table for the life of the `Store`.
 
-{% include excalidraw.html file="06-host-exercises-component" alt="host/src/main.rs using bindgen! against contracts/wit's cargo world, instantiating cargo_rust.wasm, and calling book-cargo, get-cargo, request-possible-routes, assign-route, register-handling-event three times, list-handling-events, and the cargo-tracker constructor plus its three methods and resource_drop, each call crossing into the matching Guest trait implementation on the component side." caption="Figure 6.2: one host binary, one scenario, every call landing on the Guest trait implementations this chapter wrote." %}
+{% include excalidraw.html file="06-host-exercises-component" alt="host/src/main.rs using bindgen! against contracts/wit's cargo world, instantiating cargo_rust.wasm, and calling book-cargo, get-cargo, request-possible-routes, assign-route, register-handling-event three times, list-handling-events, and the cargo-tracker constructor plus its three methods and resource_drop, each call crossing into the matching Guest trait implementation on the component side." caption="Figure 6.2: One host binary and one scenario, every call landing on a Guest trait implementation." %}
 
-Build and run both sides together from `examples/part2-building-components/`:
+> **Decision**
+>
+> Point the crate at `contracts/wit/` through `[package.metadata.component.target]` instead of vendoring a copy into `rust/wit/`. A vendored copy stays identical to the contract only by discipline, and the Rust and Go crates would each own one with nothing forcing them to agree. With both pointed at the same files, `book-cargo`'s signature can't drift between languages without `contracts/wit/` changing first. The cost is a relative path (`../../../contracts/wit`) that resolves only from this crate's position in the tree. Move `rust/` without updating it and the build fails at resolution time, which beats a silently drifted copy.
+
+> **🤖 Explore with your agent**
+>
+> "In `examples/part2-building-components/rust/src/lib.rs`, add a `cancel_booking` method to `impl BookingGuest for Component` that removes the booking and returns `CargoError::NotFound` for an unknown ID. First add `cancel-booking: func(booking-id: string) -> result<booking, cargo-error>;` to `contracts/wit/bookings.wit`, keep `[package.metadata.component.target]` pointing at `contracts/wit` rather than copying the file, and rebuild with `cargo component build --release`. Then run `wasm-tools component wit` on `cargo_rust.wasm`."
+>
+> Check: the build fails until the method exists with the generated signature, and the printed `booking` interface lists `cancel-booking`.
+
+## Build, run, observe
+
+From `examples/part2-building-components/`:
 
 ```bash
 cd rust
@@ -297,26 +294,17 @@ cargo build --release
 ./target/release/cargo-host ../rust/target/wasm32-wasip1/release/cargo_rust.wasm ../fixtures/scenario.json rust
 ```
 
-The host reads `fixtures/scenario.json` (book `USNYC → DEHAM` at 1200.5 kg, three handling events, one `cargo-tracker` query), asserts every result against the fixture's expected values with `assert_eq_ctx!`, and prints `[rust] all assertions passed` to stderr followed by a normalized JSON summary on stdout. `./verify.sh`, one level up, runs this exact sequence for both languages and diffs their two summaries, which is how composing the two ultimately proves the Rust and Go components are interchangeable rather than merely similar: identical fixture, identical host, byte-identical output.
+The host books `USNYC` to `DEHAM` at 1200.5 kg, registers three handling events, queries one `cargo-tracker`, checks every result against `fixtures/scenario.json`, prints `[rust] all assertions passed` to stderr and a normalized JSON summary to stdout. `./verify.sh` one level up runs the sequence for both languages and diffs the two summaries; expect `PASS`. The same script also covers the not-found `cargo-error` against a trap, and composes the consumers with `wac plug`.
 
-## Why cargo-component instead of hand-rolled bindgen
-
-It would be possible, in principle, to call `wit-bindgen` directly and wire its output into a crate by hand, the way the Go side of this example does with `wit-bindgen-go` and a separate `wasm-tools component embed`/`component new` step, covered in full for the Go side next. `cargo-component` exists specifically to remove that manual wiring on the Rust side: it folds WIT resolution, binding generation, the `wasm32-wasip1` compile, and the Preview 2 adapt step into one `cargo component build` invocation driven entirely by `Cargo.toml` metadata. The cost of that convenience is narrow but real: `cargo-component` is a Rust-specific tool with its own release cadence tracking the Component Model's evolving tooling, not a thin wrapper a project could trivially replace with stock `cargo build` if the project ever needed to. The benefit, visible across this entire chapter, is that nothing in `src/lib.rs` or `Cargo.toml` manually invokes `wit-bindgen`, manually embeds a WIT type section into a core module, or manually runs `wasm-tools component new`; one declarative `[package.metadata.component.target]` block and one build command produce a component wasmtime can load directly.
-
-## Build, run, observe
-
-```bash
-cd examples/part2-building-components && ./verify.sh
-```
-
-`verify.sh` builds this chapter's Rust provider with `cargo component build --release`, builds the Go provider and the native host from `host/`, then runs the host against both components over the same shared fixture. For each provider it asserts the full booking-handling-cargo-tracker scenario (book, get, request routes, assign, register three handling events, list them, read the tracker's status and history) and the distinction between a recoverable `cargo-error::not-found` and an unrecoverable wasm trap. It confirms this chapter's Rust artifact exports exactly `world cargo` against `contracts/wit` with `wasm-tools component wit`, diffs the Rust and Go components' JSON output byte for byte, then builds both consumer components and composes all four consumer x provider pairs with `wac plug`, running each directly under `wasmtime run` and asserting the identical normalized summary line. Expect `PASS` once every assertion holds; see `examples/part2-building-components/README.md` for the full walkthrough.
-
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>This crate targets <code>contracts/wit/</code> via <code>[package.metadata.component.target]</code>'s relative <code>path</code> rather than vendoring a copy of the WIT files into <code>rust/wit/</code>. A vendored copy would need to stay byte-identical to the shared contract by developer discipline alone, and the two Rust and Go implementations would each own their own copy with no mechanism forcing them to agree; pointing both at the same three files on disk means <code>book-cargo</code>'s signature cannot drift between the two languages without <code>contracts/wit/</code> itself changing first, which is exactly the guarantee the Component Model's composition claim depends on. The cost is a relative path threading three directories up from this crate's own root (<code>../../../contracts/wit</code>), which only resolves correctly from this crate's specific position in the repository tree. Move <code>rust/</code> without updating the path and the build fails loudly at resolution time rather than silently building against stale types. That failure mode is the better trade: a build-time path error is visible and immediate, where a silently vendored, drifted copy of three WIT files is not.</p></div>
+- Change `world = "cargo"` to `"cargo-consumer"` in `Cargo.toml`: the crate generates import bindings instead of the `Guest` traits `src/lib.rs` implements.
+- Move `rust/` without updating `path`: the build fails at WIT resolution.
+- Delete the `export!` line: the crate compiles as a library implementing two traits nobody instantiates, with nothing wired into the export table.
+- Skip `resource_drop` in the host: the tracker handle's slot stays in the resource table until the `Store` goes.
 
 ## For deeper coverage
 
-- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the Component Model and Wasm toolchain mechanics this chapter's `cargo-component` build exercises directly.
-- Shashank Jain, *WebAssembly for Cloud* (Apress): component build pipelines and language-specific toolchain trade-offs, the same ground this chapter's "why cargo-component" section covers for Rust.
-- [cargo-component](https://github.com/bytecodealliance/cargo-component): the tool's own documentation for `[package.metadata.component]`'s full configuration surface beyond `target.path` and `target.world`.
-- [Wasmtime's Rust embedding guide](https://docs.wasmtime.dev/examples-rust.html): `wasmtime::component::bindgen!` and the `Linker`/`Store` machinery `host/src/main.rs` builds on.
-- [WebAssembly Component Model documentation](https://component-model.bytecodealliance.org/): the canonical ABI lowering this chapter's `Result`-to-`result` mapping relies on without implementing by hand.
+- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): the Component Model and toolchain mechanics the `cargo-component` build exercises.
+- Shashank Jain, *WebAssembly for Cloud* (Apress): component build pipelines and language-specific toolchain trade-offs.
+- [cargo-component](https://github.com/bytecodealliance/cargo-component): the full `[package.metadata.component]` configuration beyond `target.path` and `target.world`.
+- [Wasmtime's Rust embedding guide](https://docs.wasmtime.dev/examples-rust.html): `wasmtime::component::bindgen!` and the `Linker` and `Store` machinery `host/src/main.rs` builds on.
+- [WebAssembly Component Model documentation](https://component-model.bytecodealliance.org/): the canonical ABI lowering the `Result` to `result` mapping relies on.

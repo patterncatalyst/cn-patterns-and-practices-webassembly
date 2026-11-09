@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-// Protobuf contract for the cargo domain, shared by the two ch12 artifacts:
+// Protobuf contract for the cargo domain, shared by two artifacts:
 //
 //   1. proto-component (prost-in-Wasm): a WebAssembly component that uses prost
 //      to DECODE a GetCargoRequest and ENCODE a GetCargoResponse entirely inside
@@ -11,7 +11,7 @@ syntax = "proto3";
 //      CargoService and, per RPC, dispatches over WIT to the unchanged part2
 //      Rust provider instantiated with wasmtime.
 //
-// The point ch12 makes: gRPC-the-transport needs the host bridge (no in-Wasm
+// The split: gRPC-the-transport needs the host bridge (no in-Wasm
 // gRPC server is claimed), but Protobuf-the-serialization runs fully
 // server-side inside a component.
 package patterncatalyst.cargo.v1;

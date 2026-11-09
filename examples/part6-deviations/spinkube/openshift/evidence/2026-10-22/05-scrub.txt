@@ -1,1 +1,1 @@
-no secrets found under ~/Dev/cn-patterns-and-practices-webassembly/examples/part6-deviations/spinkube/openshift/evidence/2026-10-22
+no secrets found under <repo>/examples/part6-deviations/spinkube/openshift/evidence/2026-10-22

@@ -1,4 +1,4 @@
-# ch14: Embedding wasmtime, host-provided imports and Store/Engine controls
+# Chapter 14: Embedding wasmtime, host-provided imports and Store/Engine controls
 
 A native Rust host (`host/`) embeds the **wasmtime 50** component-model runtime
 and drives a guest component (`guest/`) through four scenarios, asserting that

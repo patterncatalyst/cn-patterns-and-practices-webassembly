@@ -59,10 +59,10 @@ metadata:
   # No `strimzi.io/node-pools: enabled` annotation: that was an opt-in feature
   # gate in earlier Strimzi lines (when ZooKeeper-mode clusters were still
   # possible). By 1.3.0, KafkaNodePool is the ONLY supported topology
-  # (ZooKeeper support is fully removed) and the annotation is a no-op —
+  # (ZooKeeper support is fully removed) and the annotation is a no-op,
   # confirmed against Strimzi's own current example for this exact tag
   # (examples/kafka/kafka-with-dual-role-nodes.yaml @ release 1.3.0), which
-  # omits it entirely. No top-level spec.kafka.replicas/storage either — those
+  # omits it entirely. No top-level spec.kafka.replicas/storage either; those
   # live on the KafkaNodePool above.
 spec:
   kafka:

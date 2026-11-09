@@ -21,7 +21,7 @@ metadata:
   annotations:
     # Deterministic "my rule actually matched" signal: ingress-nginx stamps
     # this cookie only on responses that went through THIS Ingress rule, never
-    # on its generic default-backend 404 — verify-minikube.sh waits for it
+    # on its generic default-backend 404; verify-minikube.sh waits for it
     # before trusting the Ingress (a config reload is asynchronous).
     nginx.ingress.kubernetes.io/affinity: "cookie"
     nginx.ingress.kubernetes.io/session-cookie-name: "part5-cargo-affinity"

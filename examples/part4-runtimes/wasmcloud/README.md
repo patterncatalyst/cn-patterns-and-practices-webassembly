@@ -1,14 +1,14 @@
-# ch15 / ch16: Running the same component on wasmCloud
+# Chapters 15 and 16: Running the same component on wasmCloud
 
 This example deploys the cargo HTTP front door to a local **wasmCloud** lattice
 and proves it serves live traffic through the HTTP server capability provider.
 The deployed artifact (`app.wasm`) is **byte-for-byte the same component** that
-`wasmtime serve` runs in Part 3 and in `prove-same-bytes.sh` (ch16).
+`wasmtime serve` runs in Part 3 and in `prove-same-bytes.sh` (Chapter 16).
 
 ```
 part2 rust cargo provider  ─┐
-                             ├─ wac plug ─> app.wasm ─┬─ wasmtime serve -S cli   (ch16)
-part3 http-rust front door ─┘                        └─ wasmCloud httpserver link (ch15)
+                             ├─ wac plug ─> app.wasm ─┬─ wasmtime serve -S cli   (Chapter 16)
+part3 http-rust front door ─┘                        └─ wasmCloud httpserver link (Chapter 15)
 ```
 
 Everything here reuses the Part 2/3 crates by *building* them; nothing is forked
@@ -20,7 +20,7 @@ or edited, and `contracts/wit` stays pristine.
 | --- | --- |
 | `build.sh` | rebuilds the Part 2 provider + Part 3 http-rust and `wac plug`s them into `app.wasm` (prints its sha256). |
 | `capture-evidence.sh` | full headless live run: `wash up` -> deploy -> link -> HTTP asserts -> resilience -> sha256 -> secret scrub, teeing to `evidence/<date>/`. |
-| `prove-same-bytes.sh` | ch16: serves the same `app.wasm` under `wasmtime serve` and asserts the identical JSON + the sha256. |
+| `prove-same-bytes.sh` | Chapter 16: serves the same `app.wasm` under `wasmtime serve` and asserts the identical JSON + the sha256. |
 | `teardown.sh` | idempotent: undeploy + delete the app, `wash down --all`. |
 
 ```bash

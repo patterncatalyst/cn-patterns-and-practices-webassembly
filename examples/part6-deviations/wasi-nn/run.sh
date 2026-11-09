@@ -41,11 +41,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 if ! command -v wasmtime >/dev/null 2>&1; then
-  echo "run.sh: FAIL — 'wasmtime' not found on PATH; build it from source with --features wasi-nn (see header comment)" >&2
+  echo "run.sh: FAIL, 'wasmtime' not found on PATH; build it from source with --features wasi-nn (see header comment)" >&2
   exit 1
 fi
 if ! wasmtime run -S help 2>&1 | grep -q '\bnn\b'; then
-  echo "run.sh: FAIL — this wasmtime binary was not built with --features wasi-nn (run 'wasmtime run -S help' and look for 'nn')" >&2
+  echo "run.sh: FAIL, this wasmtime binary was not built with --features wasi-nn (run 'wasmtime run -S help' and look for 'nn')" >&2
   exit 1
 fi
 

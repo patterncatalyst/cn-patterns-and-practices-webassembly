@@ -164,3 +164,6 @@ echo "secret scrub: no token/password/private-key material found under $OUT" >> 
 ok "sha256 + scrub -> 19-interposed-sha256-scrub.txt"
 
 printf '\n    evidence: %s\n' "${OUT#"$REPO_ROOT"/}"
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

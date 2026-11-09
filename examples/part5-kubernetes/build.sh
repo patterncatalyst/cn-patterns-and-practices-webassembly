@@ -50,7 +50,7 @@ done
 
 for tool in cargo cargo-component wac wasm-tools; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -59,7 +59,7 @@ echo "build.sh: [1/3] building the Part 2 Rust cargo provider (reused, not edite
 ( cd "$PART2/rust" && cargo component build --release )
 PROVIDER="$(find "$PART2/rust/target" -name cargo_rust.wasm -not -path '*/deps/*' | head -1)"
 if [[ ! -s "$PROVIDER" ]]; then
-  echo "build.sh: FAIL — part2 rust provider not produced" >&2
+  echo "build.sh: FAIL, part2 rust provider not produced" >&2
   exit 1
 fi
 
@@ -67,7 +67,7 @@ echo "build.sh: [2/3] building the Part 3 http-rust front door (reused, not edit
 ( cd "$PART3/http-rust" && cargo component build --release )
 HTTP="$(find "$PART3/http-rust/target" -name cargo_http_rust.wasm -not -path '*/deps/*' | head -1)"
 if [[ ! -s "$HTTP" ]]; then
-  echo "build.sh: FAIL — part3 http-rust component not produced" >&2
+  echo "build.sh: FAIL, part3 http-rust component not produced" >&2
   exit 1
 fi
 
@@ -83,7 +83,7 @@ wasm-tools component wit "$OUT" | grep -E '^\s*(export|world)' | head -10
 
 if [[ "$BUILD_IMAGE" -eq 1 ]]; then
   if ! command -v docker >/dev/null 2>&1; then
-    echo "build.sh: FAIL — docker not found on PATH (needed to package the OCI image)" >&2
+    echo "build.sh: FAIL, docker not found on PATH (needed to package the OCI image)" >&2
     exit 1
   fi
   echo "build.sh: packaging OCI image '$IMAGE' (FROM scratch, COPY app.wasm /app.wasm) ..."

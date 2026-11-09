@@ -1,7 +1,7 @@
 ambassador/build.sh: [1/2] building the Part 3 sockets-rust resilience component (reused, not edited) ...
   Generating bindings for sockets-client-rust (src/bindings.rs)
     Finished `release` profile [optimized] target(s) in 0.00s
-ambassador/build.sh: wrote ~/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/ambassador/ambassador.wasm (sha256 2aad26bd28373b70f5f4a0f0d9d3ec558f58dd89e3d3978868b21a04964172f9)
+ambassador/build.sh: wrote <repo>/examples/part5-kubernetes/ambassador/ambassador.wasm (sha256 2aad26bd28373b70f5f4a0f0d9d3ec558f58dd89e3d3978868b21a04964172f9)
 ambassador/build.sh: [2/2] local wasmtime -S inherit-network smoke ...
 
 === SMOKE A: retry + exponential backoff with jitter (dead port 34571, WITH network grant) ===

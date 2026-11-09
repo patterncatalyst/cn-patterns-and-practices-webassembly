@@ -75,17 +75,17 @@ assert_file "$HOST_BIN" "host built"
 echo
 echo "=== Step 4: run the host against BOTH components (scenario + error taxonomy) ==="
 "$HOST_BIN" "$RUST_WASM" "$FIXTURE" rust >"$OUT_RUST"
-echo "lib.sh: ok — rust provider scenario + error/trap assertions passed"
+echo "lib.sh: ok, rust provider scenario + error/trap assertions passed"
 "$HOST_BIN" "$GO_WASM" "$FIXTURE" go >"$OUT_GO"
-echo "lib.sh: ok — go provider scenario + error/trap assertions passed"
+echo "lib.sh: ok, go provider scenario + error/trap assertions passed"
 
 echo
 echo "=== Step 5: cross-language agreement (Rust output === Go output) ==="
 if ! diff -u "$OUT_RUST" "$OUT_GO"; then
-  echo "lib.sh: FAIL — Rust and Go components produced different results" >&2
+  echo "lib.sh: FAIL, Rust and Go components produced different results" >&2
   exit 1
 fi
-echo "lib.sh: ok — Rust and Go components produced byte-identical results"
+echo "lib.sh: ok, Rust and Go components produced byte-identical results"
 
 echo
 echo "=== Step 6: world-conformance against contracts/wit ==="
@@ -104,7 +104,7 @@ echo
 echo "=== Step 8: compose all four consumer x provider combos and run each ==="
 # wac plug: the PROVIDER (exports cargo) is the --plug; the CONSUMER (imports
 # cargo, exports wasi:cli/run) is the socket. The composed component needs no
-# native host — wasmtime runs it directly. Assert RUNTIME stdout, never bytes.
+# native host: wasmtime runs it directly. Assert RUNTIME stdout, never bytes.
 compose_run_assert() {
   local name="$1" consumer="$2" provider="$3"
   local composed="$COMPOSE_DIR/composed-$name.wasm"
@@ -119,7 +119,7 @@ compose_run_assert "goC-rustP"   "$GO_CONSUMER"   "$RUST_WASM"
 compose_run_assert "goC-goP"     "$GO_CONSUMER"   "$GO_WASM"
 
 echo
-echo "PASS — part2-building-components:"
+echo "PASS: part2-building-components:"
 echo "  * Rust and Go PROVIDER components each export world cargo and implement"
 echo "    the booking + handling domain (incl. the cargo-tracker resource)"
 echo "    identically; the native host drives both to the same observable result"

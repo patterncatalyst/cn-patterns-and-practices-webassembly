@@ -63,7 +63,7 @@ body="$(https "https://$HOST/cargo/CARGO-USNYC-DEHAM")" || fail "post-recovery c
 ok "pod recreated by the Deployment; traffic recovered to the exact cargo JSON"
 
 echo
-echo "PASS — ch26 Spin app on OpenShift Local (CRC, crc-admin context):" \
+echo "PASS: ch26 Spin app on OpenShift Local (CRC, crc-admin context):" \
      "the spin CLI running inside a restricted-v2 container served the exact" \
      "cargo JSON and a 404 through an edge-TLS Route (CA-verified against the" \
      "cluster's own ingress CA, never -k/port-forward/NodePort); and recovered" \

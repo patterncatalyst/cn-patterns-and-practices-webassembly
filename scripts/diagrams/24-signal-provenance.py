@@ -19,7 +19,7 @@ W, H = 1040, 540
 
 nodes = [
     {"x": 20, "y": 20, "w": 1000, "h": 70,
-     "lines": ["guest wasi-otel is RC-only: NOT used in this book",
+     "lines": ["guest wasi-otel is RC-only: NOT used here",
                "telemetry here is substrate-provided, not component-authored"],
      "style": "ink"},
 
@@ -54,7 +54,7 @@ nodes = [
 
 notes = [
     {"x": 520, "y": 500, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "Check whether a signal is shim-emitted, host-emitted, or absent before trusting a chapter's \"OTel on Wasm\" claim."},
+     "text": "Check whether a signal is shim-emitted, host-emitted, or absent before trusting an \"OTel on Wasm\" claim."},
 ]
 
 gd.emit("24-signal-provenance", W, H, nodes=nodes, notes=notes)

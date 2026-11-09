@@ -43,6 +43,6 @@ gd.emit(
         {"x1":490,"y1":456,"x2":600,"y2":456,"label":"constructor + 3 methods"},
     ],
     notes=[
-        {"x":540,"y":540,"text":"Same host binary, same scenario, same assertions run again in Chapter 7 against cargo-go.wasm; the point is that both sides satisfy identical calls.","size":12,"color":"#555555","anchor":"middle"},
+        {"x":540,"y":540,"text":"Same host binary, same scenario, same assertions run again against cargo-go.wasm; the point is that both sides satisfy identical calls.","size":12,"color":"#555555","anchor":"middle"},
     ],
 )

@@ -12,7 +12,7 @@
 <text x="105.0" y="555.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Runs on</text>
 <rect x="204" y="60" width="228" height="70" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="318.0" y="93.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">raw containerd shim</text>
-<text x="318.0" y="110.0" font-size="11.5" fill="#555555" text-anchor="middle">(ch17–ch18)</text>
+<text x="318.0" y="110.0" font-size="11.5" fill="#555555" text-anchor="middle">(RuntimeClass)</text>
 <rect x="204" y="150" width="228" height="140" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="318.0" y="218.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">none</text>
 <text x="318.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">RuntimeClass + shim, no control plane</text>
@@ -24,7 +24,7 @@
 <text x="318.0" y="565.0" font-size="11.5" fill="#555555" text-anchor="middle">CRC</text>
 <rect x="446" y="60" width="228" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="560.0" y="93.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud</text>
-<text x="560.0" y="110.0" font-size="11.5" fill="#555555" text-anchor="middle">(ch15, ch19)</text>
+<text x="560.0" y="110.0" font-size="11.5" fill="#555555" text-anchor="middle">(lattice, operator)</text>
 <rect x="446" y="150" width="228" height="140" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="560.0" y="218.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">operator + lattice</text>
 <text x="560.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">wadm links, capability providers</text>
@@ -36,7 +36,7 @@
 <text x="560.0" y="565.0" font-size="11.5" fill="#555555" text-anchor="middle">CRC</text>
 <rect x="688" y="60" width="228" height="70" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
 <text x="802.0" y="93.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">SpinKube / Spin</text>
-<text x="802.0" y="110.0" font-size="11.5" fill="#555555" text-anchor="middle">(ch26)</text>
+<text x="802.0" y="110.0" font-size="11.5" fill="#555555" text-anchor="middle">(SpinApp operator)</text>
 <rect x="688" y="150" width="228" height="140" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
 <text x="802.0" y="218.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">operator + shim</text>
 <text x="802.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">spin-operator + containerd-shim-spin</text>
@@ -60,5 +60,5 @@
 <rect x="20" y="650" width="1140" height="140" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="590.0" y="718.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Four backend options for server-side Wasm: a decision aid, not a ranking.</text>
 <text x="590.0" y="735.0" font-size="11.5" fill="#555555" text-anchor="middle">Pick by operations model and app model: SpinKube trades portability for built-in HTTP/Redis/key-value triggers.</text>
-<text x="590" y="812" font-size="12" fill="#555555" text-anchor="middle">WasmEdge / other runwasi shims shown for completeness; not exercised as a runnable example in this book.</text>
+<text x="590" y="812" font-size="12" fill="#555555" text-anchor="middle">WasmEdge / other runwasi shims shown for completeness; not exercised as a runnable example.</text>
 </svg>

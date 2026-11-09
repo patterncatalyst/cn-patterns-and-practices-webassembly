@@ -1,9 +1,8 @@
-// gRPC-in-FRONT-of-Wasm bridge (ch12).
+// gRPC-in-FRONT-of-Wasm bridge.
 //
 // A native host terminates gRPC with tonic and, per RPC, instantiates the
 // UNCHANGED part2 Rust provider with wasmtime and dispatches the call over WIT.
-// There is no gRPC server inside any component — the bridge is the artifact, and
-// the chapter states this plainly. prost/tonic are pinned exact (Cargo.lock
+// There is no gRPC server inside any component: the bridge is the artifact. prost/tonic are pinned exact (Cargo.lock
 // committed).
 //
 // Run:   cargo-grpc-bridge [ADDR]         (default 127.0.0.1:50051)

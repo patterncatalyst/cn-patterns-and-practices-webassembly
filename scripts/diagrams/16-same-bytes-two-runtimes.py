@@ -17,8 +17,8 @@ os.makedirs(gd.OUT, exist_ok=True)
 W, H = 1180, 660
 
 bands = [
-    {"x": 20, "y": 120, "w": 540, "h": 420, "label": "wasmtime serve -S cli  (ch14)", "fill": "#f1f5f9"},
-    {"x": 620, "y": 120, "w": 540, "h": 420, "label": "wasmCloud lattice  (ch15)", "fill": "#fff3e0"},
+    {"x": 20, "y": 120, "w": 540, "h": 420, "label": "wasmtime serve -S cli", "fill": "#f1f5f9"},
+    {"x": 620, "y": 120, "w": 540, "h": 420, "label": "wasmCloud lattice", "fill": "#fff3e0"},
 ]
 
 nodes = [

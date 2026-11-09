@@ -151,7 +151,7 @@ body="$(https "https://$HOST/cargo/CARGO-USNYC-DEHAM")" || fail "curl failed"
 ok "GET /cargo/CARGO-USNYC-DEHAM returned the exact cargo JSON back at instances=1"
 
 echo
-echo "PASS — Part 5 ch22 autoscaler asymmetry on OpenShift Local (CRC):" \
+echo "PASS: Part 5 ch22 autoscaler asymmetry on OpenShift Local (CRC):" \
      "the wadm spreadscaler took cargo-http's instance count 1 -> $SCALE_UP_INSTANCES -> 1" \
      "with the Route serving the exact cargo JSON throughout and ZERO Kubernetes" \
      "Pod churn — the opposite of the minikube half, where a stock HPA visibly" \

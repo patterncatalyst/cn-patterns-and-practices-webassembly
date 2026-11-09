@@ -61,7 +61,7 @@ nodes = [
 
     # --- minikube band ---
     {"x": 60, "y": 410, "w": 260, "h": 60,
-     "lines": ["ambassador.wasm", "(sockets-rust, Chapter 13, reused)"],
+     "lines": ["ambassador.wasm", "(sockets-rust, reused)"],
      "style": "user"},
     {"x": 400, "y": 390, "w": 240, "h": 60,
      "lines": ["wasmtime run (no grant)", "dead port"],

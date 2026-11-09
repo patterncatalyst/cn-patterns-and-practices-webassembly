@@ -68,5 +68,5 @@
 <path d="M800,429.0 L830,429.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M380,513.0 L410,513.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M800,513.0 L830,513.0" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="600" y="594" font-size="12" fill="#555555" text-anchor="middle">All six run against the SAME Part 2 artifacts (rust/target/.../cargo_rust.wasm, go/cargo-go.wasm); none of them require rebuilding or instrumenting the component first.</text>
+<text x="600" y="594" font-size="12" fill="#555555" text-anchor="middle">All six run against the SAME cargo component artifacts (rust/target/.../cargo_rust.wasm, go/cargo-go.wasm); none of them require rebuilding or instrumenting the component first.</text>
 </svg>

@@ -57,7 +57,7 @@ trap cleanup EXIT
 step "Step 0: tool + version checks"
 mk_ver="$(minikube version --short 2>/dev/null || echo v0.0.0)"
 [[ "$(printf '%s\n%s\n' "$MINIKUBE_MIN" "$mk_ver" | sort -V | head -1)" == "$MINIKUBE_MIN" ]] \
-  || { echo "verify-minikube.sh: FAIL — minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
+  || { echo "verify-minikube.sh: FAIL, minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
 echo "verify-minikube.sh: minikube $mk_ver OK (>= $MINIKUBE_MIN); shim $SHIM_VERSION; Kubernetes $KUBERNETES_VERSION"
 
 step "Step 1: minikube profile '$PROFILE' (docker driver, containerd, Kubernetes $KUBERNETES_VERSION)"
@@ -109,7 +109,7 @@ while (( waited < 90 )); do
   fi
   sleep 2; waited=$(( waited + 2 ))
 done
-[[ "$ok" -eq 1 ]] || { echo "verify-minikube.sh: FAIL — ingress never routed Host $CARGO_HOST (no affinity cookie) within 90s" >&2; exit 1; }
+[[ "$ok" -eq 1 ]] || { echo "verify-minikube.sh: FAIL, ingress never routed Host $CARGO_HOST (no affinity cookie) within 90s" >&2; exit 1; }
 echo "verify-minikube.sh: ingress routing confirmed for Host $CARGO_HOST after ${waited}s"
 
 step "Step 6: live HTTP assertions through the ingress (readiness = a real 200)"
@@ -122,7 +122,7 @@ code404="$(curl_code "$BASE/cargo/NOPE")"
 assert_eq "404" "$code404" "minikube GET /cargo/NOPE through ingress"
 
 echo
-echo "PASS — part5-kubernetes on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
+echo "PASS: part5-kubernetes on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
 echo "  the cargo wasi:http component runs as a Wasm Pod via the containerd"
 echo "  wasmtime shim (RuntimeClass '$SHIM_HANDLER'), and GET $VALID_PATH through"
 echo "  ingress-nginx returns the exact cargo JSON while /cargo/NOPE returns 404."

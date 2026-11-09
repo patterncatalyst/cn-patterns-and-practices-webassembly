@@ -12,7 +12,7 @@
 <text x="500.0" y="360.0" font-size="11.5" fill="#555555" text-anchor="middle">load-by-name · init-execution-context · compute</text>
 <rect x="55" y="500" width="135" height="140" rx="9" fill="#fff3e0" stroke="#e8870c" stroke-width="2"/>
 <text x="122.5" y="568.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">OpenVINO</text>
-<text x="122.5" y="585.0" font-size="11.5" fill="#555555" text-anchor="middle">this chapter</text>
+<text x="122.5" y="585.0" font-size="11.5" fill="#555555" text-anchor="middle">exercised here</text>
 <rect x="205" y="500" width="135" height="140" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="272.5" y="568.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">ONNX</text>
 <text x="272.5" y="585.0" font-size="11.5" fill="#555555" text-anchor="middle">Runtime</text>

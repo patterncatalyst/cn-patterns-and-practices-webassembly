@@ -59,7 +59,7 @@ check() {
   fi
 }
 
-echo "checking the Part 2-4 build toolchain (Ch0) ..."
+echo "checking the Part 2-4 build toolchain ..."
 echo
 
 check "rustc" rustc \

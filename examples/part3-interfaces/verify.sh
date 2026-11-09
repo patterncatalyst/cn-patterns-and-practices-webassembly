@@ -117,7 +117,7 @@ PROTO_HOST="$SCRIPT_DIR/proto-component/proto-host/target/release/cargo-proto-ho
 assert_file "$PROTO_HOST" "proto-host"
 wac plug --plug "$RUST_PROVIDER" "$PROTO_RUST" -o "$COMPOSE_DIR/composed-proto-rust.wasm"
 "$PROTO_HOST" "$COMPOSE_DIR/composed-proto-rust.wasm"
-echo "lib.sh: ok — prost-in-Wasm (Rust) protobuf round trip asserted"
+echo "lib.sh: ok, prost-in-Wasm (Rust) protobuf round trip asserted"
 
 echo
 echo "=== GATE C.2 (ch12): protobuf-in-Wasm (reflection-free wire codec, TinyGo) round trip ==="
@@ -125,12 +125,12 @@ bash "$SCRIPT_DIR/proto-go/build.sh"
 assert_file "$SCRIPT_DIR/proto-go/cargo-proto-go.wasm" "proto-go component"
 wac plug --plug "$GO_PROVIDER" "$SCRIPT_DIR/proto-go/cargo-proto-go.wasm" -o "$COMPOSE_DIR/composed-proto-go.wasm"
 "$PROTO_HOST" "$COMPOSE_DIR/composed-proto-go.wasm"
-echo "lib.sh: ok — reflection-free protobuf (TinyGo) round trip asserted"
+echo "lib.sh: ok, reflection-free protobuf (TinyGo) round trip asserted"
 
 echo
 echo "=== GATE C.3 (ch12): gRPC bridge (tonic) client round trip ==="
 ( cd "$SCRIPT_DIR/grpc-bridge" && cargo test --release -- --nocapture )
-echo "lib.sh: ok — tonic client round trip through the Wasm provider asserted"
+echo "lib.sh: ok, tonic client round trip through the Wasm provider asserted"
 
 echo
 echo "=== GATE D (ch13): wasi-sockets reconnect (Rust) ==="
@@ -158,7 +158,7 @@ bash "$SCRIPT_DIR/sockets-go/build.sh"
 assert_file "$SCRIPT_DIR/sockets-go/sockets-client-go.wasm" "sockets-go component (build+validate only; see README)"
 
 echo
-echo "PASS — part3-interfaces:"
+echo "PASS: part3-interfaces:"
 echo "  * ch11: Rust AND TinyGo wasi-http components serve GET /cargo/{id} under"
 echo "    wasmtime serve, composed with the Part 2 providers, identical JSON."
 echo "  * ch12: protobuf runs server-side INSIDE a component (prost in Rust, a"

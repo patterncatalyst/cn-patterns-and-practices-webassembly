@@ -52,7 +52,7 @@ assert_eq "404" "$CODE" "wasmtime serve GET /cargo/NOPE"
 kill $PID 2>/dev/null || true
 
 echo
-echo "PASS — same-bytes (ch16):"
+echo "PASS: same-bytes (ch16):"
 echo "  app.wasm ($SHA) serves the cargo JSON under 'wasmtime serve'."
 echo "  capture-evidence.sh deploys the SAME app.wasm to wasmCloud and records"
 echo "  the same sha256 — one artifact, two runtimes, identical behavior."

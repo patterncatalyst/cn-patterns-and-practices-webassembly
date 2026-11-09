@@ -174,3 +174,6 @@ echo "  cold request through the KEDA interceptor, with a real 200 and the exact
 echo "  cargo JSON; cold-start latency captured in evidence/*/05-cold-start.txt."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
 echo "  run ../teardown.sh to leave the box clean."
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

@@ -7,10 +7,10 @@
 <text x="700.0" y="72.5" font-size="11.5" fill="#555555" text-anchor="middle">patterncatalyst:cargo</text>
 <text x="700.0" y="87.5" font-size="11.5" fill="#555555" text-anchor="middle">the one contract</text>
 <rect x="100" y="150" width="400" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="300.0" y="188.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 2: Rust cargo provider</text>
+<text x="300.0" y="188.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Rust cargo provider</text>
 <text x="300.0" y="205.0" font-size="11.5" fill="#555555" text-anchor="middle">implements contracts/wit</text>
 <rect x="100" y="270" width="400" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="300.0" y="308.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 3: http-rust component</text>
+<text x="300.0" y="308.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">http-rust component</text>
 <text x="300.0" y="325.0" font-size="11.5" fill="#555555" text-anchor="middle">wasi:http/incoming-handler</text>
 <rect x="100" y="390" width="400" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="300.0" y="425.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wac plug --plug provider http-rust</text>
@@ -18,10 +18,10 @@
 <text x="300.0" y="528.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">cargo-rust.wasm</text>
 <text x="300.0" y="545.0" font-size="11.5" fill="#555555" text-anchor="middle">composed, self-contained</text>
 <rect x="900" y="150" width="400" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="1100.0" y="188.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 2: Go cargo provider</text>
+<text x="1100.0" y="188.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Go cargo provider</text>
 <text x="1100.0" y="205.0" font-size="11.5" fill="#555555" text-anchor="middle">implements contracts/wit</text>
 <rect x="900" y="270" width="400" height="80" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
-<text x="1100.0" y="308.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Part 3: http-go component (TinyGo)</text>
+<text x="1100.0" y="308.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">http-go component (TinyGo)</text>
 <text x="1100.0" y="325.0" font-size="11.5" fill="#555555" text-anchor="middle">wasi:http/incoming-handler</text>
 <rect x="900" y="390" width="400" height="60" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
 <text x="1100.0" y="425.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wac plug --plug provider http-go</text>
@@ -30,10 +30,10 @@
 <text x="1100.0" y="545.0" font-size="11.5" fill="#555555" text-anchor="middle">composed, self-contained</text>
 <rect x="55" y="670" width="310" height="110" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="210.0" y="723.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">containerd-shim-wasmtime</text>
-<text x="210.0" y="740.0" font-size="11.5" fill="#555555" text-anchor="middle">Part 5: RuntimeClass: wasmtime</text>
+<text x="210.0" y="740.0" font-size="11.5" fill="#555555" text-anchor="middle">RuntimeClass: wasmtime</text>
 <rect x="385" y="670" width="310" height="110" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="540.0" y="723.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">Istio gateway filter</text>
-<text x="540.0" y="740.0" font-size="11.5" fill="#555555" text-anchor="middle">Part 6: proxy-wasm</text>
+<text x="540.0" y="740.0" font-size="11.5" fill="#555555" text-anchor="middle">proxy-wasm</text>
 <rect x="715" y="670" width="310" height="110" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="870.0" y="723.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">shim OTel → otel-lgtm</text>
 <text x="870.0" y="740.0" font-size="11.5" fill="#555555" text-anchor="middle">Tempo traces</text>
@@ -41,7 +41,7 @@
 <text x="1200.0" y="723.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">wasmCloud operator</text>
 <text x="1200.0" y="740.0" font-size="11.5" fill="#555555" text-anchor="middle">CRC</text>
 <rect x="20" y="890" width="1360" height="70" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
-<text x="700.0" y="930.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">One WIT contract; every part of the book plugs into it.</text>
+<text x="700.0" y="930.5" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">One WIT contract; every deploy target plugs into it.</text>
 <path d="M600,110 L300,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="456.0" y="124.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">implements</text>
 <text x="456.0" y="124.0" font-size="11" fill="#555" text-anchor="middle">implements</text>

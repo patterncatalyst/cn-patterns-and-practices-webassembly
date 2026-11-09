@@ -2,7 +2,7 @@
 title: "First Component in Go"
 order: 7
 part: "Building Components in Rust & Go"
-description: "Build the same cargo-domain component in Go against the same WIT world, using wit-bindgen-go and TinyGo, and see exactly why standard go build cannot finish the job today."
+description: "Build the cargo-domain component in Go against the same WIT world with wit-bindgen-go and TinyGo, and see why standard go build can't finish the job."
 duration: "24 min read"
 ---
 
@@ -10,23 +10,23 @@ duration: "24 min read"
 
 By the end of this chapter you can:
 
-- Generate Go bindings for `contracts/wit`'s `cargo` world with `wit-bindgen-go generate` and read what it produces: an `Exports` struct of function-valued fields per interface, plus a resource table pattern for `cargo-tracker`.
-- Implement every exported function and the `cargo-tracker` resource's constructor, destructor, and three methods as plain Go, assigning each to the generated `Exports` fields.
-- Reproduce the exact `go:wasmexport` compiler errors that make standard `go build` unable to finish this build, and explain why they happen in terms of pointer width, not a Go-language limitation.
-- Run the working build recipe (`wit-bindgen-go generate` → `tinygo build -target=wasip1 -buildmode=c-shared` → `wasm-tools component embed` → `wasm-tools component new` with the reactor adapter) and confirm the result with `wasm-tools component wit`.
-- State why `cabi_realloc` has to be hand-provided for a Go/TinyGo component when it is not for the Rust one, and what breaks without it.
+- Generate Go bindings for `world cargo` with `wit-bindgen-go generate` and read what it produces: an `Exports` struct of function-valued fields per interface, and a table keyed by `cm.Rep` for `cargo-tracker`.
+- Implement every exported function and the `cargo-tracker` constructor, destructor and three methods as plain Go.
+- Reproduce the `go:wasmexport` errors that stop standard `go build`, and explain them as a pointer-width problem, not a Go limitation.
+- Run the working recipe (`wit-bindgen-go generate`, `tinygo build -target=wasip1 -buildmode=c-shared`, `wasm-tools component embed`, `wasm-tools component new` with the reactor adapter) and confirm it with `wasm-tools component wit`.
+- Say why a TinyGo component needs a hand-provided `cabi_realloc` when the Rust one doesn't, and what breaks without it.
 
 ## Why this matters
 
-The Rust cargo-domain provider, built against `contracts/wit`'s `cargo` world with `cargo-component` doing the binding generation and the componentization in one tool, gets a Go counterpart in this chapter, built against the identical contract: the same three interfaces, the same `book-cargo`/`request-possible-routes`/`assign-route`/`get-cargo` functions, the same `cargo-tracker` resource. The two components are observably interchangeable: a native host built once against `world cargo` runs either one and gets byte-identical results. That symmetry is the Component Model's headline claim made concrete: composition and conformance check against the WIT identifiers a component exports, not against the language or toolchain that produced it.
+The Rust provider gets a Go counterpart built against the identical contract: the same three interfaces, the same functions, the same `cargo-tracker` resource. A native host built once against `world cargo` runs either component and gets byte-identical results. Composition and conformance check the WIT identifiers a component exports, not the language that produced it.
 
-Getting there in Go means confronting something the Rust build didn't have to: the compiler that produces a Wasm Component Model provider in Go today is not the one already on your `PATH`. `go build` with `GOOS=wasip1 GOARCH=wasm` is an established, documented target for ordinary WebAssembly modules, and it is the first thing most Go developers reach for. Run it against this chapter's generated bindings and it fails, every time, with a specific and repeatable compiler diagnostic. That failure is reproduced and explained exactly below, then the same source is built with TinyGo, which compiles it cleanly into a reactor component the host runs without any change to how the domain logic is defined. The source is identical either way. Only the compiler differs.
+Getting there in Go means using a compiler other than the one on your `PATH`. `GOOS=wasip1 GOARCH=wasm go build` is the documented target for ordinary Wasm modules, and against these generated bindings it fails with a specific, repeatable diagnostic. TinyGo compiles the same source into a reactor component with no change to the domain logic. Only the compiler differs.
 
-{% include excalidraw.html file="07-go-build-pipeline" alt="Three bands top to bottom: generation (contracts/wit through wit-bindgen-go generate into internal/cargo bindings, feeding hand-written main.go and cabi_realloc.go), compilation (tinygo build -target=wasip1 -buildmode=c-shared producing core.wasm, the one step that must be TinyGo), and componentization (wasm-tools component embed then component new with the reactor adapter, producing cargo-go.wasm)." caption="Figure 7.1: the Go build pipeline: generation and componentization use ordinary tools either way; only the middle band, compilation, is where TinyGo replaces go build." %}
+{% include excalidraw.html file="07-go-build-pipeline" alt="Three bands top to bottom: generation (contracts/wit through wit-bindgen-go generate into internal/cargo bindings, feeding hand-written main.go and cabi_realloc.go), compilation (tinygo build -target=wasip1 -buildmode=c-shared producing core.wasm, the one step that must be TinyGo), and componentization (wasm-tools component embed then component new with the reactor adapter, producing cargo-go.wasm)." caption="Figure 7.1: The Go build pipeline. Generation and componentization use ordinary tools either way; only compilation, where TinyGo replaces go build, differs." %}
 
 ## Generating the bindings
 
-`wit-bindgen-go` reads the same `contracts/wit` directory the Rust build's `cargo-component` read, and the same `--world cargo` the Rust provider targeted:
+`wit-bindgen-go` reads the same `contracts/wit` directory and the same `--world cargo` the Rust build used:
 
 ```bash
 wit-bindgen-go generate -o internal/cargo \
@@ -34,128 +34,136 @@ wit-bindgen-go generate -o internal/cargo \
   --world cargo ../../../contracts/wit
 ```
 
-That command is step 1 of `build.sh`, the exact build recipe this example ships (`examples/part2-building-components/go/build.sh`). It writes a Go package tree under `internal/cargo/patterncatalyst/cargo/` with one subpackage per WIT interface: `types`, `booking`, `handling`. Every file in that tree opens with `// Code generated by wit-bindgen-go. DO NOT EDIT.`: this is generated output, read for what it produces, not hand-maintained.
+It writes a package tree under `internal/cargo/patterncatalyst/cargo/`, one subpackage per interface (`types`, `booking`, `handling`). Every file opens with `// Code generated by wit-bindgen-go. DO NOT EDIT.`
 
-The shape that matters for implementing the domain logic is the `Exports` struct each interface package declares. `booking.exports.go` is short enough to read whole:
+What matters for the domain code is the `Exports` struct each interface package declares. `booking.exports.go` is short enough to read whole:
 
 ```go
 // Exports represents the caller-defined exports from "patterncatalyst:cargo/booking@0.1.0".
 var Exports struct {
+	// BookCargo represents the caller-defined, exported function "book-cargo".
+	//
+	// Book a new cargo shipment against a route specification.
+	//
+	//	book-cargo: func(spec: route-spec, weight-kg: f64) -> result<booking, cargo-error>
 	BookCargo func(spec RouteSpec, weightKg float64) (result cm.Result[BookingShape, Booking, CargoError])
 
+	// RequestPossibleRoutes represents the caller-defined, exported function "request-possible-routes".
+	//
+	// Request the candidate itineraries that satisfy a booking's route
+	// spec.
+	//
+	//	request-possible-routes: func(booking-id: string) -> result<list<itinerary>, cargo-error>
 	RequestPossibleRoutes func(bookingID string) (result cm.Result[CargoErrorShape, cm.List[Itinerary], CargoError])
 
+	// AssignRoute represents the caller-defined, exported function "assign-route".
+	//
+	// Assign one of the candidate itineraries to a booking.
+	//
+	//	assign-route: func(booking-id: string, itinerary: itinerary) -> result<booking,
+	//	cargo-error>
 	AssignRoute func(bookingID string, itinerary Itinerary) (result cm.Result[BookingShape, Booking, CargoError])
 
+	// GetCargo represents the caller-defined, exported function "get-cargo".
+	//
+	// Look up a cargo by its tracking ID.
+	//
+	//	get-cargo: func(tracking-id: string) -> result<cargo, cargo-error>
 	GetCargo func(trackingID string) (result cm.Result[CargoShape, Cargo, CargoError])
 }
 ```
 
-`Exports` is not an interface a type implements; it is a package-level struct of function-valued fields, each one initially `nil`. The chapter's domain code assigns a closure to each field, for example `booking.Exports.BookCargo = func(...) { ... }`, and the generated code elsewhere in the package wires each field to the actual `//go:wasmexport`-annotated function the host calls. `cm.Result[BookingShape, Booking, CargoError]` is `wit-bindgen-go`'s Go rendering of WIT's `result<booking, cargo-error>`: a generic type carrying either an `Ok` value of type `Booking` or an `Err` value of type `CargoError`, with `BookingShape` as a same-size byte array used purely for the result's internal storage layout. `cm.List[Itinerary]` is the equivalent rendering of `list<itinerary>`. These are the same WIT-to-language mappings the Component Model describes in the abstract, now concrete as generated Go types.
+`Exports` isn't an interface a type implements. It is a package-level struct of function-valued fields, each `nil` until the domain code assigns a closure; generated `//go:wasmexport` functions call whatever is assigned. `cm.Result[BookingShape, Booking, CargoError]` is `wit-bindgen-go`'s rendering of `result<booking, cargo-error>`: an `Ok` of `Booking` or an `Err` of `CargoError`, with `BookingShape` a same-size byte array that fixes the storage layout. `cm.List[Itinerary]` renders `list<itinerary>`. A `result<_, cargo-error>` with no success value, such as `register-handling-event`, becomes `cm.Result[CargoError, struct{}, CargoError]`.
 
-`handling.exports.go` adds the one shape `booking.exports.go` doesn't have to: a resource.
+A resource adds one shape. `handling.Exports.CargoTracker` has `Constructor`, `Destructor`, `CurrentStatus`, `History` and `TrackingID` fields, and its constructor is:
 
 ```go
-var Exports struct {
-	CargoTracker struct {
-		Destructor func(self cm.Rep)
 		Constructor func(trackingID string) (result CargoTracker)
-		CurrentStatus func(self cm.Rep) (result TransportStatus)
-		History func(self cm.Rep) (result cm.List[HandlingEvent])
-		TrackingID func(self cm.Rep) (result string)
-	}
-
-	RegisterHandlingEvent func(cargoID string, eventType HandlingEventType, location Location, voyageID string, recordedAt string) (result cm.Result[CargoError, struct{}, CargoError])
-
-	ListHandlingEvents func(cargoID string) (result cm.Result[CargoErrorShape, cm.List[HandlingEvent], CargoError])
-}
 ```
 
-`cm.Rep` is the Component Model's resource representation handle: an opaque value the host hands back on every method call after a constructor returns one, standing in for "this specific `cargo-tracker` instance" without the host or the component sharing a pointer across the sandbox boundary. The generated code expects the implementation to maintain whatever state that `cm.Rep` refers to on its own side; Go gets a bare integer-like handle and a contract that the same handle always refers to the same logical resource.
+Every method takes a `cm.Rep`, an opaque handle the host passes back after the constructor returns one. It stands for "this `cargo-tracker`" without a pointer crossing the sandbox boundary. The component keeps whatever state the handle refers to.
 
 ## Implementing the exports
 
-`examples/part2-building-components/go/main.go` assigns every one of those fields inside a single `init()` function. The simplest case is `GetCargo`, a straight lookup against an in-memory map:
+`go/main.go` assigns every field in one `init()`. Result aliases declared once (`type cargoResult = cm.Result[booking.CargoShape, types.Cargo, types.CargoError]`) keep signatures short. `cm.OK[...]` and `cm.Err[...]` build the two sides of a `result`, and `types.CargoErrorNotFound` is a generated helper for the `not-found` case. `GetCargo` looks up a map; for an unknown ID it ends:
 
 ```go
-booking.Exports.GetCargo = func(trackingID string) cargoResult {
-	c, ok := cargos[trackingID]
-	if !ok {
-		return cm.Err[cargoResult](types.CargoErrorNotFound("no cargo " + trackingID))
-	}
-	return cm.OK[cargoResult](c)
-}
+		c, ok := cargos[trackingID]
+		if !ok {
+			return cm.Err[cargoResult](types.CargoErrorNotFound("no cargo " + trackingID))
+		}
+		return cm.OK[cargoResult](c)
 ```
 
-`cargoResult` here is a package-level type alias (`type cargoResult = cm.Result[booking.CargoShape, types.Cargo, types.CargoError]`) declared once near the top of `main.go` so every function signature that returns this shape doesn't repeat the three-parameter generic inline. `cm.Err[cargoResult](...)` and `cm.OK[cargoResult](...)` are the `cm` package's constructors for the two sides of a `result`; `types.CargoErrorNotFound` is a generated helper (`types.wit.go`) that builds the `not-found` case of the `cargo-error` variant from a message string, exactly as `types.CargoErrorInvalidBooking` and `types.CargoErrorInvalidLocation` do for their own cases.
+(Like the Rust provider, it panics on the sentinel ID `__TRAP__`, which the host sees as a trap rather than a `cargo-error`.)
 
-`BookCargo` is the function that does the most work, and it is still ordinary Go: validation, a deterministic ID derivation, two map writes, and a typed return.
+`BookCargo` does the most work and is still ordinary Go: validation, deterministic IDs, two map writes, a typed return.
 
 ```go
-booking.Exports.BookCargo = func(spec types.RouteSpec, weightKg float64) bookingResult {
-	if spec.Origin.Unlocode == "" || spec.Destination.Unlocode == "" {
-		return cm.Err[bookingResult](types.CargoErrorInvalidLocation(
-			"origin and destination must each have a UN/LOCODE"))
-	}
-	if weightKg <= 0 {
-		return cm.Err[bookingResult](types.CargoErrorInvalidBooking(
-			"weight-kg must be greater than zero"))
-	}
+	booking.Exports.BookCargo = func(spec types.RouteSpec, weightKg float64) bookingResult {
+		if spec.Origin.Unlocode == "" || spec.Destination.Unlocode == "" {
+			return cm.Err[bookingResult](types.CargoErrorInvalidLocation(
+				"origin and destination must each have a UN/LOCODE"))
+		}
+		if weightKg <= 0 {
+			return cm.Err[bookingResult](types.CargoErrorInvalidBooking(
+				"weight-kg must be greater than zero"))
+		}
 
-	trackingID := trackingIDFor(spec.Origin, spec.Destination)
-	bookingID := bookingIDFor(spec.Origin, spec.Destination)
+		trackingID := trackingIDFor(spec.Origin, spec.Destination)
+		bookingID := bookingIDFor(spec.Origin, spec.Destination)
 
-	cargos[trackingID] = types.Cargo{
-		TrackingID:  trackingID,
-		Origin:      spec.Origin,
-		Destination: spec.Destination,
-		WeightKg:    weightKg,
+		cargos[trackingID] = types.Cargo{
+			TrackingID:  trackingID,
+			Origin:      spec.Origin,
+			Destination: spec.Destination,
+			WeightKg:    weightKg,
+		}
+		b := types.Booking{
+			BookingID: bookingID,
+			CargoID:   trackingID,
+			RouteSpec: spec,
+			Price:     types.Money{Amount: priceAmount, Currency: priceCurrency},
+			Status:    types.RoutingStatusNotRouted,
+		}
+		bookings[bookingID] = b
+		return cm.OK[bookingResult](b)
 	}
-	b := types.Booking{
-		BookingID: bookingID,
-		CargoID:   trackingID,
-		RouteSpec: spec,
-		Price:     types.Money{Amount: priceAmount, Currency: priceCurrency},
-		Status:    types.RoutingStatusNotRouted,
-	}
-	bookings[bookingID] = b
-	return cm.OK[bookingResult](b)
-}
 ```
 
-Nothing in that function touches `cm.Rep`, linear memory, or anything Wasm-specific beyond the `cm.Result` return type. The deterministic `trackingIDFor`/`bookingIDFor` helpers and the `priceAmount`/`priceCurrency` constants are the same values the Rust implementation hard-codes, by design: the host runs an identical scenario against both components and diffs the results, so the two implementations have to agree on every derived ID and fixed price, not just on the WIT shapes.
+Nothing there touches `cm.Rep` or linear memory beyond the `cm.Result` return type. `trackingIDFor`, `bookingIDFor` and the price constants match the Rust values, because the host diffs the two components' output, so they must agree on every derived ID and fixed price, not only on WIT shapes.
 
-`RequestPossibleRoutes` shows `cm.List` on both ends: reading one in `AssignRoute` via `itinerary.Legs.Len()`, and building one with `cm.ToList`.
+`RequestPossibleRoutes` builds a `cm.List`, and `AssignRoute` reads one with `Legs.Len()` to reject an itinerary with no legs:
 
 {% raw %}
 ```go
-booking.Exports.RequestPossibleRoutes = func(bookingID string) itinerariesResult {
-	b, ok := bookings[bookingID]
-	if !ok {
-		return cm.Err[itinerariesResult](types.CargoErrorNotFound("no booking " + bookingID))
+	booking.Exports.RequestPossibleRoutes = func(bookingID string) itinerariesResult {
+		b, ok := bookings[bookingID]
+		if !ok {
+			return cm.Err[itinerariesResult](types.CargoErrorNotFound("no booking " + bookingID))
+		}
+		spec := b.RouteSpec
+		itinerary := types.Itinerary{
+			BookingID: bookingID,
+			Legs: cm.ToList([]types.Leg{{
+				VoyageID:       voyageID,
+				LoadLocation:   spec.Origin,
+				UnloadLocation: spec.Destination,
+				LoadTime:       legLoadTime,
+				UnloadTime:     spec.ArrivalDeadline,
+				Status:         types.TransportStatusPlanned,
+			}}),
+		}
+		return cm.OK[itinerariesResult](cm.ToList([]types.Itinerary{itinerary}))
 	}
-	spec := b.RouteSpec
-	itinerary := types.Itinerary{
-		BookingID: bookingID,
-		Legs: cm.ToList([]types.Leg{{
-			VoyageID:       voyageID,
-			LoadLocation:   spec.Origin,
-			UnloadLocation: spec.Destination,
-			LoadTime:       legLoadTime,
-			UnloadTime:     spec.ArrivalDeadline,
-			Status:         types.TransportStatusPlanned,
-		}}),
-	}
-	return cm.OK[itinerariesResult](cm.ToList([]types.Itinerary{itinerary}))
-}
 ```
 {% endraw %}
 
-`cm.ToList` takes an ordinary Go slice and wraps it as the `cm.List[T]` the WIT `list<T>` boundary expects; there is no manual length-and-pointer bookkeeping in this source file for that conversion; `wit-bindgen-go`'s generated lowering code handles turning that `cm.List` into the two-word (pointer, length) pair the Canonical ABI puts on the wire when the host lifts the return value. `cm.List` has a `.Len()` method too, which `AssignRoute` uses to reject an itinerary with zero legs before committing it to a booking.
+`cm.ToList` wraps a Go slice as the `cm.List[T]` that `list<T>` expects. The generated lowering code turns it into the (pointer, length) pair the canonical ABI puts on the wire.
 
-## The `cargo-tracker` resource
+## The cargo-tracker resource
 
-A resource's five generated fields (`Constructor`, `Destructor`, and three methods) map onto one Go pattern: a package-level table keyed by `cm.Rep`, because the resource's state has to outlive any single export call and nothing about `cm.Rep` itself carries storage.
+The resource's state has to outlive any one export call, and `cm.Rep` carries no storage. The Go pattern is a package-level table keyed by `cm.Rep`:
 
 ```go
 type trackerState struct {
@@ -168,55 +176,57 @@ var (
 )
 ```
 
-```go
-handling.Exports.CargoTracker.Constructor = func(trackingID string) handling.CargoTracker {
-	rep := nextTracker
-	nextTracker++
-	trackers[rep] = &trackerState{trackingID: trackingID}
-	return handling.CargoTrackerResourceNew(rep)
-}
-
-handling.Exports.CargoTracker.Destructor = func(self cm.Rep) {
-	delete(trackers, self)
-}
-
-handling.Exports.CargoTracker.TrackingID = func(self cm.Rep) string {
-	if t, ok := trackers[self]; ok {
-		return t.trackingID
-	}
-	return ""
-}
-```
-
-`handling.CargoTrackerResourceNew` is a generated function (`handling.wit.go`) that turns a bare `cm.Rep` into the typed `handling.CargoTracker` handle the constructor has to return; it calls a `wasmimport_CargoTrackerResourceNew` import under the hood, which is the host-side resource table registering this rep as a live instance. The component never stores anything resembling a pointer to the resource itself in that handle: the `rep` integer and the `trackers` map on the Go side are the entire state, and the handle is just a token the host presents back on every method call so the component can look its own state up again.
-
-`CurrentStatus` and `History` both derive their answers from the same shared `events` map the `handling` export functions already maintain, rather than keeping a duplicate copy inside `trackerState`:
+The constructor, destructor and `TrackingID` maintain it:
 
 ```go
-handling.Exports.CargoTracker.CurrentStatus = func(self cm.Rep) types.TransportStatus {
-	t, ok := trackers[self]
-	if !ok {
-		return types.TransportStatusUnspecified
+	handling.Exports.CargoTracker.Constructor = func(trackingID string) handling.CargoTracker {
+		rep := nextTracker
+		nextTracker++
+		trackers[rep] = &trackerState{trackingID: trackingID}
+		return handling.CargoTrackerResourceNew(rep)
 	}
-	history := events[t.trackingID]
-	if len(history) == 0 {
-		return types.TransportStatusUnspecified
+
+	handling.Exports.CargoTracker.Destructor = func(self cm.Rep) {
+		delete(trackers, self)
 	}
-	return statusFromLastEvent(history[len(history)-1].EventType)
-}
+
+	handling.Exports.CargoTracker.TrackingID = func(self cm.Rep) string {
+		if t, ok := trackers[self]; ok {
+			return t.trackingID
+		}
+		return ""
+	}
 ```
 
-That's a deliberate shape: the resource's only private state is the `trackingID` it was constructed with, and every query re-reads the live `events` map by that ID, so a tracker constructed before three handling events were recorded still reports the current status after they land, exactly as a caller querying live state should expect.
+`handling.CargoTrackerResourceNew` is generated. It turns a `cm.Rep` into the typed `handling.CargoTracker` handle the constructor returns by registering the rep with the host's resource table. The component stores no pointer in that handle; the integer and the `trackers` map are the whole state.
 
-## Why `go build` stops here
+`CurrentStatus` and `History` read the shared `events` map instead of copying events into `trackerState`:
 
-With the bindings generated and `main.go` complete, the natural next step is the compiler already on `PATH`:
+```go
+	handling.Exports.CargoTracker.CurrentStatus = func(self cm.Rep) types.TransportStatus {
+		t, ok := trackers[self]
+		if !ok {
+			return types.TransportStatusUnspecified
+		}
+		history := events[t.trackingID]
+		if len(history) == 0 {
+			return types.TransportStatusUnspecified
+		}
+		return statusFromLastEvent(history[len(history)-1].EventType)
+	}
+```
+
+A tracker built before three events were recorded still reports the current status after they land, as with the Rust `Tracker`.
+
+## Why go build stops here
+
+The natural next step is the compiler already on `PATH`:
 
 ```bash
 GOOS=wasip1 GOARCH=wasm go build -o core.wasm .
 ```
 
-Running that against this exact source tree fails, and it fails the same way every time:
+On Go 1.26.9 it fails the same way every time, in generated files and not in `main.go`:
 
 ```
 # example.com/cargo-go/internal/cargo/patterncatalyst/cargo/handling
@@ -228,41 +238,42 @@ internal/cargo/patterncatalyst/cargo/booking/booking.wasm.go:14:6: go:wasmexport
 internal/cargo/patterncatalyst/cargo/booking/booking.wasm.go:33:6: go:wasmexport: unsupported parameter type *types.Leg
 ```
 
-This is go1.26.9, `GOOS=wasip1 GOARCH=wasm`, against the exact generated bindings this chapter already walked through: not a hypothetical, not an older toolchain issue. Every one of those diagnostics points at a file `wit-bindgen-go` generated, not at `main.go`: `handling.wasm.go` and `booking.wasm.go` carry the `//go:wasmexport` pragmas that mark the functions the Canonical ABI calls directly, and each pragma precedes a function signature like this one, straight from `booking.wasm.go`:
+Each rejected function carries a `//go:wasmexport` pragma, for example in `booking.wasm.go`:
 
 ```go
 //go:wasmexport patterncatalyst:cargo/booking@0.1.0#book-cargo
-func wasmexport_BookCargo(spec0 *uint8, spec1 uint32, ... ) (result *cm.Result[BookingShape, Booking, CargoError]) {
+//export patterncatalyst:cargo/booking@0.1.0#book-cargo
+func wasmexport_BookCargo(spec0 *uint8, spec1 uint32, spec2 *uint8, spec3 uint32, spec4 *uint8, spec5 uint32, spec6 *uint8, spec7 uint32, spec8 *uint8, spec9 uint32, spec10 *uint8, spec11 uint32, spec12 *uint8, spec13 uint32, weightKg0 float64) (result *cm.Result[BookingShape, Booking, CargoError]) {
 ```
 
-`go:wasmexport` is the standard Go toolchain's own mechanism for exporting a function to a WebAssembly host, not a `wit-bindgen-go` invention. Its restriction is about pointer width, not about `cm.Result` or `cm.List` as types: `GOOS=wasip1 GOARCH=wasm` is Go's 64-bit-pointer Wasm target, and `go:wasmexport` refuses to return or accept a pointer to a type whose in-memory layout wouldn't make sense as a 32-bit Canonical ABI value on the other side of the call. `*cm.Result[...]`, `*cm.List[...]`, `*string`, and `*types.Leg` are all pointers to pointerful, multi-word structures, exactly the ABI encoding WIT's `result`, `list`, `string`, and `leg` need for their generated lowering, and exactly what `//go:wasmexport` rejects on this target. The compiler's own diagnostic even names the fix in the abstract: these shapes would be legal "on `GOARCH=wasm32`," but `wasip1`/`wasm32` has no buildable `buildmode` on the installed Go (`c-shared`, `c-archive`, `pie`, and the default all refuse), and there is no `wasm32` `GOEXPERIMENT` to opt into on this release.
+`go:wasmexport` is the standard toolchain's own way to export a function to a Wasm host. The restriction is about pointer width, not about `cm.Result` or `cm.List` as types. `GOOS=wasip1 GOARCH=wasm` is Go's 64-bit-pointer Wasm target, and `go:wasmexport` refuses a pointer to a pointerful multi-word type, which is the shape WIT's `result`, `list`, `string` and records need. The compiler's own text says these signatures would be allowed on `GOARCH=wasm32`, but `wasip1/wasm32` has no buildable build mode on the installed Go (`c-shared`, `c-archive`, `pie` and the default all refuse), and there is no `wasm32` `GOEXPERIMENT`.
 
-{% include excalidraw.html file="07-go-build-vs-tinygo" alt="Two side-by-side panels compiling the identical main.go and generated bindings: the left panel, GOOS=wasip1 GOARCH=wasm go build, flags 64-bit pointers against the generated wasmexport signatures and rejects *cm.Result, *cm.List, *string, and *types.Leg, failing with no core.wasm produced; the right panel, tinygo build -target=wasip1, targets wasm32 natively with no such pointer-width restriction and accepts the same signatures, producing core.wasm with reactor exports." caption="Figure 7.2: same source, two compilers: go build's 64-bit Wasm target rejects the pointerful wasmexport signatures wit-bindgen-go generates; TinyGo's native 32-bit target accepts them unchanged." %}
+{% include excalidraw.html file="07-go-build-vs-tinygo" alt="Two side-by-side panels compiling the identical main.go and generated bindings: the left panel, GOOS=wasip1 GOARCH=wasm go build, flags 64-bit pointers against the generated wasmexport signatures and rejects *cm.Result, *cm.List, *string, and *types.Leg, failing with no core.wasm produced; the right panel, tinygo build -target=wasip1, targets wasm32 natively with no such pointer-width restriction and accepts the same signatures, producing core.wasm with reactor exports." caption="Figure 7.2: Same source, two compilers. go build's 64-bit Wasm target rejects the pointerful wasmexport signatures; TinyGo's 32-bit target accepts them unchanged." %}
 
-This is not a Go-dialect rewrite. The source in `main.go`, the generated bindings under `internal/cargo/`, and the `cm` package's API are exactly the same Go whether the eventual compiler is `go build` or TinyGo: nothing about `types.RouteSpec`, `cm.Result`, or the closures assigned to `Exports` fields changes. The difference that matters is entirely in which compiler turns that source into a wasip1 core module, because only one of the two installed compilers currently targets 32-bit wasm the way the Canonical ABI's generated signatures require.
+This isn't a Go dialect. `main.go`, the generated bindings and the `cm` package are identical under either compiler. Only one of the two currently targets 32-bit Wasm the way the canonical ABI's generated signatures require. One more pin: `go.bytecodealliance.org/cm` resolves only to v0.3.0, because the later tags were cut on the monorepo root module and Go rejects them for the `/cm` import path.
 
 ## The TinyGo build
 
-TinyGo targets `wasm32` as a first-class target, with none of `go:wasmexport`'s pointer-width restriction, so the second step of `build.sh` compiles cleanly against the identical source tree that just failed under `go build`:
+TinyGo targets `wasm32` natively, so the same tree compiles:
 
 ```bash
 tinygo build -target=wasip1 -buildmode=c-shared -o core.wasm .
 ```
 
-`-target=wasip1` selects WASI Preview 1's calling convention at the core-module level; the Component Model layer on top of it comes from the next two steps, not from this one. `-buildmode=c-shared` is the setting that decides whether the resulting module is a *reactor* (`_initialize`, callable export functions, no `main` entry point run at startup) or a *command* (`_start`, runs `main()` once and exits). A cargo provider has to be a reactor: the host instantiates it once and calls `book-cargo`, `get-cargo`, and the rest of the exports repeatedly across the life of the process, never invoking a `main` function at all. `main.go`'s own `main()` function exists only because the Go toolchain requires a package `main` to declare one; a reactor component never runs it:
+`-target=wasip1` selects the WASI Preview 1 calling convention at the core-module level; the next two steps add the Component Model. `-buildmode=c-shared` produces a **reactor** (`_initialize`, callable exports, no startup `main`) rather than a **command** (`_start`, runs `main()` once and exits). A cargo provider must be a reactor because the host instantiates it once and calls its exports repeatedly. The Go toolchain still requires a `main`, which a reactor never runs:
 
 ```go
 // main is required by the Go toolchain for the module build, but a reactor
-// component never runs it — the host instantiates the component and calls
-// the exported functions directly.
+// component never runs it: the host instantiates the component and calls the
+// exported functions directly.
 func main() {}
 ```
 
-Plain `tinygo build` without `-buildmode=c-shared` produces a command module instead, and pairing a command core with the reactor adapter (the next step) does not fail loudly. It instantiates, and the runtime never initializes, so the first exported-function call panics inside `runtime.wasmExportCheckRun`. Getting `-buildmode=c-shared` right the first time avoids a failure mode that otherwise only shows up once the host tries to call into the component.
+Without `-buildmode=c-shared` you get a command. Paired with the reactor adapter it doesn't fail at build time: it instantiates, the runtime never initializes, and the first export call panics inside `runtime.wasmExportCheckRun`.
 
-### `cabi_realloc`
+### cabi_realloc
 
-`wasm-tools component new`, the step after this one, requires the core module to export a function named `cabi_realloc`: the Canonical ABI's own allocator, which the runtime calls to allocate or grow the linear-memory buffers used to lift and lower strings and lists across the component boundary. Without it, `component new` fails outright with "module does not export a function named `cabi_realloc`." The upstream `go.bytecodealliance.org/x/cabi` package implements the right logic but ships no `//export` directive of its own, so this example provides its own, `cabi_realloc.go`:
+`wasm-tools component new` requires the core module to export `cabi_realloc`, the canonical ABI's allocator that the runtime calls to size the buffers for strings and lists crossing the boundary. Without it, `component new` fails with "module does not export a function named `cabi_realloc`." The upstream `go.bytecodealliance.org/x/cabi` package has the right logic but no `//export` directive, so the project provides `cabi_realloc.go`:
 
 ```go
 //export cabi_realloc
@@ -278,24 +289,18 @@ func cabiRealloc(ptr unsafe.Pointer, size, align, newsize uintptr) unsafe.Pointe
 }
 ```
 
-`cabiAlloc` picks a slice element type matching the requested alignment (`uint8`, `uint16`, `uint32`, or `uint64`) and allocates through `make`, so the Go/TinyGo runtime, and its garbage collector, owns the memory the host is about to read from or write into, rather than the function reaching for raw, GC-invisible memory. Rust's `cargo-component` doesn't need this hand-written step because the `wit-bindgen` crate it depends on already provides a `cabi_realloc` export built in; Go's binding generator and `cm` package currently don't, so the example supplies the twenty-six lines itself.
+`cabiAlloc` picks a slice element type matching the requested alignment and allocates with `make`, so the TinyGo runtime and its garbage collector own the memory the host reads and writes. Rust's `cargo-component` needs no such file because the `wit-bindgen` crate it depends on already exports `cabi_realloc`.
 
 ## Componentizing: embed, then wrap
 
-Two `wasm-tools` subcommands turn the wasip1 core module into the finished component, and both are the same tool the Rust build used internally through `cargo-component`, run here by hand:
+Two `wasm-tools` subcommands turn the wasip1 core module into the component. `cargo-component` runs the same tool internally.
 
-```bash
-wasm-tools component embed ../../../contracts/wit --world cargo core.wasm -o embedded.wasm
-wasm-tools component new embedded.wasm \
-  --adapt wasi_snapshot_preview1=adapters/wasi_snapshot_preview1.reactor.wasm \
-  -o cargo-go.wasm
-```
+- `component embed` attaches the `cargo` world's type information to the core module, which on its own exports only flat `i32`, `i64`, `f32` and `f64` functions.
+- `component new` wraps the result in the component binary format. It also needs an adapter that translates the wasip1 syscalls TinyGo's runtime makes into the wasip2 WASI interfaces (`wasi:cli`, `wasi:io`, `wasi:filesystem`) a component host supplies. `adapters/wasi_snapshot_preview1.reactor.wasm` is that adapter, vendored from a Wasmtime release. Use the reactor variant for a reactor core. The command variant is for a core built without the flag, and mixing them fails silently until a call reaches the component.
 
-`component embed` attaches the `cargo` world's type information, the Canonical ABI metadata describing what `book-cargo`, `get-cargo`, and every other export mean at the component level, onto the raw core module, which on its own exports only flat `i32`/`i64`/`f32`/`f64` functions exactly as a core module does. `component new` then does the actual wrapping into the binary component format, and it needs one more thing a TinyGo wasip1 core module doesn't provide on its own: an adapter translating the wasip1 WASI syscall surface TinyGo's runtime calls into the wasip2 WASI interfaces (`wasi:cli`, `wasi:io`, `wasi:filesystem`, and so on) a Component Model host satisfies. `adapters/wasi_snapshot_preview1.reactor.wasm` is that adapter, vendored from wasmtime's v50.0.0 release, specifically the **reactor** variant, matching the reactor core module `-buildmode=c-shared` produced. The command-adapter variant exists too, for a core module built without that flag, and pairing the wrong one of the two with this core module fails the same way the missing `-buildmode=c-shared` flag does: silently, until a call reaches the component.
+`wit-bindgen-go generate` and `wasm-tools component embed` read the contract through a Wasmtime filesystem sandbox that resolves only paths relative to the current directory. `build.sh` changes into the Go example's directory and passes `../../../contracts/wit` for that reason; an absolute path fails with "failed to find a pre-opened file descriptor". (`wasm-tools component wit`, used only to inspect, accepts an absolute path.)
 
-Both `wit-bindgen-go generate` and `wasm-tools component embed` read the contract directory through a wasmtime filesystem sandbox that only resolves paths relative to the current working directory; `build.sh` `cd`s into the Go example's own directory first and passes `../../../contracts/wit` as a relative path for exactly that reason. An absolute path to the same directory fails both commands with "failed to find a pre-opened file descriptor," even though `wasm-tools component wit` (used only for inspecting a finished component, not generating anything) tolerates an absolute path without complaint.
-
-`build.sh` runs all four steps end to end and validates the result:
+`build.sh` runs all four steps and validates the result:
 
 ```bash
 echo "build.sh: [1/4] generating Go bindings from the contract ..."
@@ -320,11 +325,9 @@ echo "build.sh: wrote $OUT"
 wasm-tools validate "$OUT"
 ```
 
-Run against this chapter's example on Go 1.26.9, TinyGo 0.43.0, `wit-bindgen-go` v0.7.0, and `wasm-tools` 1.262.0, it produces a valid `cargo-go.wasm` with no manual intervention. The recipe above is exactly what ran to produce the output shown next.
-
 ## Confirming the export surface
 
-`wasm-tools component wit`, run against the finished artifact, lists every interface and world the component exports, read back from the binary itself rather than from source:
+`wasm-tools component wit` reads the export list back from the binary:
 
 ```bash
 $ wasm-tools component wit cargo-go.wasm
@@ -345,35 +348,27 @@ world root {
 }
 ```
 
-The `import` list is the wasip2 WASI surface the reactor adapter satisfies on the component's behalf (`wasi:cli`, `wasi:io`, `wasi:clocks`, `wasi:filesystem`, `wasi:random`), present because TinyGo's runtime still calls into WASI even for a reactor that never touches a file or an environment variable directly. The three `export` lines are the ones that matter for this chapter: `patterncatalyst:cargo/types`, `/booking`, and `/handling`, exactly the three interfaces `contracts/wit/world.wit`'s `cargo` world declares, and exactly what the Rust-built `cargo_rust.wasm` exports under the same command. Neither component's export list depends on which language built it; a consumer, or the host below, reads the same `world cargo` either way.
+The imports are the wasip2 WASI surface the adapter satisfies; TinyGo's runtime calls WASI even when the reactor touches no file. The three exports are exactly what `world cargo` declares and what the Rust `cargo_rust.wasm` exports, so a consumer or host reads the same world either way.
 
 ## Running it through the host
 
-`examples/part2-building-components/host/` is a native Rust binary built with `wasmtime::component::bindgen!({ world: "cargo" })`, generating typed accessors for `cargo`'s exported interfaces the same way `wit-bindgen-go` generated typed bindings for the Go side. It loads a component by path, links WASI support, and drives one fixed scenario: book `USNYC → DEHAM` at 1200.5 kg, fetch the cargo back, request routes, assign one, register three handling events, list them, then construct a `cargo-tracker` and read its tracking ID, current status, and history.
+`host/` is the native Wasmtime binary from the Rust component's chapter, built with `wasmtime::component::bindgen!({ world: "cargo" })`. It drives one scenario: book `USNYC` to `DEHAM` at 1200.5 kg, fetch the cargo, request routes, assign one, register three handling events, list them, then construct a `cargo-tracker` and read its ID, status and history.
 
 ```bash
 ./host/target/release/cargo-host go/cargo-go.wasm fixtures/scenario.json go
 ```
 
-```
-[go] all assertions passed
-{
-  "booking": {
-    "booking-id": "BOOKING-USNYC-DEHAM",
-    "cargo-id": "CARGO-USNYC-DEHAM",
-    "price": { "amount": "1500.00", "currency": "USD" },
-    "status": "not-routed"
-  },
-  "assigned-status": "routed",
-  "tracker": {
-    "tracking-id": "CARGO-USNYC-DEHAM",
-    "current-status": "in-transit",
-    "history-count": 3
-  }
-}
-```
+It prints `[go] all assertions passed` to stderr and a pretty-printed JSON summary to stdout: the booking (`BOOKING-USNYC-DEHAM`, price `1500.00 USD`, status `not-routed`), the cargo, the itinerary leg, the assigned status `routed`, the event count, and the tracker (`CARGO-USNYC-DEHAM`, `in-transit`, three history entries). The same command against the Rust component, with `rust` as the label, prints a byte-identical summary.
 
-Running the identical command against the Rust component, with `rust` as the trailing label instead of `go`, produces a byte-identical summary. `verify.sh` runs both and diffs the two JSON outputs as its final assertion: the proof, not just the claim, that two components built from the same WIT package by two independent toolchains are interchangeable from the host's point of view, which neither has to know or care was built in Go versus Rust.
+> **Decision**
+>
+> Build Component Model providers in Go with TinyGo, not standard `go build`. The constraint is mechanical: `GOARCH=wasm` has 64-bit pointers, `//go:wasmexport` rejects pointers to pointerful result and parameter types on that target, and `wit-bindgen-go` emits exactly those shapes for any WIT `result`, `list`, `string` or record. The rejected signatures live in generated code, so no rewrite of `main.go` avoids it. TinyGo targets `wasm32` natively and compiles the same source and bindings unchanged. Watch for a `wasm32` `GOARCH` or `GOEXPERIMENT` in standard Go (the compiler's error already names `GOARCH=wasm32` as where the signatures are legal), and for `cm` or `wit-bindgen-go` shipping their own `cabi_realloc`, which would remove the only other TinyGo-specific file. Until then everything around the single compile step is toolchain-neutral: the contract, the bindings, the domain logic and the `wasm-tools` componentization.
+
+> **🤖 Explore with your agent**
+>
+> "In `examples/part2-building-components/go/main.go`, implement `booking.Exports.GetCargo` so it returns `types.CargoErrorNotFound` for an unknown ID, then rebuild with `go/build.sh` (`wit-bindgen-go generate`, `tinygo build -target=wasip1 -buildmode=c-shared`, `wasm-tools component embed`, `wasm-tools component new` with the reactor adapter). Next run `GOOS=wasip1 GOARCH=wasm go build -o core.wasm .` in the same directory and explain, from the `go:wasmexport` errors, which generated signatures it rejects and why TinyGo accepts them."
+>
+> Check: `build.sh` ends by validating `cargo-go.wasm`, and the `go build` output names `go:wasmexport: unsupported result type` for files under `internal/cargo/`.
 
 ## Build, run, observe
 
@@ -381,14 +376,17 @@ Running the identical command against the Rust component, with `rust` as the tra
 cd examples/part2-building-components && ./verify.sh
 ```
 
-`verify.sh` builds this chapter's Go provider with `build.sh` (`wit-bindgen-go generate`, then `tinygo build -target=wasip1 -buildmode=c-shared`, then `wasm-tools component embed`/`component new` with the reactor adapter), builds the Rust provider and the native host from `host/`, then runs the host against both components over the same shared fixture. For each provider it asserts the full booking-handling-cargo-tracker scenario and the distinction between a recoverable `cargo-error::not-found` and an unrecoverable wasm trap, then diffs the Go component's JSON output against the Rust component's byte for byte. It confirms both artifacts export exactly `world cargo` against `contracts/wit`, then builds both consumer components and composes all four consumer x provider pairs with `wac plug`, running each directly under `wasmtime run` and asserting the identical normalized summary line. Expect `PASS` once every assertion holds; see `examples/part2-building-components/README.md` for the full walkthrough.
+The script builds the Go provider with `build.sh`, builds the Rust provider and the native host, then runs the host against both over one fixture. It checks the full booking, handling and tracker scenario, a recoverable `cargo-error::not-found` against an unrecoverable trap, that both artifacts export exactly `world cargo`, and that the two JSON summaries match byte for byte. It then composes the consumer components with each provider using `wac plug` and runs all four pairs under `wasmtime run`. Expect `PASS`.
 
-<div class="callout callout--safe"><p class="callout__title">Decision</p><p>Build Component Model providers in Go with TinyGo, not standard <code>go build</code>, as of this writing (Go 1.26.9, TinyGo 0.43.0, late 2026). The constraint is specific and mechanical, not a vague toolchain-immaturity claim: <code>GOOS=wasip1 GOARCH=wasm</code> is Go's 64-bit-pointer Wasm target, <code>//go:wasmexport</code> rejects pointers to pointerful result and parameter types on that target, and <code>wit-bindgen-go</code>'s generated bindings for any WIT <code>result</code>, <code>list</code>, <code>string</code>, or record return exactly those pointerful shapes, and there is no way to write the domain logic differently to avoid it, because the rejected signatures live in generated code, not in <code>main.go</code>. TinyGo targets wasm32 natively, has no such restriction, and compiles the identical Go source and the identical generated bindings without any change to either. Watch two things as the standard toolchain evolves: a <code>wasm32</code> <code>GOARCH</code> or <code>GOEXPERIMENT</code> landing in a future Go release (the compiler's own error text already names <code>GOARCH=wasm32</code> as where these signatures would be legal, which reads as an acknowledged gap rather than a permanent one), and whether <code>go.bytecodealliance.org/cm</code> or <code>wit-bindgen-go</code> ever ship a <code>cabi_realloc</code> export of their own, which would remove this example's one other TinyGo-specific file. Until either lands, the working recipe is <code>wit-bindgen-go generate</code> followed by a TinyGo compile, not a <code>go build</code> one, with everything upstream and downstream of that single step (the WIT contract, the generated bindings, the hand-written domain logic, and the componentization with <code>wasm-tools</code>) identical to what a <code>go build</code>-based pipeline would also use if one existed today.</p></div>
+- Drop `-buildmode=c-shared` from the `tinygo build` line: the component builds and instantiates, and the first export call panics in `runtime.wasmExportCheckRun`.
+- Delete `cabi_realloc.go`: `wasm-tools component new` fails with "module does not export a function named `cabi_realloc`".
+- Pass an absolute path for the contract directory: `wit-bindgen-go generate` and `component embed` fail with "failed to find a pre-opened file descriptor".
+- Run `GOOS=wasip1 GOARCH=wasm go build` on the same tree: it fails with the `go:wasmexport` errors above and produces no `core.wasm`.
 
 ## For deeper coverage
 
-- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): compiling Go and TinyGo sources into WebAssembly components, including the WASI Preview 1/2 adapter boundary this chapter's reactor adapter crosses.
-- Shashank Jain, *WebAssembly for Cloud* (Apress): cross-language Component Model interoperability patterns, the same proof this chapter builds toward with one host driving two independently built components.
-- [wit-bindgen-go repository](https://github.com/bytecodealliance/go-modules): the binding generator and the `cm` package's API this chapter's `Exports` struct, `cm.Result`, and `cm.List` types come from.
-- [TinyGo documentation: WebAssembly guide](https://tinygo.org/docs/guides/webassembly/): TinyGo's `wasip1`/`wasip2` targets and `-buildmode` options this chapter's build recipe uses directly.
-- [Go Wiki: WebAssembly](https://go.dev/wiki/WebAssembly): the standard toolchain's `GOOS=wasip1 GOARCH=wasm` target and the `//go:wasmexport` directive whose restriction this chapter reproduces.
+- Danilo Chiarlone, *Server-Side WebAssembly* (Manning): compiling Go and TinyGo sources into components, including the WASI Preview 1 to 2 adapter boundary the reactor adapter crosses.
+- Shashank Jain, *WebAssembly for Cloud* (Apress): cross-language Component Model interoperability, the proof one host driving two independently built components provides.
+- [wit-bindgen-go repository](https://github.com/bytecodealliance/go-modules): the generator and the `cm` package that `Exports`, `cm.Result` and `cm.List` come from.
+- [TinyGo documentation: WebAssembly guide](https://tinygo.org/docs/guides/webassembly/): the `wasip1` and `wasip2` targets and `-buildmode` options this recipe uses.
+- [Go Wiki: WebAssembly](https://go.dev/wiki/WebAssembly): the `GOOS=wasip1 GOARCH=wasm` target and the `//go:wasmexport` directive whose restriction is reproduced here.

@@ -1,4 +1,4 @@
-# ch26 Spin app on OpenShift Local (CRC): the container path
+# Chapter 26 Spin app on OpenShift Local (CRC): the container path
 
 This is the OpenShift counterpart to the minikube SpinKube deploy one
 directory up (`../base`, `../overlays`, which run `containerd-shim-spin` via
@@ -6,7 +6,7 @@ the `runtime-class-manager` Helm chart and a `SpinApp` custom resource). That
 path needs a privileged RHCOS node install (the shim chart writes a
 node-level containerd plugin and, on OpenShift, a `MachineConfig` that
 restarts the node), and that fights the `restricted-v2` security posture CRC
-chapters hold to. It is the same constraint ch18/ch19 already hit with the
+chapters hold to. It is the same constraint Chapters 18 and 19 already hit with the
 raw `containerd-shim-wasmtime` path; there the substitute was the wasmCloud
 *operator* running an in-cluster host
 (`../../../part5-kubernetes/openshift/wasmcloud-host.yaml`).
@@ -63,7 +63,7 @@ SCC exception is granted.
 
 Every HTTP assertion goes through the edge-TLS Route and is verified against
 the cluster's own ingress CA, combined with the system trust store, the same
-`combined_ca_bundle` helper as every other CRC chapter in this book:
+`combined_ca_bundle` helper as every other CRC chapter in the repository:
 
 ```bash
 # combined bundle = system trust store + the cluster ingress CA

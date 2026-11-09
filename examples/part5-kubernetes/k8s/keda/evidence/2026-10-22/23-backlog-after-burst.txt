@@ -1,6 +1,6 @@
 # topic cargo-handling-events end offset BEFORE the burst = 120
 
-$ COUNT=120 ~/Dev/cn-patterns-and-practices-webassembly/examples/part5-kubernetes/k8s/kafka/producer-burst.sh
+$ COUNT=120 <repo>/examples/part5-kubernetes/k8s/kafka/producer-burst.sh
 
 === 0/3 disposable Strimzi client Pod (cargo-producer-burst, image quay.io/strimzi/kafka:1.3.0-kafka-4.3.1) ===
 pod/cargo-producer-burst created

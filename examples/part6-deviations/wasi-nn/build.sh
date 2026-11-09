@@ -16,12 +16,12 @@ cd "$SCRIPT_DIR"
 
 for tool in cargo wasm-tools; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "wasi-nn/build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "wasi-nn/build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
 if ! cargo component --version >/dev/null 2>&1; then
-  echo "wasi-nn/build.sh: FAIL — 'cargo component' subcommand not found on PATH" >&2
+  echo "wasi-nn/build.sh: FAIL, 'cargo component' subcommand not found on PATH" >&2
   exit 1
 fi
 
@@ -29,7 +29,7 @@ echo "wasi-nn/build.sh: [1/3] cargo component build --release ..."
 cargo component build --release
 
 WASM="$SCRIPT_DIR/target/wasm32-wasip1/release/cargo-wasi-nn.wasm"
-[[ -s "$WASM" ]] || { echo "wasi-nn/build.sh: FAIL — component not produced at $WASM" >&2; exit 1; }
+[[ -s "$WASM" ]] || { echo "wasi-nn/build.sh: FAIL, component not produced at $WASM" >&2; exit 1; }
 
 echo "wasi-nn/build.sh: [2/3] wasm-tools validate ..."
 wasm-tools validate "$WASM"
@@ -37,18 +37,18 @@ wasm-tools validate "$WASM"
 WIT="$(wasm-tools component wit "$WASM")"
 
 if ! grep -q 'import wasi:nn/graph@0.2.0-rc-2024-10-28;' <<<"$WIT"; then
-  echo "wasi-nn/build.sh: FAIL — component does not import wasi:nn/graph@0.2.0-rc-2024-10-28" >&2
+  echo "wasi-nn/build.sh: FAIL, component does not import wasi:nn/graph@0.2.0-rc-2024-10-28" >&2
   echo "$WIT" >&2
   exit 1
 fi
 if ! grep -q 'export wasi:cli/run@0.2.3;' <<<"$WIT"; then
-  echo "wasi-nn/build.sh: FAIL — component does not export wasi:cli/run@0.2.3" >&2
+  echo "wasi-nn/build.sh: FAIL, component does not export wasi:cli/run@0.2.3" >&2
   echo "$WIT" >&2
   exit 1
 fi
 NON_WASI_IMPORTS="$(grep -E '^\s*import ' <<<"$WIT" | grep -vE '^\s*import wasi:' || true)"
 if [[ -n "$NON_WASI_IMPORTS" ]]; then
-  echo "wasi-nn/build.sh: FAIL — component imports something other than wasi:*:" >&2
+  echo "wasi-nn/build.sh: FAIL, component imports something other than wasi:*:" >&2
   echo "$NON_WASI_IMPORTS" >&2
   exit 1
 fi

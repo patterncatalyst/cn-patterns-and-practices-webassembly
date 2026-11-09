@@ -58,6 +58,6 @@ gd.emit(
         {"x1":825,"y1":496,"x2":650,"y2":546,"label":""},
     ],
     notes=[
-        {"x":550,"y":600,"text":"Forward reference: wasmCloud / wash (Part 4) and minikube + OpenShift Local + the LGTM stack (Part 5) are each set up in their own parts, not here.","size":12,"color":"#555555","anchor":"middle"},
+        {"x":550,"y":600,"text":"wasmCloud / wash, minikube, OpenShift Local and the LGTM stack are each set up where they are first used, not here.","size":12,"color":"#555555","anchor":"middle"},
     ],
 )

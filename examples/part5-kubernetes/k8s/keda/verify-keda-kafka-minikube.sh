@@ -93,7 +93,7 @@ trap cleanup EXIT
 step "Step 0: tool + version checks"
 mk_ver="$(minikube version --short 2>/dev/null || echo v0.0.0)"
 [[ "$(printf '%s\n%s\n' "$MINIKUBE_MIN" "$mk_ver" | sort -V | head -1)" == "$MINIKUBE_MIN" ]] \
-  || { echo "verify-keda-kafka-minikube.sh: FAIL — minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
+  || { echo "verify-keda-kafka-minikube.sh: FAIL, minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
 
 step "Step 1: minikube profile '$PROFILE' (docker driver, containerd, Kubernetes $KUBERNETES_VERSION)"
 if minikube status -p "$PROFILE" >/dev/null 2>&1; then
@@ -139,7 +139,7 @@ while (( waited < ZERO_TIMEOUT )); do
 done
 kubectl get deploy cargo-kafka-host -n "$KAFKA_NAMESPACE"
 if [[ "$zeroed" -ne 1 ]]; then
-  echo "verify-keda-kafka-minikube.sh: FAIL — cargo-kafka-host never scaled to 0/0 within ${ZERO_TIMEOUT}s of idle (cooldownPeriod is 30s; check keda-operator logs)" >&2
+  echo "verify-keda-kafka-minikube.sh: FAIL, cargo-kafka-host never scaled to 0/0 within ${ZERO_TIMEOUT}s of idle (cooldownPeriod is 30s; check keda-operator logs)" >&2
   exit 1
 fi
 
@@ -190,7 +190,7 @@ while (( waited < LAG_TIMEOUT )); do
   sleep 5; waited=$(( waited + 5 ))
 done
 if [[ "$grew" -ne 1 ]]; then
-  echo "verify-keda-kafka-minikube.sh: FAIL — topic backlog did not grow within ${LAG_TIMEOUT}s of the burst" >&2
+  echo "verify-keda-kafka-minikube.sh: FAIL, topic backlog did not grow within ${LAG_TIMEOUT}s of the burst" >&2
   exit 1
 fi
 kubectl get scaledobject cargo-kafka-host -n "$KAFKA_NAMESPACE" -o wide
@@ -210,7 +210,7 @@ while (( waited < SCALEOUT_TIMEOUT )); do
 done
 kubectl get deploy cargo-kafka-host -n "$KAFKA_NAMESPACE"
 if [[ "$peak" -le 1 ]]; then
-  echo "verify-keda-kafka-minikube.sh: FAIL — cargo-kafka-host peak replica count was $peak (expected > 1) within ${SCALEOUT_TIMEOUT}s of the burst" >&2
+  echo "verify-keda-kafka-minikube.sh: FAIL, cargo-kafka-host peak replica count was $peak (expected > 1) within ${SCALEOUT_TIMEOUT}s of the burst" >&2
   exit 1
 fi
 echo "verify-keda-kafka-minikube.sh: observed peak replicas=$peak"
@@ -225,7 +225,7 @@ while (( waited < HANDLER_TIMEOUT )); do
   sleep 3; waited=$(( waited + 3 ))
 done
 if [[ "$sawhandler" -ne 1 ]]; then
-  echo "verify-keda-kafka-minikube.sh: FAIL — no per-message 'outcome=' log lines from cargo-kafka-host within ${HANDLER_TIMEOUT}s" >&2
+  echo "verify-keda-kafka-minikube.sh: FAIL, no per-message 'outcome=' log lines from cargo-kafka-host within ${HANDLER_TIMEOUT}s" >&2
   exit 1
 fi
 echo "verify-keda-kafka-minikube.sh: observed handler activity (outcome= log lines)"
@@ -242,7 +242,7 @@ while (( waited < DRAIN_TIMEOUT )); do
   sleep 10; waited=$(( waited + 10 ))
 done
 if [[ "$drained" -ne 1 ]]; then
-  echo "verify-keda-kafka-minikube.sh: FAIL — lag never drained to 0 within ${DRAIN_TIMEOUT}s" >&2
+  echo "verify-keda-kafka-minikube.sh: FAIL, lag never drained to 0 within ${DRAIN_TIMEOUT}s" >&2
   exit 1
 fi
 
@@ -259,7 +259,7 @@ while (( waited < POST_DRAIN_ZERO_TIMEOUT )); do
 done
 kubectl get deploy cargo-kafka-host -n "$KAFKA_NAMESPACE"
 if [[ "$rezeroed" -ne 1 ]]; then
-  echo "verify-keda-kafka-minikube.sh: FAIL — cargo-kafka-host never returned to 0/0 within ${POST_DRAIN_ZERO_TIMEOUT}s of the drain (cooldownPeriod is 30s)" >&2
+  echo "verify-keda-kafka-minikube.sh: FAIL, cargo-kafka-host never returned to 0/0 within ${POST_DRAIN_ZERO_TIMEOUT}s of the drain (cooldownPeriod is 30s)" >&2
   exit 1
 fi
 
@@ -267,7 +267,7 @@ step "Step 13: teardown the test workload (disposable client pod); cargo-kafka-h
 kubectl delete pod "$CLIENT_POD" -n "$KAFKA_NAMESPACE" --wait=false >/dev/null 2>&1 || true
 
 echo
-echo "PASS — part5-kubernetes ch23 KEDA Kafka half on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
+echo "PASS: part5-kubernetes ch23 KEDA Kafka half on minikube (docker+containerd, Kubernetes $KUBERNETES_VERSION):"
 echo "  KEDA scaled cargo-kafka-host from 0/0 up to $peak replica(s) on"
 echo "  cargo-handling-events consumer-group lag, the handler processed the burst"
 echo "  (kubectl logs confirmed it), and KEDA scaled it back to 0/0 once the lag"

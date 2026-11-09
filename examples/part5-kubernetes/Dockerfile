@@ -3,7 +3,7 @@
 # A thin OCI image that carries ONLY the Wasm component. The runwasi
 # `containerd-shim-wasmtime` shim mounts this image's rootfs, reads the OCI
 # config's command (the Deployment sets it to the single arg `/app.wasm`), and
-# loads that file as a Wasm component — it never needs a Linux userland, so the
+# loads that file as a Wasm component; it never needs a Linux userland, so the
 # base is `scratch` and the whole image is just the ~290 KiB component plus the
 # OCI metadata. No registry push: `minikube image load` copies it straight into
 # the node's containerd image store (DRQ convention: docker driver + containerd,

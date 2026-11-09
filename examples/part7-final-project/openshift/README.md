@@ -1,10 +1,10 @@
 # Part 7 final project on OpenShift Local (CRC): the reduced pass
 
 This is the final project's CRC tier. minikube runs the full assembly (both
-composites, the Ch25 Istio proxy-wasm gateway filter, and the OTel trace
+composites, the Chapter 25 Istio proxy-wasm gateway filter, and the OTel trace
 capture). CRC runs a **reduced pass**: both language composites deployed via
-the wasmCloud operator (the same Part 5/Ch19 CRC tier) fronted by edge-TLS
-Routes. There is **no service mesh here**; the gateway filter and the Ch23
+the wasmCloud operator (the same Part 5 (Chapter 19) CRC tier) fronted by edge-TLS
+Routes. There is **no service mesh here**; the gateway filter and the Chapter 23
 KEDA scale-to-zero pass stay minikube-only for this project.
 
 ```
@@ -39,7 +39,7 @@ project never starts or stops the cluster.
 
 ## Pinned versions
 
-No new pins for this chapter; it reuses the firm Part 5/Ch19 CRC tier as-is:
+No new pins for this chapter; it reuses the firm Part 5 (Chapter 19) CRC tier as-is:
 
 | thing | pin | why |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ No new pins for this chapter; it reuses the firm Part 5/Ch19 CRC tier as-is:
 
 ## Two Applications, one per language
 
-Ch19 and Ch20 each wire one httpserver provider per wadm Application, and this
+Chapters 19 and 20 each wire one httpserver provider per wadm Application, and this
 reduced pass follows that shape: `cargo-final-rust` (component `cargo-rust` +
 `httpserver-rust` on `0.0.0.0:8000`) and `cargo-final-go` (component `cargo-go`
 + `httpserver-go` on `0.0.0.0:8000`). The wasmCloud operator creates one
@@ -77,7 +77,7 @@ real HTTPS at `*.apps-crc.testing`.
 
 Everything runs in the **`wasmcloud-final`** project (a normal project, so it
 is governed by `restricted-v2`: the `default` namespace is PodSecurity
-`privileged` and would not prove anything). Same posture as Ch19: the
+`privileged` and would not prove anything). Same posture as Chapter 19: the
 `WasmCloudHostConfig` CRD has no `securityContext` field and the operator
 leaves the host/leaf containers' `securityContext` unset, so `restricted-v2`
 assigns namespace-range UIDs, drops all capabilities, forbids privilege

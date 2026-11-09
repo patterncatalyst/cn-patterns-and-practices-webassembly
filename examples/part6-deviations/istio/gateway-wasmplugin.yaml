@@ -47,7 +47,7 @@ spec:
   # The filter image is a PRIVATE ghcr package, so the gateway Envoy's agent
   # needs registry credentials to fetch it: a docker-registry secret named
   # `ghcr-pull` in THIS namespace (istio-system, where the gateway Pod and
-  # this WasmPlugin both live — not the app's namespace). ../istio-install.sh
+  # this WasmPlugin both live, not the app's namespace). ../istio-install.sh
   # creates it (kubectl create secret docker-registry ghcr-pull
   # --docker-server=ghcr.io --docker-username=<owner> --docker-password=<token>
   # -n istio-system). Make the package public instead and this line can be

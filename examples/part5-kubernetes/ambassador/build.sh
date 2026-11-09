@@ -46,7 +46,7 @@ OUT="$SCRIPT_DIR/ambassador.wasm"
 
 for tool in cargo cargo-component wasmtime python3; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "ambassador/build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "ambassador/build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -55,7 +55,7 @@ echo "ambassador/build.sh: [1/2] building the Part 3 sockets-rust resilience com
 ( cd "$SOCKETS" && cargo component build --release )
 WASM="$(find "$SOCKETS/target" -name 'sockets-client-rust.wasm' -not -path '*/deps/*' | head -1)"
 if [[ ! -s "$WASM" ]]; then
-  echo "ambassador/build.sh: FAIL — sockets-rust component not produced" >&2
+  echo "ambassador/build.sh: FAIL, sockets-rust component not produced" >&2
   exit 1
 fi
 cp "$WASM" "$OUT"
@@ -74,7 +74,7 @@ wasmtime run -S inherit-network "$OUT" "$DEAD_PORT" 4 50
 rcA=$?
 set -e
 echo "ambassador/build.sh: smoke A exit code = $rcA (expected 1 — gave up after retries)"
-[[ "$rcA" -eq 1 ]] || { echo "ambassador/build.sh: FAIL — smoke A expected exit 1" >&2; exit 1; }
+[[ "$rcA" -eq 1 ]] || { echo "ambassador/build.sh: FAIL, smoke A expected exit 1" >&2; exit 1; }
 
 echo
 echo "=== SMOKE B: connects on attempt 1 (live listener $LIVE_PORT, WITH network grant) ==="
@@ -103,7 +103,7 @@ set -e
 kill "$LISTENER_PID" 2>/dev/null || true
 wait "$LISTENER_PID" 2>/dev/null || true
 echo "ambassador/build.sh: smoke B exit code = $rcB (expected 0 — connected)"
-[[ "$rcB" -eq 0 ]] || { echo "ambassador/build.sh: FAIL — smoke B expected exit 0" >&2; exit 1; }
+[[ "$rcB" -eq 0 ]] || { echo "ambassador/build.sh: FAIL, smoke B expected exit 0" >&2; exit 1; }
 
 echo
 echo "=== SMOKE C: capability boundary (dead port $DEAD_PORT, WITHOUT network grant) ==="
@@ -113,11 +113,11 @@ rcC=$?
 set -e
 printf '%s\n' "$outC"
 echo "ambassador/build.sh: smoke C exit code = $rcC (non-zero — failed fast, no retries)"
-[[ "$rcC" -ne 0 ]] || { echo "ambassador/build.sh: FAIL — smoke C expected a non-zero exit" >&2; exit 1; }
-printf '%s' "$outC" | grep -q 'access-denied' || { echo "ambassador/build.sh: FAIL — smoke C expected an 'access-denied' capability denial" >&2; exit 1; }
+[[ "$rcC" -ne 0 ]] || { echo "ambassador/build.sh: FAIL, smoke C expected a non-zero exit" >&2; exit 1; }
+printf '%s' "$outC" | grep -q 'access-denied' || { echo "ambassador/build.sh: FAIL, smoke C expected an 'access-denied' capability denial" >&2; exit 1; }
 # Fail-fast proof: the capability denial stops after the FIRST attempt (no
 # "attempt 2/4"), unlike the connection-refused backoff in smoke A.
-printf '%s' "$outC" | grep -q 'attempt 2/4' && { echo "ambassador/build.sh: FAIL — smoke C retried; a capability denial must fail fast" >&2; exit 1; }
+printf '%s' "$outC" | grep -q 'attempt 2/4' && { echo "ambassador/build.sh: FAIL, smoke C retried; a capability denial must fail fast" >&2; exit 1; }
 echo "ambassador/build.sh: smoke C denied egress on the first attempt (no retry) — capability boundary held"
 
 echo

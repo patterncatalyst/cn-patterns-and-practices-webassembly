@@ -2,7 +2,7 @@
 
 // Package client represents the exported interface "patterncatalyst:sockets-client-go/client@0.1.0".
 //
-// TinyGo outbound TCP client with reconnect + backoff (ch13, GATE D Go).
+// TinyGo outbound TCP client with reconnect + backoff.
 //
 // Shipped as a REACTOR exporting `client.run-client`, driven by the native
 // sockets-host. Why not a command (`wasmtime run`): TinyGo 0.43's runtime seeds

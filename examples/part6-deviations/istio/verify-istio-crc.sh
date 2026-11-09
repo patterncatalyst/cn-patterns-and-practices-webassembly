@@ -112,7 +112,7 @@ echo "$headers" | grep -qi '^x-cargo-filtered-by: *cargo-wasmfilter' \
 ok "GET $CARGO_PATH (x-cargo-tenant: acme) -> 200, exact cargo JSON, x-cargo-filtered-by: cargo-wasmfilter"
 
 echo
-echo "PASS — ch25 Istio + Wasm on OpenShift Local (CRC, OSSM3/Sail operator):" \
+echo "PASS: ch25 Istio + Wasm on OpenShift Local (CRC, OSSM3/Sail operator):" \
      "the proxy-wasm filter, running in the istio-ingressgateway's own Envoy" \
      "(no sidecar), denied the request without x-cargo-tenant (403) and, with" \
      "it, added x-cargo-filtered-by before proxying on to the same" \

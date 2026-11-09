@@ -51,7 +51,7 @@ spec:
             - name: CONCURRENCY
               value: "8"
             - name: TARGET
-              # In-cluster Service DNS name — NO port-forward, NO NodePort.
+              # In-cluster Service DNS name, NO port-forward, NO NodePort.
               value: "http://cargo-http.part5-kubernetes.svc.cluster.local:8080/cargo/CARGO-USNYC-DEHAM"
           resources:
             requests:

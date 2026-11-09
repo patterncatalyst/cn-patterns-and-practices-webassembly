@@ -27,7 +27,7 @@
 <text x="300.0" y="455.0" font-size="11.5" fill="#555555" text-anchor="middle">link -&gt; wrpc call -&gt; wasi:http/incoming-handler</text>
 <text x="300.0" y="470.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo-http component (app.wasm, sha256 eff7f5ee…)</text>
 <rect x="620" y="380" width="320" height="70" rx="9" fill="#ffffff" stroke="#8a8d91" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="780.0" y="413.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">same app.wasm Chapters 14/15/18 run</text>
+<text x="780.0" y="413.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">same app.wasm the other runtimes run</text>
 <text x="780.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">byte-identical, no rebuild</text>
 <rect x="800" y="130" width="340" height="100" rx="9" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
 <text x="970.0" y="163.0" font-size="13.5" font-weight="700" fill="#1a1a1a" text-anchor="middle">every pod in this project</text>

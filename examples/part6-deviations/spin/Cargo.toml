@@ -3,7 +3,7 @@ name = "cargo-spin"
 version = "0.1.0"
 edition = "2021"
 
-# The HTTP handler for the Fermyon Spin example in this book's Part 6 (ch26).
+# The HTTP handler for the Fermyon Spin example in Part 6.
 # `spin-sdk` gives the `#[http_service]` entrypoint and the
 # `spin_sdk::dependencies!()` macro that bindgens the `patterncatalyst:cargo`
 # import Spin's own component-dependency composer satisfies at `spin build`

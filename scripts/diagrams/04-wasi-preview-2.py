@@ -49,10 +49,10 @@ gd.emit(
 # Figure 4.2: WASI Preview 2 world map: one component's imports
 # ---------------------------------------------------------------------------
 gd.emit(
-    "04-wasi-world-map", 960, 460,
+    "04-wasi-world-map", 960, 480,
     bands=[
-        {"x":20,"y":16,"w":920,"h":180,"label":"WASI 0.2.x base interfaces: Foundations, covered this chapter","fill":"#f1f5f9"},
-        {"x":20,"y":212,"w":920,"h":150,"label":"WASI 0.2.x interfaces: covered in later chapters","fill":"#fff3e0"},
+        {"x":20,"y":16,"w":920,"h":180,"label":"WASI 0.2.x base interfaces: Foundations","fill":"#f1f5f9"},
+        {"x":20,"y":212,"w":920,"h":150,"label":"WASI 0.2.x interfaces: imported only when needed","fill":"#fff3e0"},
     ],
     nodes=[
         {"x":48,"y":58,"w":160,"h":62,"lines":["wasi:io","streams, pollable"],"style":"box"},
@@ -61,17 +61,17 @@ gd.emit(
         {"x":588,"y":58,"w":160,"h":62,"lines":["wasi:filesystem","scoped dir handles"],"style":"box"},
         {"x":768,"y":58,"w":148,"h":62,"lines":["wasi:random","secure + insecure"],"style":"box"},
 
-        {"x":80,"y":252,"w":220,"h":70,"lines":["wasi:http","Ch 11"],"style":"accent"},
-        {"x":360,"y":252,"w":220,"h":70,"lines":["wasi:sockets","Ch 13"],"style":"accent"},
-        {"x":640,"y":252,"w":220,"h":70,"lines":["wasi:nn","Ch 27"],"style":"accent"},
+        {"x":80,"y":252,"w":220,"h":70,"lines":["wasi:http","HTTP serving"],"style":"accent"},
+        {"x":360,"y":252,"w":220,"h":70,"lines":["wasi:sockets","outbound networking"],"style":"accent"},
+        {"x":640,"y":252,"w":220,"h":70,"lines":["wasi:nn","inference"],"style":"accent"},
 
         {"x":280,"y":388,"w":400,"h":56,"lines":["This component's WIT world","imports a subset of the above, by name"],"style":"ink"},
     ],
     edges=[
-        {"x1":480,"y1":120,"x2":480,"y2":388,"label":"imported by the world","dashed":True},
-        {"x1":190,"y1":322,"x2":420,"y2":388,"label":"imported when needed","dashed":True},
+        {"x1":610,"y1":196,"x2":610,"y2":388,"label":"imported","dashed":True},
+        {"x1":190,"y1":322,"x2":330,"y2":388,"label":"when needed","dashed":True},
     ],
     notes=[
-        {"x":480,"y":450,"text":"A world names exactly which interfaces it imports; the host decides at instantiation whether to satisfy them.","size":12,"color":"#555555","anchor":"middle"},
+        {"x":480,"y":468,"text":"A world names exactly which interfaces it imports; the host decides at instantiation whether to satisfy them.","size":12,"color":"#555555","anchor":"middle"},
     ],
 )

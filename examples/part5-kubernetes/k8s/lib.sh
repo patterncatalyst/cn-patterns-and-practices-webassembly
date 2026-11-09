@@ -88,12 +88,12 @@ wait_for_200() {
   local url="$1" timeout="${2:-90}" host="${3:-}" waited=0
   while (( waited < timeout )); do
     if [[ "$(curl_code "$url" "$host")" == "200" ]]; then
-      echo "lib.sh: ok — $url answered 200 after ${waited}s" >&2
+      echo "lib.sh: ok, $url answered 200 after ${waited}s" >&2
       return 0
     fi
     sleep 2
     waited=$(( waited + 2 ))
   done
-  echo "lib.sh: FAIL — $url never returned 200 within ${timeout}s" >&2
+  echo "lib.sh: FAIL, $url never returned 200 within ${timeout}s" >&2
   return 1
 }

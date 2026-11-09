@@ -57,9 +57,9 @@ edges = [
 
 notes = [
     {"x": 590, "y": 20, "size": 13, "color": "#1d1d1d", "anchor": "middle", "bold": True,
-     "text": "Real transcript: evidence/2026-10-21/05-resilience.txt; fail_observed=1 recovered=1, recovered after 2s"},
+     "text": "Observed: one failure, one recovery, recovered after 2s"},
     {"x": 590, "y": 440, "size": 12, "color": "#555555", "anchor": "middle",
-     "text": "`wash app status: deployed` means the desired state was accepted at step 2 already; it does not mean step 3's 500s aren't happening."},
+     "text": "`wash app status: deployed` means the desired state was accepted already; it does not mean the 500s aren't happening."},
 ]
 
 gd.emit("15-wadm-self-heal-loop", W, H, nodes=nodes, edges=edges, notes=notes)

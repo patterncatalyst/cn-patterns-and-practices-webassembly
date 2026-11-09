@@ -16,7 +16,7 @@ this crate's handler  (imports patterncatalyst:cargo/*,       wasi:http/handler@
 
 ## The teaching point: Spin's own composition mechanism, and a real ABI surprise
 
-Every earlier wac-composed example in this book hand-wires a provider's
+Every earlier wac-composed example in the repository hand-wires a provider's
 exports into a consumer's imports with `wac plug`, run from a `build.sh`. Spin
 has a native equivalent, **component dependencies**, that does the same
 thing through the manifest instead of a CLI invocation:
@@ -39,7 +39,7 @@ time, via the identical `wac`-based graph composition internally (see
 This crate still runs `wac plug` itself, in `build.sh`, for one reason:
 packaging. The CRC runtime image (`Dockerfile`) ships exactly two files:
 `spin.toml` and `cargo-spin.wasm`, the same "one pre-composed artifact"
-shape as every other Part 5/6 runtime image in this book, rather than a raw
+shape as every other Part 5/6 runtime image in the repository, rather than a raw
 handler plus a provider file plus a dependency-aware manifest. `build.sh`
 therefore runs two manifests: a gitignored, generated `spin-build.toml` that
 declares the dependency (so `spin build` regenerates `spin-dependencies.wit`
@@ -49,7 +49,7 @@ and compiles the handler), and the committed `spin.toml` (dependency-free,
 The real surprise is the export, not the import. `spin-sdk = "=7.0.0"`'s
 `#[http_service]` macro targets `wasi:http@0.3.0/handler`, the **wasip3**
 async HTTP world, not the `wasi:http/incoming-handler@0.2.x` every other
-HTTP example in this book exports (`examples/part3-interfaces/http-rust`,
+HTTP example in the repository exports (`examples/part3-interfaces/http-rust`,
 every Part 5 Kubernetes deploy target, the wasmCloud and Istio deviations).
 Spin's own `trigger-http` (v4.2.4) runs both ABIs natively (compare
 `crates/trigger-http/src/wasip3.rs` against `.../wasi.rs` in the Spin source),
@@ -76,7 +76,7 @@ directly, while a `wasmtime serve` pipeline or another wasi:http 0.2.x host
 - `cargo-component` 0.21.1 (builds the Part 2 provider this crate composes with).
 - `wac` 0.12.0, `wasm-tools` 1.262.0.
 - Spin CLI **v4.2.4**, installed from the pinned release (see below), not a
-  package-manager install; this book pins exact binaries per chapter.
+  package-manager install; the repository pins exact binaries per chapter.
 - `gh` (GitHub CLI, authenticated) only for `./build.sh --push`.
 
 No `libcurl`/C toolchain prerequisites: unlike `../../part5-kubernetes/
@@ -123,9 +123,9 @@ reproducible builds.
 
 ## Deploy targets
 
-This chapter runs the same artifact on both substrates this book always
+This chapter runs the same artifact on both substrates the repository always
 compares, by two different mechanisms, the same constraint Part 6's Istio
-chapter and Ch19's wasmCloud-operator move already established: a privileged
+chapter and Chapter 19's wasmCloud-operator move already established: a privileged
 node-level install does not fit the `restricted-v2` SCC the CRC chapters hold
 to.
 

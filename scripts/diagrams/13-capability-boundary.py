@@ -34,7 +34,7 @@ gd.emit(
         {"x": 630, "y": 56, "w": 500, "h": 56, "lines": ["component: create-tcp-socket + start-connect"], "style": "box"},
         {"x": 630, "y": 128, "w": 500, "h": 56, "lines": ["wasi:sockets import resolves to a REAL", "OS TCP socket the host granted"], "style": "box"},
         {"x": 630, "y": 200, "w": 500, "h": 64, "lines": ["connect REACHES 127.0.0.1:port;", "refused while no listener is bound yet"], "style": "ink"},
-        {"x": 630, "y": 284, "w": 500, "h": 56, "lines": ["component backs off and retries", "(see Figure 13.2)"], "style": "box"},
+        {"x": 630, "y": 284, "w": 500, "h": 56, "lines": ["component backs off and retries", "(reconnect backoff)"], "style": "box"},
         {"x": 630, "y": 400, "w": 500, "h": 72, "lines": ["once a listener appears, the SAME", "retry loop connects and returns"], "style": "box"},
     ],
     edges=[
@@ -49,7 +49,7 @@ gd.emit(
         {"x1": 880, "y1": 340, "x2": 880, "y2": 400},
     ],
     notes=[
-        {"x": 590, "y": 600, "text": "Contrast with Chapter 2: a container starts with the host's network stack by default and loses it only by subtraction (namespaces, egress policy).", "size": 12, "color": "#555555", "anchor": "middle"},
+        {"x": 590, "y": 600, "text": "Contrast with a container: it starts with the host's network stack by default and loses it only by subtraction (namespaces, egress policy).", "size": 12, "color": "#555555", "anchor": "middle"},
         {"x": 590, "y": 620, "text": "A component starts with none and gains exactly what -S inherit-network hands it: no grant, no socket, no exception.", "size": 12, "color": "#555555", "anchor": "middle"},
     ],
 )

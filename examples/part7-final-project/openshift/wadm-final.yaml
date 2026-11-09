@@ -27,7 +27,7 @@ metadata:
   name: cargo-final-rust
   annotations:
     version: v0.0.1
-    description: "Part 7 final project — Rust cargo composite on the wasmCloud lattice (CRC)"
+    description: "Part 7 final project, Rust cargo composite on the wasmCloud lattice (CRC)"
 spec:
   components:
     - name: cargo-rust
@@ -65,7 +65,7 @@ metadata:
   name: cargo-final-go
   annotations:
     version: v0.0.1
-    description: "Part 7 final project — Go cargo composite on the wasmCloud lattice (CRC)"
+    description: "Part 7 final project, Go cargo composite on the wasmCloud lattice (CRC)"
 spec:
   components:
     - name: cargo-go

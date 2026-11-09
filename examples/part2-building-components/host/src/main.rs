@@ -367,7 +367,7 @@ fn main() -> Result<()> {
     // so the stdout the cross-language diff compares is unchanged. The trap call
     // is LAST because a trap poisons the component instance in this Store.
 
-    // Recoverable: get-cargo on an unknown id returns Ok(Err(not-found)) — the
+    // Recoverable: get-cargo on an unknown id returns Ok(Err(not-found)). The
     // CALL succeeds, the domain result is an error. No trap.
     let missing = booking_api
         .call_get_cargo(&mut store, "NO-SUCH-CARGO")
@@ -378,7 +378,7 @@ fn main() -> Result<()> {
             c.tracking_id
         ),
         Err(CargoError::NotFound(msg)) => {
-            eprintln!("[{label}] recoverable: get-cargo(\"NO-SUCH-CARGO\") -> Ok(Err(cargo-error::not-found: {msg:?})) — domain error, instance still alive");
+            eprintln!("[{label}] recoverable: get-cargo(\"NO-SUCH-CARGO\") -> Ok(Err(cargo-error::not-found: {msg:?})), domain error, instance still alive");
         }
         Err(other) => bail!(
             "ASSERT FAIL [recoverable]: expected cargo-error::not-found, got {other:?}"
@@ -386,7 +386,7 @@ fn main() -> Result<()> {
     }
 
     // Unrecoverable: the sentinel id makes get-cargo panic inside the component,
-    // which surfaces as an Err from the wasmtime CALL itself (a trap) — NOT an
+    // which surfaces as an Err from the wasmtime CALL itself (a trap), NOT an
     // Ok(Err(..)) domain result. Distinguishing these is the whole point.
     let trapped = booking_api.call_get_cargo(&mut store, TRAP_SENTINEL);
     match trapped {

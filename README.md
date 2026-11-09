@@ -23,7 +23,7 @@ protocol fundamentals.
 
 ## What's here
 
-- **29 chapters (Ch0–Ch28) across 8 parts**: from the execution model and the
+- **29 chapters (Chapter 0 to Chapter 28) across 8 parts**: from the execution model and the
   Component Model/WIT, through building the same component in Rust and in Go,
   exposing it over HTTP and gRPC, running it under wasmtime and wasmCloud,
   deploying it to Kubernetes (minikube and OpenShift Local/CRC), scaling it
@@ -66,7 +66,6 @@ bundle exec jekyll serve --baseurl ""
 |---|---|
 | `_docs/` | The chapters + the CRC appendix (Markdown). |
 | `_parts/` | The 8 Parts the chapters are grouped under. |
-| `_plans/` | Build plan, decisions log, version matrix: excluded from the build. |
 | `_example_pages/` | The examples index. |
 | `contracts/` | The WIT world (excluded from the built site). |
 | `scripts/` | Diagram generation (`generate_diagram.py`). |

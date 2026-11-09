@@ -80,7 +80,7 @@ body="$(https "https://$HOST/cargo/CARGO-USNYC-DEHAM")" || fail "post-recovery c
 ok "host pod recreated by the operator Deployment; traffic recovered to the exact cargo JSON"
 
 echo
-echo "PASS — Part 5 cargo component on OpenShift Local (CRC, crc-admin context):" \
+echo "PASS: Part 5 cargo component on OpenShift Local (CRC, crc-admin context):" \
      "deployed by the wasmCloud operator to an in-cluster host; served the exact" \
      "cargo JSON and a 404 through an edge-TLS Route (CA-verified against the" \
      "cluster's own ingress CA, never -k/port-forward/NodePort); and recovered" \

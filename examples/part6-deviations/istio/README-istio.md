@@ -1,6 +1,6 @@
-# ch25: Istio + WebAssembly (proxy-wasm `WasmPlugin`)
+# Chapter 25: Istio + WebAssembly (proxy-wasm `WasmPlugin`)
 
-Deployment manifests + verify scripts for ch25. Both clusters reuse the
+Deployment manifests + verify scripts for Chapter 25. Both clusters reuse the
 existing Part 5 app unmodified. This chapter layers a service mesh and a
 proxy-wasm filter around it; it does not change the app.
 
@@ -58,7 +58,7 @@ network edge, never a port-forward.
 # 3. Build + push the filter image (sibling task, examples/part6-deviations/istio-wasmfilter)
 #    oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio must exist before this step.
 
-# 4. Layer the ch25 Gateway + VirtualService onto the existing (pure Wasm, no
+# 4. Layer the Chapter 25 Gateway + VirtualService onto the existing (pure Wasm, no
 #    sidecar) app, apply gateway-wasmplugin.yaml into istio-system, and prove it
 ./verify-istio-minikube.sh
 ```
@@ -76,9 +76,9 @@ eval "$(crc oc-env)"
 #    creates the ghcr-pull secret the gateway's WasmPlugin needs)
 ./install-ossm.sh
 
-# 3. Build + push the filter image (sibling task) — same OCI ref as minikube.
+# 3. Build + push the filter image (sibling task), same OCI ref as minikube.
 
-# 4. Layer the ch25 Gateway + VirtualService + Route, apply the gateway-scoped
+# 4. Layer the Chapter 25 Gateway + VirtualService + Route, apply the gateway-scoped
 #    WasmPlugin into istio-system, and prove it
 ./verify-istio-crc.sh
 ```
@@ -88,7 +88,7 @@ eval "$(crc oc-env)"
 - Istio **1.31.2** (`istioctl`); `WasmPlugin` API `extensions.istio.io/v1alpha1`.
 - Filter OCI ref: `oci://ghcr.io/patterncatalyst/cargo-wasmfilter:istio`
   (built by the `istio-wasmfilter` sibling task).
-- Istio↔Kubernetes skew: Istio 1.31 supports Kubernetes 1.32–1.36; Part 5 pins
+- Istio↔Kubernetes skew: Istio 1.31 supports Kubernetes 1.32 to 1.36; Part 5 pins
   minikube's control plane to 1.37.1: `istio-install.sh` step 1 runs
   `istioctl x precheck` as the gate; re-pin
   `KUBERNETES_VERSION` into the supported window if it fails.
@@ -110,7 +110,7 @@ eval "$(crc oc-env)"
    --show-labels` once live and adjust `openshift/wasmplugin.yaml` if it
    differs.
 3. **Istio↔minikube Kubernetes skew** (`istio-install.sh`): Part 5 pins
-   Kubernetes 1.37.1, one minor past Istio 1.31's documented 1.32–1.36 ceiling;
+   Kubernetes 1.37.1, one minor past Istio 1.31's documented 1.32 to 1.36 ceiling;
    gated on `istioctl x precheck`, may require re-pinning minikube's version
    for this chapter.
 

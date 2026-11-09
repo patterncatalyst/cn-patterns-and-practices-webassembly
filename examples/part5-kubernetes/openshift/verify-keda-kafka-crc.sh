@@ -103,7 +103,7 @@ done
 [[ "$drained" -eq 1 ]] || fail "lag never drained to 0 within ${DRAIN_TIMEOUT}s"
 
 echo
-echo "PASS — part5-kubernetes ch23 KEDA Kafka half on OpenShift Local (CRC):"
+echo "PASS: part5-kubernetes ch23 KEDA Kafka half on OpenShift Local (CRC):"
 echo "  a producer message raised cargo-handling-events consumer-group lag, the"
 echo "  Custom Metrics Autoscaler's kafka ScaledObject observed it, and the lag"
 echo "  drained once the wadm-owned kafka-handler component consumed it."

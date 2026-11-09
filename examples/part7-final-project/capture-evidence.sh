@@ -328,3 +328,6 @@ echo "  istio-ingressgateway enforces the x-cargo-tenant contract for both"
 echo "  languages; and the shim exported traces for the workload into the"
 echo "  shared otel-lgtm sink's Tempo backend (node-level shim service.name)."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

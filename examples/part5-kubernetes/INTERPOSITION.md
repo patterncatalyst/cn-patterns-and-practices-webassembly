@@ -1,4 +1,4 @@
-# Part 5: ch20/ch21 interposition (filter, adapter, ambassador)
+# Part 5: Chapters 20 and 21 interposition (filter, adapter, ambassador)
 
 Three interposition patterns composed over the same Part 2 provider and Part 3
 HTTP front door used by the plain `app.wasm`, expressed on minikube as
@@ -13,9 +13,9 @@ path dependency.
 
 | Dir | World package | Shape | What it does |
 | --- | --- | --- | --- |
-| `sidecar-filter/` (ch20) | `patterncatalyst:cargo-filter` | imports + exports the canonical cargo interfaces (interposer) | Destination-embargo policy + per-call stderr logging. An embargoed destination -> `cargo-error::invalid-location` (front door maps to 400); a normal destination passes through unchanged. |
-| `adapter/` (ch21) | `patterncatalyst:cargo-adapter` | imports + exports canonical cargo and exports its own `legacy` interface | Shape translation. `book-cargo` round-trips each request canonical -> legacy -> canonical before calling the provider; the round-trip is lossless, so the exact cargo JSON still comes back. The `legacy` interface (flat codes, renamed fields, a `service-level` enum with no canonical counterpart) lets a legacy-shaped caller drive the modern provider. |
-| `ambassador/` (ch21) | reuses `part3-interfaces/sockets-rust` | outbound command component | Resilient outbound calls: retry with exponential backoff + jitter behind a capability-scoped network grant. Minikube evidence is a local `wasmtime run -S inherit-network` smoke (the shim exposes no outbound-network knob); the cluster-live, lattice-linked form is the wasmCloud/CRC path. |
+| `sidecar-filter/` (Chapter 20) | `patterncatalyst:cargo-filter` | imports + exports the canonical cargo interfaces (interposer) | Destination-embargo policy + per-call stderr logging. An embargoed destination -> `cargo-error::invalid-location` (front door maps to 400); a normal destination passes through unchanged. |
+| `adapter/` (Chapter 21) | `patterncatalyst:cargo-adapter` | imports + exports canonical cargo and exports its own `legacy` interface | Shape translation. `book-cargo` round-trips each request canonical -> legacy -> canonical before calling the provider; the round-trip is lossless, so the exact cargo JSON still comes back. The `legacy` interface (flat codes, renamed fields, a `service-level` enum with no canonical counterpart) lets a legacy-shaped caller drive the modern provider. |
+| `ambassador/` (Chapter 21) | reuses `part3-interfaces/sockets-rust` | outbound command component | Resilient outbound calls: retry with exponential backoff + jitter behind a capability-scoped network grant. Minikube evidence is a local `wasmtime run -S inherit-network` smoke (the shim exposes no outbound-network knob); the cluster-live, lattice-linked form is the wasmCloud/CRC path. |
 
 ## wac plug chains
 

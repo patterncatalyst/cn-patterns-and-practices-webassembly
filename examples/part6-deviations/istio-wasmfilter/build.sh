@@ -25,7 +25,7 @@ OUT="$SCRIPT_DIR/target/wasm32-wasip1/release/cargo_wasmfilter.wasm"
 
 for tool in cargo; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -34,7 +34,7 @@ echo "build.sh: building the proxy-wasm HTTP filter (plain cargo, wasm32-wasip1)
 cargo build --release --target wasm32-wasip1
 
 if [[ ! -s "$OUT" ]]; then
-  echo "build.sh: FAIL — $OUT not produced" >&2
+  echo "build.sh: FAIL, $OUT not produced" >&2
   exit 1
 fi
 

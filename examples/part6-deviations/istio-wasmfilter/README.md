@@ -61,7 +61,7 @@ the same minimal-image pattern as `examples/part5-kubernetes/Dockerfile`
 *consumer* is different (Envoy's wasm fetcher vs. the containerd wasmtime
 shim).
 
-### Option B: `wash push` (wasmCloud's OCI tooling, already in this book's toolchain)
+### Option B: `wash push` (wasmCloud's OCI tooling, already in the repository's toolchain)
 
 ```sh
 wash push ghcr.io/patterncatalyst/cargo-wasmfilter:istio \
@@ -71,7 +71,7 @@ wash push ghcr.io/patterncatalyst/cargo-wasmfilter:istio \
 `wash push` pushes the raw `.wasm` as a generic OCI artifact rather than a
 Docker-style layered image. Istio's fetcher accepts both; pick Option A if
 you want the artifact to also be `docker pull`-able for debugging, Option B
-if you want one tool (`wash`) for every wasm OCI push in the book.
+if you want one tool (`wash`) for every wasm OCI push in the repository.
 
 ### Load it with a WasmPlugin
 

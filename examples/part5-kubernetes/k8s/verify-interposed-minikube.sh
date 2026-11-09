@@ -55,7 +55,7 @@ trap cleanup EXIT
 step "Step 0: tool + version checks"
 mk_ver="$(minikube version --short 2>/dev/null || echo v0.0.0)"
 [[ "$(printf '%s\n%s\n' "$MINIKUBE_MIN" "$mk_ver" | sort -V | head -1)" == "$MINIKUBE_MIN" ]] \
-  || { echo "verify-interposed-minikube.sh: FAIL — minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
+  || { echo "verify-interposed-minikube.sh: FAIL, minikube $mk_ver older than required $MINIKUBE_MIN" >&2; exit 1; }
 echo "verify-interposed-minikube.sh: minikube $mk_ver OK (>= $MINIKUBE_MIN); shim $SHIM_VERSION; Kubernetes $KUBERNETES_VERSION"
 
 step "Step 1: minikube profile '$PROFILE' (docker driver, containerd)"
@@ -89,7 +89,7 @@ apply_interposed() {
   until kubectl apply -k "$SCRIPT_DIR/interposed/overlays/minikube"; do
     tries=$(( tries + 1 ))
     if (( tries >= 24 )); then
-      echo "verify-interposed-minikube.sh: FAIL — apply -k never accepted (ingress admission webhook) after $tries tries" >&2
+      echo "verify-interposed-minikube.sh: FAIL, apply -k never accepted (ingress admission webhook) after $tries tries" >&2
       return 1
     fi
     echo "verify-interposed-minikube.sh: ingress admission webhook not ready; retrying apply in 5s ($tries/24)" >&2
@@ -120,7 +120,7 @@ wait_for_cookie() {
     if curl -sS -D - -o /dev/null "$url" 2>/dev/null | grep -qi "$cookie"; then return 0; fi
     sleep 2; waited=$(( waited + 2 ))
   done
-  echo "verify-interposed-minikube.sh: FAIL — ingress never routed $url within 90s" >&2
+  echo "verify-interposed-minikube.sh: FAIL, ingress never routed $url within 90s" >&2
   return 1
 }
 wait_for_cookie "$FILTERED_BASE$VALID_PATH" "part5-filtered-affinity"
@@ -142,7 +142,7 @@ assert_eq "$EXPECTED_JSON" "$abody" "ADAPTED round-trip GET $VALID_PATH through 
 assert_eq "404" "$(curl_code "$ADAPTED_BASE/cargo/NOPE")" "ADAPTED GET /cargo/NOPE -> 404"
 
 echo
-echo "PASS — part5-kubernetes interposed on minikube:"
+echo "PASS: part5-kubernetes interposed on minikube:"
 echo "  FILTERED (ch20) returns exact JSON (200), embargo 400, unknown 404;"
 echo "  ADAPTED  (ch21) round-trips to the exact JSON (200), unknown 404;"
 echo "  both as Wasm Pods via the containerd wasmtime shim, through ingress-nginx."

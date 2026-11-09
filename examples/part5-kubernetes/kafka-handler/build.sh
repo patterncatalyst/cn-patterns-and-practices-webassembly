@@ -25,7 +25,7 @@ cd "$SCRIPT_DIR"
 
 for tool in cargo cargo-component wasm-tools; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "kafka-handler/build.sh: FAIL — required tool '$tool' not found on PATH" >&2
+    echo "kafka-handler/build.sh: FAIL, required tool '$tool' not found on PATH" >&2
     exit 1
   fi
 done
@@ -34,7 +34,7 @@ echo "kafka-handler/build.sh: building the ch23 Kafka message handler component 
 cargo component build --release
 
 OUT="$(find "$SCRIPT_DIR/target/wasm32-wasip1/release" -maxdepth 1 -name 'cargo_kafka_handler_rust.wasm' | head -1)"
-[[ -s "$OUT" ]] || { echo "kafka-handler/build.sh: FAIL — component not produced" >&2; exit 1; }
+[[ -s "$OUT" ]] || { echo "kafka-handler/build.sh: FAIL, component not produced" >&2; exit 1; }
 wasm-tools validate "$OUT"
 
 SHA="$(sha256sum "$OUT" | awk '{print $1}')"

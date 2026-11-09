@@ -54,16 +54,15 @@ static mut _RET_AREA: _RetArea = _RetArea(
 #[allow(dead_code, clippy::all)]
 pub mod patterncatalyst {
     pub mod host_demo {
-        /// Host-provided capabilities. The HOST (native Rust, ../host) implements these
-        /// functions and supplies them to the guest at link time through a wasmtime
-        /// `Linker` closure. The guest cannot call anything the host does not wire in —
-        /// this interface is the whole of the guest's ambient authority.
+        /// Host-provided capabilities. The host implements these functions and supplies
+        /// them to the guest at link time through a wasmtime `Linker` closure. The guest
+        /// cannot call anything the host does not wire in; this interface is the whole
+        /// of the guest's ambient authority.
         ///
-        /// This is a LOCAL world for the ch14 embedding example only; it never touches
-        /// the repository contract under contracts/wit (which stays pristine). It
-        /// deliberately models a host-side capability (a pricing/clock service) rather
-        /// than re-exporting the cargo domain, so the example shows the *host import*
-        /// direction distinct from the Part 2/3 components that EXPORT the domain.
+        /// This is a local world for the embedding example only; it never touches the
+        /// repository contract under contracts/wit. It models a host-side capability (a
+        /// pricing and clock service) rather than re-exporting the cargo domain, so the
+        /// example shows the host import direction.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod host_caps {
             #[used]
@@ -71,8 +70,8 @@ pub mod patterncatalyst {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[allow(unused_unsafe, clippy::all)]
-            /// A host-computed quote for a cargo id. Pure host logic — the guest has no
-            /// way to produce this itself; it must call across the boundary.
+            /// A host-computed quote for a cargo id. Pure host logic: the guest has no
+            /// way to produce this itself and must call across the boundary.
             pub fn host_quote(id: &str) -> _rt::String {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]

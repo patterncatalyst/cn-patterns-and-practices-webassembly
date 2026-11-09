@@ -221,3 +221,6 @@ echo "  ADAPTED  (ch21): round-trip 200 exact JSON, unknown 404 via ingress."
 echo "  AMBASSADOR (ch21): local -S inherit-network backoff + capability-deny smoke."
 echo "  evidence: ${OUT#"$REPO_ROOT"/}"
 echo "  run ./teardown.sh to leave the box clean."
+
+# Remove host identifiers (paths, account, kernel build) from what was captured.
+bash "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)/examples/_lib/scrub-host.sh" "$OUT"

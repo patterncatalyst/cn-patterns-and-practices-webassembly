@@ -41,9 +41,9 @@ for tool in kubectl curl; do require_cmd "$tool"; done
 
 step "0/6 Preflight: Part 5 app + Istio control plane are up"
 kubectl get deployment/cargo-http -n "$NAMESPACE" >/dev/null 2>&1 \
-  || { echo "verify-istio-minikube.sh: FAIL — deployment/cargo-http not found in $NAMESPACE (run ../../part5-kubernetes/k8s/verify-minikube.sh --keep first)" >&2; exit 1; }
+  || { echo "verify-istio-minikube.sh: FAIL, deployment/cargo-http not found in $NAMESPACE (run ../../part5-kubernetes/k8s/verify-minikube.sh --keep first)" >&2; exit 1; }
 kubectl get deployment/istiod -n istio-system >/dev/null 2>&1 \
-  || { echo "verify-istio-minikube.sh: FAIL — istiod not found in istio-system (run ./istio-install.sh first)" >&2; exit 1; }
+  || { echo "verify-istio-minikube.sh: FAIL, istiod not found in istio-system (run ./istio-install.sh first)" >&2; exit 1; }
 echo "verify-istio-minikube.sh: Part 5 app + Istio control plane present"
 
 step "1/6 Apply the ch25 app-side overlay (Gateway + VirtualService; NO WasmPlugin, NO injection label)"
@@ -65,7 +65,7 @@ kubectl -n istio-system rollout status deployment/istio-ingressgateway --timeout
 step "3/6 Resolve the istio-ingressgateway NodePort + minikube ip; patch Gateway/VirtualService host"
 MINIKUBE_IP="$(minikube ip -p "$PROFILE")"
 NODE_PORT="$(kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')"
-[[ -n "$NODE_PORT" ]] || { echo "verify-istio-minikube.sh: FAIL — istio-ingressgateway has no NodePort for port 'http2' (is it type NodePort? see istio-install.sh step 4)" >&2; exit 1; }
+[[ -n "$NODE_PORT" ]] || { echo "verify-istio-minikube.sh: FAIL, istio-ingressgateway has no NodePort for port 'http2' (is it type NodePort? see istio-install.sh step 4)" >&2; exit 1; }
 CARGO_HOST="cargo-istio.${MINIKUBE_IP}.nip.io"
 echo "verify-istio-minikube.sh: minikube ip = $MINIKUBE_IP; istio-ingressgateway NodePort (http2) = $NODE_PORT"
 echo "verify-istio-minikube.sh: cargo gateway host = http://${CARGO_HOST}:${NODE_PORT}/"
@@ -93,7 +93,7 @@ while (( waited < 150 )); do
   sleep 3; waited=$(( waited + 3 ))
 done
 [[ "$code" == "200" ]] \
-  || { echo "verify-istio-minikube.sh: FAIL — gateway route + filter not ready within ${waited}s (last code '$code')" >&2; exit 1; }
+  || { echo "verify-istio-minikube.sh: FAIL, gateway route + filter not ready within ${waited}s (last code '$code')" >&2; exit 1; }
 echo "verify-istio-minikube.sh: gateway route + filter ready after ${waited}s"
 
 step "5/6 WITHOUT x-cargo-tenant -> expect 403 (the filter denies)"
@@ -106,13 +106,13 @@ register_cleanup "rm -f '$tmp_body'"
 headers="$(curl -sS -D - -o "$tmp_body" --max-time 8 -H "Host: $CARGO_HOST" -H 'x-cargo-tenant: acme' "$GW_URL")"
 body="$(cat "$tmp_body")"
 echo "$headers" | grep -qi '^HTTP/.* 200' \
-  || { echo "verify-istio-minikube.sh: FAIL — expected 200 with x-cargo-tenant, got headers:" >&2; echo "$headers" >&2; exit 1; }
+  || { echo "verify-istio-minikube.sh: FAIL, expected 200 with x-cargo-tenant, got headers:" >&2; echo "$headers" >&2; exit 1; }
 echo "$headers" | grep -qi '^x-cargo-filtered-by: *cargo-wasmfilter' \
-  || { echo "verify-istio-minikube.sh: FAIL — missing 'x-cargo-filtered-by: cargo-wasmfilter' response header (filter did not run):" >&2; echo "$headers" >&2; exit 1; }
+  || { echo "verify-istio-minikube.sh: FAIL, missing 'x-cargo-filtered-by: cargo-wasmfilter' response header (filter did not run):" >&2; echo "$headers" >&2; exit 1; }
 assert_eq "$EXPECTED_JSON" "$body" "minikube GET $CARGO_PATH (x-cargo-tenant: acme) through the istio gateway"
 
 echo
-echo "PASS — ch25 Istio + Wasm on minikube (docker+containerd, Istio layered on the Part 5 profile):"
+echo "PASS: ch25 Istio + Wasm on minikube (docker+containerd, Istio layered on the Part 5 profile):"
 echo "  the proxy-wasm filter, running in the istio-ingressgateway's own Envoy (no"
 echo "  sidecar), denied the request without x-cargo-tenant (403) and, with it,"
 echo "  added x-cargo-filtered-by before proxying on to the same pure"

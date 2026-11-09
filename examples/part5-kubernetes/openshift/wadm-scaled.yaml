@@ -58,11 +58,11 @@ spec:
         image: __COMPONENT_REF__
       traits:
         # spreadscaler, NOT daemonscaler: `instances` is the wadm-managed
-        # component instance count inside the host pod — the autoscaling
-        # LEVER this chapter is about. verify-scaling-crc.sh re-applies this
-        # manifest with __INSTANCES__ set first to a scaled-up count, then
-        # back to 1, and asserts `wash get inventory` / the host logs show the
-        # instance count actually changed both times.
+        # component instance count inside the host pod, the autoscaling
+        # lever. verify-scaling-crc.sh re-applies this manifest with
+        # __INSTANCES__ set first to a scaled-up count, then back to 1, and
+        # asserts the instance count read back from the Application changed
+        # both times.
         - type: spreadscaler
           properties:
             instances: __INSTANCES__
